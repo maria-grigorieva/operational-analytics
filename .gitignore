@@ -1,0 +1,6 @@
+conf/
+logs/
+celerybeat-schedule.db
+config.ini
+.DS_Store
+__pycache__/
