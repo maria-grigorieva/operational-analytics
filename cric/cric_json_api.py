@@ -44,3 +44,24 @@ def enhance_queues():
 
     enhanced_queues = pd.DataFrame(enhanced_queues)
     return enhanced_queues.explode('rse')
+
+
+def enhance_sites():
+    cric_base_url = config['CRIC']['cric_base_url']
+    url_queue = urllib.parse.urljoin(cric_base_url, config['CRIC']['url_site'])
+    cric_sites = requests.get(url_queue, cert=(os.path.join(BASE_DIR, config['CRIC']['ssl_cert']),
+                                                os.path.join(BASE_DIR, config['CRIC']['ssl_key'])),
+                               verify=os.path.join(BASE_DIR, config['CRIC']['tls_ca_certificate'])).json()
+    enhanced_sites = []
+
+    for site, attrs in cric_sites.items():
+        enhanced_sites.append({
+            'site': site,
+            'latitude': attrs['latitude'],
+            'longitude': attrs['longitude'],
+            'tier_level': attrs['tier_level'],
+            'cloud': attrs['cloud'],
+            'corepower': attrs['corepower']
+        })
+
+    return pd.DataFrame(enhanced_sites)

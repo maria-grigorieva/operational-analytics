@@ -8,7 +8,7 @@ config.read('config.ini')
 app = Celery('checker',
              broker=config['Redis']['connection_string'],
              backend=config['Redis']['connection_string'],
-             include=['queues.tasks'])
+             include=['queues.tasks','distances.tasks'])
 
 # app.conf.beat_schedule = {
 #     'daily_queueing_time': {
@@ -38,10 +38,10 @@ app.conf.beat_schedule = {
         'task': 'merged_queues_metrics',
         'schedule': 86400
     },
-    # 'daily_queueing_time': {
-    #     'task': 'queueing_time',
-    #     'schedule': 86400
-    # },
+    'daily_distances': {
+        'task': 'get_distances',
+        'schedule': 86400
+    },
     # 'daily_efficiency': {
     #     'task': 'efficiency',
     #     'schedule': 86400
