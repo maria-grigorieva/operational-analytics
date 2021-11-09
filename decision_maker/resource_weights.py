@@ -23,16 +23,19 @@ def calculate_weights(datasetname):
     df.drop('Storage Timestamp', axis=1, inplace=True)
     df.set_index(['queue', 'rse', 'site', 'cloud', 'tier_level', 'datetime', 'src','dest',
                   'queue_type','state','status','resource_type','region','datasetname', 'timestamp'],inplace=True)
+    df['queue_utilization'] = 1/df['queue_utilization']
+    df['closeness'] = 1 / df['closeness']
+    df['queue_filling'] = 1 / df['queue_filling']
     norm_df = df.apply(lambda x: round((x - np.mean(x)) / (np.max(x) - np.min(x)), 3))
     norm_df[np.isnan(norm_df)] = 0
     norm_df.reset_index(inplace=True)
 
     norm_df['rse_weight'] = norm_df['queue_efficiency'] + \
-                            norm_df['queue_occupancy'] + \
+                            norm_df['queue_utilization'] + \
                             norm_df['Difference'] + \
                             norm_df['Unlocked'] + \
                             norm_df['closeness'] + \
-                            norm_df['queue_service_quality']
+                            norm_df['queue_filling']
 
     df.reset_index(inplace=True)
 
@@ -44,7 +47,9 @@ def calculate_weights(datasetname):
                   index=False)
 
 
-calculate_weights('data16_13TeV:data16_13TeV.00297730.physics_Main.deriv.DAOD_TOPQ1.r9264_p3083_p4513_tid25513194_00')
+
+
+calculate_weights('data16_13TeV:data16_13TeV.00299584.physics_Main.deriv.DAOD_TOPQ1.r9264_p3083_p4513_tid25513236_00')
 
 
 

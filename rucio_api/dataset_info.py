@@ -45,11 +45,9 @@ def get_dataset_info(dataset: str):
     rule_details = pd.DataFrame(rule_details)
     cols_to_use = rule_details.columns.difference(rules.columns)
     rules_df = pd.merge(rules, rule_details[cols_to_use], left_on='rule_id', right_on='id')
-    rules_df['official'] = rules_df['expires_at'].isnull()
-    rules_df['has_rule'] = True
+    rules_df['replica_type'] = rules_df['expires_at'].apply(lambda x: 'primary' if x is None else 'secondary')
     cols_to_use = rules_df.columns.difference(replicas.columns)
     all_replicas = pd.merge(replicas, rules_df[cols_to_use], left_on='rse', right_on='rse_expression', how='outer')
-    all_replicas['timestamp'] =  dt.datetime.today().strftime("%m-%d-%Y")
     all_replicas['available_TB'] = round(all_replicas['available_bytes']/1073741824/1024, 4)
     all_replicas['TB'] = round(all_replicas['bytes']/1073741824/1024, 4)
 
@@ -63,8 +61,7 @@ def get_dataset_info(dataset: str):
 
     rse_info = rse_info[['rse', 'cloud', 'site', 'tier', 'freespace']]
     result = pd.merge(all_replicas, rse_info, left_on='rse', right_on='rse')
-    result['official'].fillna(False, inplace=True)
-    result['has_rule'].fillna(False, inplace=True)
+    result['replica_type'].fillna('tmp', inplace=True)
     result.drop(['rse_id','available_bytes','bytes','child_rule_id','comments',
                  'eol_at','error','grouping','id','ignore_account_limit',
                  'ignore_availability','locked','locks_ok_cnt',
@@ -74,5 +71,5 @@ def get_dataset_info(dataset: str):
                  'weight'], axis=1, inplace=True)
     return result
 
-res = get_dataset_info('data16_13TeV:data16_13TeV.00311481.physics_Main.deriv.DAOD_TOPQ1.r9264_p3083_p4513_tid25513587_00')
+res = get_dataset_info('data16_13TeV:data16_13TeV.00299584.physics_Main.deriv.DAOD_TOPQ1.r9264_p3083_p4513_tid25513236_00')
 print(res)

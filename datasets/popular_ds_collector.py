@@ -56,9 +56,7 @@ def collect_dataset(name):
     postgres_connection = PostgreSQL_engine.connect()
     query = text(open(SQL_DIR+'/PanDA/dataset_popularity_single.sql').read())
     #query.bindparams(ds_name=name)
-    print(query)
     df = pd.read_sql_query(query, panda_connection, parse_dates={'datetime':'%Y-%m-%d'}, params={'ds_name':name})
-    print(df)
     curr_date = df['datetime'].unique()[0]
     datasets_info = dataset_info.get_dataset_info(name)
     datasets_info['datasetname'] = datasets_info['scope'].astype(str).str.cat(datasets_info['name'], sep=':')
@@ -82,4 +80,4 @@ def collect_dataset(name):
                   method='multi',
                   index=False)
 
-collect_dataset('data15_13TeV:data15_13TeV.00284484.physics_Main.deriv.DAOD_TOPQ1.r9264_p3083_p4513_tid25511747_00')
+collect_dataset('data16_13TeV:data16_13TeV.00299584.physics_Main.deriv.DAOD_TOPQ1.r9264_p3083_p4513_tid25513236_00')

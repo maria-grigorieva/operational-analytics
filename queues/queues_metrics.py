@@ -10,6 +10,7 @@ from sqlalchemy.dialects.postgresql import insert
 import configparser
 from cric.cric_json_api import enhance_queues
 from rse_info.storage_info import get_agg_storage_data
+import numpy as np
 
 
 SQL_DIR = BASE_DIR+'/sql'
@@ -77,3 +78,57 @@ def calculate_metric(metric):
                   if_exists='append',
                   method='multi',
                   index=False)
+
+
+def exclude_outliers():
+    postgres_connection = PostgreSQL_engine.connect()
+    query = text('select * from queues_metrics')
+    df = pd.read_sql_query(query, postgres_connection, parse_dates={'datetime': '%Y-%m-%d'})
+    curr_date = df['datetime'].unique()[0]
+    cols = ['queue_time_avg','queue_utilization','queue_filling','queue_efficiency']  # one or more
+
+    Q1 = df[cols].quantile(0.1)
+    Q3 = df[cols].quantile(0.9)
+    IQR = Q3 - Q1
+
+    lower_bound = Q1 - 1.5 * IQR
+    upper_bound = Q3 + 1.5 * IQR
+
+    reduced_df = df[~((df[cols] < lower_bound) | (df[cols] > upper_bound)).any(axis=1)]
+    reduced_df = reduced_df[reduced_df['status']!='test']
+    reduced_df = reduced_df[(reduced_df['Difference']>0) | (pd.isnull(reduced_df['Difference']))]
+    reduced_df = reduced_df[reduced_df['queue_efficiency'] > 0.7]
+
+    excluded_df = pd.concat([df, reduced_df]).drop_duplicates(keep=False)
+
+    #The recommended way to check for existence
+    if inspect(PostgreSQL_engine).has_table('filtered_metrics'):
+
+        with postgres_connection.begin():
+            if postgres_connection.execute(text(f'SELECT distinct datetime from filtered_metrics '
+                                                f'where datetime = \'{curr_date}\'')).first() is not None:
+                # delete those rows that we are going to "upsert"
+                postgres_connection.execute(text(f'delete from filtered_metrics '
+                                                 f'where datetime = \'{curr_date}\''))
+
+    if inspect(PostgreSQL_engine).has_table('excluded_metrics'):
+            if postgres_connection.execute(text(f'SELECT distinct datetime from excluded_metrics '
+                                                f'where datetime = \'{curr_date}\'')).first() is not None:
+                # delete those rows that we are going to "upsert"
+                postgres_connection.execute(text(f'delete from excluded_metrics '
+                                                 f'where datetime = \'{curr_date}\''))
+
+    # insert changed rows
+    reduced_df.to_sql('filtered_metrics', postgres_connection,
+                  if_exists='append',
+                  method='multi',
+                  index=False)
+
+    excluded_df.to_sql('excluded_metrics', postgres_connection,
+                  if_exists='append',
+                  method='multi',
+                  index=False)
+
+
+#calculate_metric('merged_queues_metrics')
+exclude_outliers()

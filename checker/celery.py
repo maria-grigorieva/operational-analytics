@@ -38,10 +38,10 @@ app.conf.beat_schedule = {
         'task': 'merged_queues_metrics',
         'schedule': 86400
     },
-    'daily_distances': {
-        'task': 'get_distances',
-        'schedule': 86400
-    },
+    # 'daily_distances': {
+    #     'task': 'get_distances',
+    #     'schedule': 86400
+    # },
     # 'daily_efficiency': {
     #     'task': 'efficiency',
     #     'schedule': 86400

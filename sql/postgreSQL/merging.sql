@@ -8,7 +8,7 @@ with a as (
     and src in (
         select distinct site from datasets
         where datasetname = :ds_name
-        and official = True
+        and replica_type = 'primary'
         and datetime = (
                 select max(datetime)
                 from datasets
@@ -17,9 +17,9 @@ with a as (
     )
 select *, :ds_name as datasetname,
        current_date as timestamp
-from queues_metrics qm, a
+from filtered_metrics qm, a
 where qm.site = a.dest
 and qm.datetime in (
         select max(datetime)
-        from queues_metrics
+        from filtered_metrics
     )
