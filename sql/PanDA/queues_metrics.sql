@@ -12,31 +12,36 @@ WITH all_statuses as (
                (NVL(finished,0)) as completed,
                computingsite as queue
         FROM (
-        SELECT computingsite, jobstatus, count(pandaid) as n_jobs
-        FROM ATLAS_PANDA.JOBSACTIVE4
-        WHERE modificationtime >= sysdate - 1 and prodsourcelabel = 'user'
-        GROUP BY computingsite, jobstatus
-        UNION ALL
-        (SELECT computingsite, jobstatus, count(pandaid) as n_jobs
-            FROM ATLAS_PANDA.JOBSDEFINED4
-        WHERE modificationtime >= sysdate - 1 and prodsourcelabel = 'user'
-            GROUP BY computingsite, jobstatus
-        )
-        UNION ALL
-        (SELECT computingsite, jobstatus, count(pandaid) as n_jobs
-            FROM ATLAS_PANDA.JOBSARCHIVED4
-        WHERE modificationtime >= sysdate - 1 and prodsourcelabel = 'user'
-        and starttime >= sysdate - 1
-            GROUP BY computingsite, jobstatus
-        )
-            UNION ALL
             (
-            select computingsite, jobstatus, count(pandaid) as n_jobs
-           from ATLAS_PANDA.JOBSWAITING4
-           where modificationtime >= sysdate - 1
-             and prodsourcelabel = 'user'
+                  SELECT computingsite, jobstatus, count(pandaid) as n_jobs
+                  FROM ATLAS_PANDA.JOBSACTIVE4
+                  WHERE modificationtime >= sysdate - 1
+                    and prodsourcelabel = 'user'
+                  GROUP BY computingsite, jobstatus
+              )
+        UNION ALL
+            (
+                SELECT computingsite, jobstatus, count(pandaid) as n_jobs
+                FROM ATLAS_PANDA.JOBSDEFINED4
+                WHERE modificationtime >= sysdate - 1 and prodsourcelabel = 'user'
                 GROUP BY computingsite, jobstatus
-        )
+            )
+        UNION ALL
+            (
+                SELECT computingsite, jobstatus, count(pandaid) as n_jobs
+                FROM ATLAS_PANDA.JOBSARCHIVED4
+                WHERE modificationtime >= sysdate - 1 and prodsourcelabel = 'user'
+                and starttime >= sysdate - 1
+                GROUP BY computingsite, jobstatus
+            )
+        UNION ALL
+            (
+                SELECT computingsite, jobstatus, count(pandaid) as n_jobs
+                FROM ATLAS_PANDA.JOBSWAITING4
+                WHERE modificationtime >= sysdate - 1
+                AND prodsourcelabel = 'user'
+                GROUP BY computingsite, jobstatus
+            )
         )
         PIVOT
         (
@@ -49,10 +54,11 @@ WITH all_statuses as (
                'transferring' as transferring,
                'failed' as failed,
                'finished' as finished,
-               'pending' as pending
-        ))
-                ORDER BY computingsite),
-         totals as (
+               'pending' as pending)
+            )
+            ORDER BY computingsite
+        ),
+        totals as (
              SELECT SUM(running) as total_jobs_running,
                     SUM(completed) as total_jobs_completed,
                     SUM(currently_queued) as total_jobs_queued,
@@ -60,8 +66,9 @@ WITH all_statuses as (
                     SUM(pending) as total_jobs_pending,
                     SUM(running)+SUM(completed)+SUM(currently_queued)+SUM(transferring)+SUM(pending) as total
               FROM all_statuses
-         ),
-        shares as (SELECT a.queue,
+        ),
+        shares as (
+            SELECT a.queue,
                round(NVL(a.running/NULLIF(t.total_jobs_running,0),0),6) as running_share,
                round(NVL(a.currently_queued/NULLIF(t.total_jobs_queued,0),0),6) as queued_share,
                round(NVL(a.completed/NULLIF(t.total_jobs_completed,0),0), 6) as completed_share,
@@ -69,66 +76,54 @@ WITH all_statuses as (
                round(NVL(a.pending/NULLIF(t.total_jobs_pending,0),0), 6) as pending_share,
                round((a.running+a.currently_queued+a.completed+a.transferring+a.pending)/
                      (t.total),6) as total_share
-        FROM all_statuses a, totals t),
-     occupancy as (
-         select
-                queue,
-               round(nvl((running+1)/((activated+assigned+defined+starting+10)*greatest(1,least(2,(assigned/nullif(activated,0))))),0),2) as queue_occupancy
-         from all_statuses
-         ),
-     efficiency as (
-         select
-                queue,
-                NVL(ROUND(finished / NULLIF((finished + failed),0), 4), 0) as queue_efficiency
-         from all_statuses
-     ),
-    queue_times as (
-        select queue,
-               round(avg(lag)) as queue_time_avg,
-               max(lag) as queue_time_max,
-               min(lag) as queue_time_min,
-               round(median(lag)) as queue_time_median
-        from (
-            select queue,
-                   jeditaskid,
-                   jobstatus,
-                   modificationtime,
-                   LAG(CAST(modificationtime as date), 1)
-                   OVER (
-                        PARTITION BY jeditaskid,queue ORDER BY modificationtime ASC) as prev_state,
-                   ROUND((CAST(modificationtime as date) - (LAG(CAST(modificationtime as date), 1)
-                   OVER (
-                      PARTITION BY jeditaskid,queue ORDER BY modificationtime ASC))) *
-                       60 * 60 * 24, 3) as lag
-                    FROM ((SELECT ja4.computingsite as queue,
-                                ja4.jeditaskid,
-                                js.jobstatus,
-                                js.modificationtime,
-                                ja4.starttime
-                    FROM ATLAS_PANDA.JOBS_STATUSLOG js
-                         INNER JOIN ATLAS_PANDA.JOBSACTIVE4 ja4 ON (js.pandaid = ja4.pandaid)
-                    WHERE js.modificationtime >= sysdate - 1
-                            and js.prodsourcelabel = 'user'
-                            and js.jobstatus in ('activated', 'running'))
-                    UNION ALL
-                    (SELECT ja4.computingsite as queue,
-                           ja4.jeditaskid,
-                           js.jobstatus,
-                           js.modificationtime,
-                           ja4.starttime
-                    FROM ATLAS_PANDA.JOBS_STATUSLOG js
-                         INNER JOIN ATLAS_PANDA.JOBSARCHIVED4 ja4 ON (js.pandaid = ja4.pandaid)
-                    WHERE js.modificationtime >= sysdate - 1
-                          and js.prodsourcelabel = 'user'
-                         and js.jobstatus in ('activated', 'running')
-                        --and ja4.jobstatus = 'finished'
-                    ))
-              )
-        where jobstatus = 'running'
-        group by queue
-     ),
+            FROM all_statuses a, totals t),
+        queue_times as (
+            SELECT queue,
+                   round(avg(lag)) as queue_time_avg,
+                   max(lag) as queue_time_max,
+                   min(lag) as queue_time_min,
+                   round(median(lag)) as queue_time_median
+            FROM (
+                SELECT queue,
+                       jeditaskid,
+                       jobstatus,
+                       modificationtime,
+                       LAG(CAST(modificationtime as date), 1)
+                       OVER (
+                            PARTITION BY jeditaskid,queue ORDER BY modificationtime ASC) as prev_state,
+                       ROUND((CAST(modificationtime as date) - (LAG(CAST(modificationtime as date), 1)
+                       OVER (
+                          PARTITION BY jeditaskid,queue ORDER BY modificationtime ASC))) *
+                           60 * 60 * 24, 3) as lag
+                        FROM ((SELECT ja4.computingsite as queue,
+                                    ja4.jeditaskid,
+                                    js.jobstatus,
+                                    js.modificationtime,
+                                    ja4.starttime
+                        FROM ATLAS_PANDA.JOBS_STATUSLOG js
+                             INNER JOIN ATLAS_PANDA.JOBSACTIVE4 ja4 ON (js.pandaid = ja4.pandaid)
+                        WHERE js.modificationtime >= sysdate - 1
+                                AND js.prodsourcelabel = 'user'
+                                AND js.jobstatus in ('activated', 'running'))
+                        UNION ALL
+                        (
+                            SELECT ja4.computingsite as queue,
+                               ja4.jeditaskid,
+                               js.jobstatus,
+                               js.modificationtime,
+                               ja4.starttime
+                            FROM ATLAS_PANDA.JOBS_STATUSLOG js
+                             INNER JOIN ATLAS_PANDA.JOBSARCHIVED4 ja4 ON (js.pandaid = ja4.pandaid)
+                            WHERE js.modificationtime >= sysdate - 1
+                              AND js.prodsourcelabel = 'user'
+                              AND js.jobstatus IN ('activated', 'running')
+                        ))
+                  )
+            WHERE jobstatus = 'running'
+            GROUP BY queue
+        ),
     running_times as (
-            select queue,
+            SELECT queue,
             round(avg(lead)) as running_time_avg,
             round(median(lead)) as running_time_median
             FROM (
@@ -149,14 +144,14 @@ WITH all_statuses as (
                          FROM ATLAS_PANDA.JOBS_STATUSLOG js
                                   INNER JOIN ATLAS_PANDA.JOBSARCHIVED4 ja4 ON (js.pandaid = ja4.pandaid)
                          WHERE js.modificationtime >= sysdate - 1
-                           and js.prodsourcelabel = 'user'
-                           and js.jobstatus in ('running', 'finished')
-                            and ja4.jobstatus = 'finished'
+                           AND js.prodsourcelabel = 'user'
+                           AND js.jobstatus in ('running', 'finished')
+                           AND ja4.jobstatus = 'finished'
                      )
                     WHERE starttime >= sysdate -1
                  )
-            WHERE jobstatus = 'running' and lead is not NULL and lead > 0
-            group by queue
+            WHERE jobstatus = 'running' AND lead is not NULL AND lead > 0
+            GROUP BY queue
      ),
      total_times as (
         SELECT computingsite as queue,
@@ -186,9 +181,16 @@ WITH all_statuses as (
             als.completed,
             als.currently_queued,
             als.pending,
+            als.activated,
+            als.defined,
+            als.starting,
+            als.assigned,
             als.currently_queued+als.completed+als.running+als.transferring+als.pending as total_jobs,
             als.currently_queued+als.running as active_jobs,
-            round(NVL((als.currently_queued)/NULLIF(als.completed,0),0),4) as queue_utilization,
+            round(NVL((als.currently_queued)/NULLIF(als.completed,0),null),4) as queue_utilization,
+            round(nvl((als.running+1)/((als.activated+als.assigned+als.defined+als.starting+10)*greatest(1,least(2,(als.assigned/nullif(als.activated,0))))),0),2) as queue_occupancy,
+            NVL(ROUND(als.finished/NULLIF((als.finished + als.failed),0),4),null) as queue_efficiency,
+            round(NVL(als.currently_queued/NULLIF(als.running,0),0),null) as queue_filling,
             tt.total_time_avg,
             tt.total_time_median,
             rt.running_time_avg,
@@ -197,17 +199,12 @@ WITH all_statuses as (
             qt.queue_time_max,
             qt.queue_time_median,
             qt.queue_time_min,
-            round(NVL(als.currently_queued/NULLIF(als.running,0),0),4) as queue_filling,
-            oc.queue_occupancy,
-            ef.queue_efficiency,
             TRUNC(sysdate) as datetime
-FROM queue_times qt, occupancy oc, efficiency ef,
+FROM queue_times qt,
      shares sh,
      all_statuses als, total_times tt,
      running_times rt
-WHERE qt.queue = oc.queue
-  and qt.queue = ef.queue
-  and qt.queue = sh.queue
-  and qt.queue = als.queue
-  and qt.queue = tt.queue
-  and qt.queue = rt.queue
+WHERE qt.queue = sh.queue
+  AND qt.queue = als.queue
+  AND qt.queue = tt.queue
+  AND qt.queue = rt.queue
