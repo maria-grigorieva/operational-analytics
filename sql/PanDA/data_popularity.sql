@@ -21,11 +21,15 @@ with tasks as (
                                                                 ja.pandaid = f.pandaid)
     WHERE
           t.tasktype = 'anal'
-          AND t.modificationtime >= to_date('{from_date}', 'YYYY-MM-DD HH24:MI:SS')
-          AND t.modificationtime < to_date('{to_date}', 'YYYY-MM-DD HH24:MI:SS')
+          AND t.modificationtime >= to_date(:from_date, 'YYYY-MM-DD HH24:MI:SS')
+          AND t.modificationtime < to_date(:from_date, 'YYYY-MM-DD HH24:MI:SS') + :hours/24
           AND t.creationdate >= sysdate - 100
           AND t.status in ('finished','failed','done','broken','aborted')
           AND (d.datasetname LIKE 'mc%' or d.datasetname LIKE 'data%')
+                  AND ( d.datasetname NOT LIKE '%debug%'
+            OR d.datasetname NOT LIKE '%scout%'
+            OR d.datasetname NOT LIKE '%hlt%'
+            OR d.datasetname NOT LIKE '%calibration%')
           AND d.type = 'input'
           AND t.endtime is not NULL
           AND d.masterid is null
@@ -63,11 +67,15 @@ with tasks as (
                                                  ja.pandaid = f.pandaid)
     WHERE
           t.tasktype = 'anal'
-          AND t.modificationtime >= to_date('{from_date}', 'YYYY-MM-DD HH24:MI:SS')
-          AND t.modificationtime < to_date('{to_date}', 'YYYY-MM-DD HH24:MI:SS')
+          AND t.modificationtime >= to_date(:from_date, 'YYYY-MM-DD HH24:MI:SS')
+          AND t.modificationtime < to_date(:from_date, 'YYYY-MM-DD HH24:MI:SS') + :hours/24
           AND t.creationdate >= sysdate - 100
           AND t.status in ('finished','failed','done','broken','aborted')
           AND (d.datasetname LIKE 'mc%' or d.datasetname LIKE 'data%')
+                  AND ( d.datasetname NOT LIKE '%debug%'
+            OR d.datasetname NOT LIKE '%scout%'
+            OR d.datasetname NOT LIKE '%hlt%'
+            OR d.datasetname NOT LIKE '%calibration%')
           AND d.type = 'input'
           AND t.endtime is not NULL
           AND d.masterid is null

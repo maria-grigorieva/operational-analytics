@@ -185,6 +185,6 @@ WITH all_statuses as (
             qt.queue_time_max,
             qt.queue_time_median,
             qt.queue_time_min,
-            TRUNC(sysdate) as datetime
+            TRUNC(sysdate,'HH24') as datetime
 FROM queue_times qt,shares sh,all_statuses als,total_times tt,running_times rt
 WHERE qt.queue = sh.queue AND qt.queue = als.queue AND qt.queue = tt.queue AND qt.queue = rt.queue

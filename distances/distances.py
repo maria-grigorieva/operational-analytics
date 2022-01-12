@@ -26,7 +26,7 @@ def get_distances():
                          'dest': dst,
                          'closeness': closeness})
     df = pd.DataFrame(dist)
-    df['datetime'] = dt.datetime.today().strftime("%m-%d-%Y")
+    df['datetime'] = dt.datetime.today().strftime("%d-%m-%Y")
 
     sites_info = cric_json_api.enhance_sites()
 

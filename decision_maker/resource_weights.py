@@ -23,28 +23,33 @@ def calculate_weights(datasetname):
     df.drop('Storage Timestamp', axis=1, inplace=True)
     df.set_index(['queue', 'rse', 'site', 'cloud', 'tier_level', 'datetime', 'src','dest',
                   'queue_type','state','status','resource_type','region','datasetname', 'timestamp'],inplace=True)
-    df['queue_utilization'] = 1/df['queue_utilization']
-    df['closeness'] = 1 / df['closeness']
-    df['queue_filling'] = 1 / df['queue_filling']
+    df['queue_utilization_'] = round(1/df['queue_utilization'],4)
+    df['closeness_'] = round(1 / df['closeness'],4)
+    df['queue_filling_'] = round(1 / df['queue_filling'],4)
     norm_df = df.apply(lambda x: round((x - np.mean(x)) / (np.max(x) - np.min(x)), 3))
     norm_df[np.isnan(norm_df)] = 0
     norm_df.reset_index(inplace=True)
 
     norm_df['rse_weight'] = norm_df['queue_efficiency'] + \
-                            norm_df['queue_utilization'] + \
+                            norm_df['queue_utilization_'] + \
                             norm_df['Difference'] + \
                             norm_df['Unlocked'] + \
-                            norm_df['closeness'] + \
-                            norm_df['queue_filling']
+                            norm_df['closeness_'] + \
+                            norm_df['queue_filling_']
 
     df.reset_index(inplace=True)
 
     df['rse_weight'] = round(norm_df['rse_weight'], 3)
+    df['datasetname'] = datasetname
 
-    df.to_sql('resource_weights', postgres_connection,
-                  if_exists='append',
-                  method='multi',
-                  index=False)
+    df.drop(['queue_utilization_','closeness_','queue_filling_'],axis=1, inplace=True)
+
+
+    df.to_sql('resource_weights',
+              postgres_connection,
+              if_exists='append',
+              method='multi',
+              index=False)
 
 
 

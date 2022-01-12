@@ -9,50 +9,44 @@ from sqlalchemy import create_engine, text, inspect
 from sqlalchemy.dialects.postgresql import insert
 import configparser
 from rucio_api import dataset_info
-
+from database_helpers.helpers import insert_to_db, set_start_end_dates, if_data_exists
+from datetime import datetime, timedelta
 
 SQL_DIR = BASE_DIR+'/sql'
-
-cx_Oracle.init_oracle_client(lib_dir=r"/usr/lib/oracle/19.13/client64/lib")
 
 config = configparser.ConfigParser()
 config.read(BASE_DIR+'/config.ini')
 
-PanDA_engine = create_engine(config['PanDA DB']['sqlalchemy_engine_str'], echo=True, future=True)
-PostgreSQL_engine = create_engine(config['PostgreSQL']['sqlalchemy_engine_str'], echo=True)
+PostgreSQL_engine = create_engine(config['PostgreSQL']['sqlalchemy_engine_str'], echo=True, pool_size=10, max_overflow=20)
 
-def collect():
-    panda_connection = PanDA_engine.connect()
-    postgres_connection = PostgreSQL_engine.connect()
-    query = text(open(SQL_DIR+'/PanDA/dataset_popularity.sql').read())
-    df = pd.read_sql_query(query, panda_connection, parse_dates={'datetime':'%Y-%m-%d'})
-    curr_date = df['datetime'].unique()[0]
-    datasets = df['datasetname'].values
-    datasets_info = []
-    for d in datasets:
-        datasets_info.append(dataset_info.get_dataset_info(d))
-    datasets_info = pd.concat(datasets_info)
-    datasets_info['datasetname'] = datasets_info['scope'].astype(str).str.cat(datasets_info['name'], sep=':')
-    result = pd.merge(datasets_info, df, left_on='datasetname', right_on='datasetname')
 
-    # The recommended way to check for existence
-    if inspect(PostgreSQL_engine).has_table('datasets'):
+def dataset_replicas_to_db(predefined_date = False):
+    from_date, to_date = set_start_end_dates(predefined_date)
+    if not if_data_exists('dataset_replicas', from_date):
+        postgres_connection = PostgreSQL_engine.connect()
+        from_date, to_date = set_start_end_dates(predefined_date)
+        query = text('select distinct datasetname, datetime from datasets_info where datetime >= :from_date and datetime < :to_date')
+        df = pd.read_sql_query(query, postgres_connection, parse_dates={'datetime': '%Y-%m-%d'},
+                               params={'from_date': from_date,
+                                       'to_date': to_date})
+        print(f'Number of rows: {df.shape[0]}')
+        datasets = df['datasetname'].unique()
+        print(f'Number of datasets = {len(datasets)}')
+        curr_date = df['datetime'].unique()[0]
+        datasets_replicas = [dataset_info.get_dataset_info(d) for d in datasets]
+        print('Concatenation...')
+        datasets_replicas = pd.concat(datasets_replicas)
+        #datasets_replicas['datasetname'] = datasets_replicas['scope'].astype(str).str.cat(datasets_replicas['name'], sep=':')
+        datasets_replicas['datetime'] = curr_date
+        print('Saving to the database...')
+        insert_to_db(datasets_replicas, 'dataset_replicas', curr_date)
+    else:
+        pass
 
-        with postgres_connection.begin():
-            if postgres_connection.execute(text(f'SELECT distinct datetime from datasets '
-                                                f'where datetime = \'{curr_date}\'')).first() is not None:
-                # delete those rows that we are going to "upsert"
-                postgres_connection.execute(text(f'delete from datasets '
-                                                 f'where datetime = \'{curr_date}\''))
-
-    # insert changed rows
-    result.to_sql('datasets', postgres_connection,
-                  if_exists='append',
-                  method='multi',
-                  index=False)
 
 def collect_dataset(name):
-    panda_connection = PanDA_engine.connect()
+    panda = create_engine(config['PanDA DB']['sqlalchemy_engine_str_alt'], echo=True, future=True)
+    panda_connection = panda.connect()
     postgres_connection = PostgreSQL_engine.connect()
     query = text(open(SQL_DIR+'/PanDA/dataset_popularity_single.sql').read())
     #query.bindparams(ds_name=name)
@@ -80,4 +74,6 @@ def collect_dataset(name):
                   method='multi',
                   index=False)
 
-collect_dataset('data16_13TeV:data16_13TeV.00299584.physics_Main.deriv.DAOD_TOPQ1.r9264_p3083_p4513_tid25513236_00')
+#collect_dataset('data16_13TeV:data16_13TeV.00299584.physics_Main.deriv.DAOD_TOPQ1.r9264_p3083_p4513_tid25513236_00')
+#collect()
+#dataset_replicas_to_db('2021-12-13')

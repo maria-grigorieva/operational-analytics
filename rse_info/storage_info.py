@@ -1,6 +1,8 @@
+import os, sys
 import requests
 import pandas as pd
 import datetime as dt
+from database_helpers.helpers import insert_to_db, if_data_exists, set_start_end_dates
 
 # All numbers in TB. Click on table headers to sort.
 # Used (other) is other RSEs sharing the same space token.
@@ -15,6 +17,7 @@ import datetime as dt
 # Primary diff - amount of primaries (UsedRucio-Unlocked) over a threshold: (Total(storage) - GroupQuota)*0.600000)
 # Avg tombstone - days between now and timestamp of average tombstone, giving an indication of the turnover of secondary data
 
+
 def get_agg_storage_data():
     agg_rucio_url = 'http://adc-ddm-mon.cern.ch/ddmusr01/all_storage_data.json'
     disk_sizes = requests.get(agg_rucio_url).json()
@@ -22,7 +25,16 @@ def get_agg_storage_data():
     df = df.T
     df.reset_index(inplace=True)
     df.rename(columns={'index':'rse'}, inplace=True)
-    #df = df[df['rse'].str.contains('DATADISK')]
     cols = df.columns.drop(['rse','Storage Timestamp'])
     df[cols] = df[cols].apply(pd.to_numeric, errors='coerce')
     return df
+
+
+def save_storage_attrs_to_db(predefined_date = False):
+    from_date, to_date = set_start_end_dates(predefined_date)
+    if not if_data_exists('storage_info', from_date):
+        result = get_agg_storage_data()
+        result['datetime'] = pd.to_datetime('today').normalize()
+        insert_to_db(result, 'storage_info', pd.to_datetime('today').normalize())
+    else:
+        pass

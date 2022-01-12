@@ -15,11 +15,12 @@ with a as (
             )
         )
     )
-select *, :ds_name as datasetname,
+select distinct *, :ds_name as datasetname,
        current_date as timestamp
 from filtered_metrics qm, a
 where qm.site = a.dest
-and qm.datetime in (
-        select max(datetime)
-        from filtered_metrics
-    )
+and qm.datetime = '2021-11-08'
+-- and qm.datetime in (
+--         select max(datetime)
+--         from filtered_metrics
+--     )
