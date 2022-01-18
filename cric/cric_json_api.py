@@ -4,7 +4,7 @@ import pandas as pd
 import configparser
 import os
 from sqlalchemy import create_engine, text, inspect
-from database_helpers.helpers import insert_to_db, if_data_exists
+from database_helpers.helpers import insert_to_db, if_data_exists, day_rounder
 from datetime import datetime
 
 ROOT_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -57,11 +57,13 @@ def enhance_queues(all=False):
     return enhanced_queues.explode('rse')
 
 
-def cric_resources_to_db():
-    if not if_data_exists('cric_resources', datetime.strftime(datetime.now(),'%Y-%m-%d')):
+def cric_resources_to_db(predefined_date = False):
+
+    now = day_rounder(datetime.now()) if not predefined_date else predefined_date
+    if not if_data_exists('cric_resources', now):
         result = enhance_queues()
-        result['datetime'] = datetime.strftime(datetime.now(),'%Y-%m-%d')
-        insert_to_db(result, 'cric_resources', datetime.strftime(datetime.now(),'%Y-%m-%d'))
+        result['datetime'] = now
+        insert_to_db(result, 'cric_resources', now, True)
     else:
         pass
     # try:
@@ -136,3 +138,5 @@ def get_replicas_sites(list_of_ddm_endpoints):
                 break
     return list(set(list_of_sites)), list(set(list_of_clouds)), nested
 
+
+#cric_resources_to_db('2022-01-17')

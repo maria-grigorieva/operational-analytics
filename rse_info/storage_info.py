@@ -1,8 +1,9 @@
 import os, sys
 import requests
 import pandas as pd
-import datetime as dt
-from database_helpers.helpers import insert_to_db, if_data_exists, set_start_end_dates
+# import datetime as dt
+from datetime import datetime, timedelta
+from database_helpers.helpers import insert_to_db, if_data_exists, day_rounder, set_time_period
 
 # All numbers in TB. Click on table headers to sort.
 # Used (other) is other RSEs sharing the same space token.
@@ -31,10 +32,14 @@ def get_agg_storage_data():
 
 
 def save_storage_attrs_to_db(predefined_date = False):
-    from_date, to_date = set_start_end_dates(predefined_date)
-    if not if_data_exists('storage_info', from_date):
+
+    now = day_rounder(datetime.now()) if not predefined_date else predefined_date
+    if not if_data_exists('storage_info', now):
         result = get_agg_storage_data()
-        result['datetime'] = pd.to_datetime('today').normalize()
-        insert_to_db(result, 'storage_info', pd.to_datetime('today').normalize())
+        result['datetime'] = now
+        insert_to_db(result, 'storage_info', now, True)
     else:
         pass
+
+#
+#save_storage_attrs_to_db('2022-01-17')

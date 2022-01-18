@@ -12,7 +12,7 @@ from cric.cric_json_api import enhance_queues
 from rse_info.storage_info import get_agg_storage_data
 from rucio_api.dataset_info import update_from_rucio
 import numpy as np
-from database_helpers.helpers import insert_to_db, if_data_exists, set_start_end_dates, set_time_period
+from database_helpers.helpers import insert_to_db, if_data_exists, set_start_end_dates, set_time_period, day_rounder
 import time
 from datetime import datetime, timedelta
 
@@ -78,32 +78,31 @@ PanDA_engine = create_engine(config['PanDA DB']['sqlalchemy_engine_str'], echo=T
 PostgreSQL_engine = create_engine(config['PostgreSQL']['sqlalchemy_engine_str'], echo=True)
 
 
+# def queues_to_db(metric, predefined_date = False):
+#
+#     from_date, to_date = set_start_end_dates(predefined_date)
+#
+#     if not if_data_exists(metrics.get(metric)["table_name"], from_date):
+#         panda_connection = PanDA_engine.connect()
+#         query = text(open(metrics.get(metric)['sql']).read())
+#         df = pd.read_sql_query(query, panda_connection, parse_dates={'datetime': '%Y-%m-%d'},
+#                                params={'from_date': from_date,
+#                                        'to_date': to_date})
+#         insert_to_db(df, metrics.get(metric)["table_name"], from_date)
+#     else:
+#         pass
+
 def queues_to_db(metric, predefined_date = False):
-
-    from_date, to_date = set_start_end_dates(predefined_date)
-
-    if not if_data_exists(metrics.get(metric)["table_name"], from_date):
-        panda_connection = PanDA_engine.connect()
-        query = text(open(metrics.get(metric)['sql']).read())
-        df = pd.read_sql_query(query, panda_connection, parse_dates={'datetime': '%Y-%m-%d'},
-                               params={'from_date': from_date,
-                                       'to_date': to_date})
-        insert_to_db(df, metrics.get(metric)["table_name"], from_date)
-    else:
-        pass
-
-def queues_to_db_tmp(metric, predefined_date = False):
 
     from_date, to_date = set_time_period(predefined_date, n_hours=24)
 
     if not if_data_exists(metrics.get(metric)["table_name"], from_date):
         panda_connection = PanDA_engine.connect()
         query = text(open(metrics.get(metric)['sql']).read())
-        df = pd.read_sql_query(query, panda_connection, parse_dates={'datetime': '%Y-%m-%d %H:%M:%S'},
-                               params={'from_date': from_date,
-                                       'to_date': to_date})
-        print(df)
-        #insert_to_db(df, metrics.get(metric)["table_name"], from_date)
+        from_date = day_rounder(datetime.strptime(from_date, "%Y-%m-%d %H:%M:%S"))
+        df = pd.read_sql_query(query, panda_connection, parse_dates={'datetime': '%Y-%m-%d'},
+                               params={'from_date': from_date})
+        insert_to_db(df, metrics.get(metric)["table_name"], from_date)
     else:
         pass
 
@@ -254,5 +253,5 @@ def queues_statuslog_hourly(from_date):
 
 
 # popularity_by_tasks('2021-12-01 00:00:00',1)
-#queues_to_db_tmp('queues_statuslog_actual', '2022-01-10 09:00:00')
+#queues_to_db('queues_statuslog_actual', '2022-01-17 00:10:00')
 #queues_hourly_to_db('queues_statuslog_hourly', predefined_date = False, n_hours=12)

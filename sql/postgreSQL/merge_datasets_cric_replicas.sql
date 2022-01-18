@@ -50,8 +50,8 @@ select x.*,
      dr.data_type_desc
      from dataset_replicas dr
      LEFT OUTER JOIN cric_resources cr ON (dr.rse = cr.rse)
-WHERE cr.datetime >= :from_date and cr.datetime < :to_date
-    AND dr.datetime >= :from_date and dr.datetime < :to_date) x
+WHERE cr.datetime = date_trunc('day', TIMESTAMP :from_date)
+    AND dr.datetime = date_trunc('day', TIMESTAMP :from_date)) x
 LEFT OUTER JOIN datasets_info di ON (di.datasetname = x.datasetname
     and di.queue = x.queue
-    and di.datetime >= :from_date and di.datetime < :to_date)
+    and di.datetime = date_trunc('day', TIMESTAMP :from_date))

@@ -44,23 +44,23 @@ app.conf.beat_schedule = {
     },
     'queues_statuslog_actual': {
         'task': 'queues_statuslog_actual',
-        'schedule': crontab(minute=35, hour=23)
+        'schedule': crontab(minute=10, hour=00)
     },
     'datasets_info_daily': {
         'task': 'save_popularity_to_db',
-        'schedule': crontab(minute=00, hour=22)
+        'schedule': crontab(minute=30, hour=00)
     },
     'dataset_replicas_to_db': {
         'task': 'dataset_replicas_to_db',
-        'schedule': crontab(minute=00, hour=23)
+        'schedule': crontab(minute=00, hour=1)
     },
     'merge': {
         'task': 'merge',
-        'schedule': crontab(minute=55, hour=23)
+        'schedule': crontab(minute=00, hour=3)
     },
     'merge_datasets': {
         'task': 'merge_datasets',
-        'schedule': crontab(minute=50, hour=23)
+        'schedule': crontab(minute=15, hour=3)
     },
     # 'run-me-every-10-sec': {
     #     'task': 'checker.tasks.check',

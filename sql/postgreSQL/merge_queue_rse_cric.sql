@@ -81,11 +81,8 @@ select qs.queue,
        cr.rse
 from queues_snapshots qs
 INNER JOIN cric_resources cr ON (cr.queue = qs.queue)
-where qs.datetime >= :from_date
-and qs.datetime < :to_date
-and cr.datetime >= :from_date
-and cr.datetime < :to_date
+where qs.datetime = date_trunc('day', TIMESTAMP :from_date)
+and cr.datetime = date_trunc('day', TIMESTAMP :from_date)
 ) x
 INNER JOIN  storage_info si ON (si.rse = x.rse)
-    WHERE si.datetime >= :from_date
-    AND si.datetime < :to_date
+    WHERE si.datetime = date_trunc('day', TIMESTAMP :from_date)

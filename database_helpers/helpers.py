@@ -17,6 +17,8 @@ def insert_to_db(df, table_name, curr_date, check_existance=False):
     PostgreSQL_engine = create_engine(config['PostgreSQL']['sqlalchemy_engine_str'], echo=True)
     conn = PostgreSQL_engine.connect()
 
+    curr_date = datetime.strptime(curr_date, "%Y-%m-%d")
+
     if check_existance:
         # The recommended way to check for existence
         if inspect(PostgreSQL_engine).has_table(table_name):
@@ -48,7 +50,7 @@ def if_data_exists(table_name, date):
     if inspect(PostgreSQL_engine).has_table(table_name):
         with conn.begin():
             if conn.execute(text(f'SELECT distinct datetime from {table_name} '
-                                 f'where datetime = \'{date}\'')).first() is not None:
+                                 f'where datetime = DATE_TRUNC(\'day\', TIMESTAMP \'{date}\')')).first() is not None:
                 return True
             else:
                 return False
@@ -74,3 +76,13 @@ def set_time_period(predefined_date, n_hours = 1):
     else:
         return datetime.strftime(datetime.strptime(predefined_date, "%Y-%m-%d %H:%M:%S") - timedelta(hours=n_hours),"%Y-%m-%d %H:%M:%S"), \
                datetime.strftime(datetime.strptime(predefined_date, "%Y-%m-%d %H:%M:%S"), "%Y-%m-%d %H:%M:%S")
+
+
+
+def hour_rounder(t):
+    # Rounds to nearest hour by adding a timedelta hour if minute >= 30
+    return datetime.strftime(t.replace(second=0, microsecond=0, minute=0, hour=t.hour)
+               +timedelta(hours=t.minute//30),'%Y-%m-%d %H:%M:%S')
+
+def day_rounder(t):
+    return datetime.strftime(t, '%Y-%m-%d')
