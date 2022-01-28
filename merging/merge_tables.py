@@ -47,9 +47,30 @@ def dataset_cric_replicas(predefined_date = False):
         merged_df = pd.read_sql_query(text(open(merged).read()), postgres_connection,
                                       parse_dates={'datetime': '%Y-%m-%d'},
                                       params={'from_date': from_date})
+        merged_df[['corecount','n_tasks','n_jobs','avg_queue_time','avg_running_time']].fillna(0, inplace=True)
         insert_to_db(merged_df, 'datasets_snapshot', from_date)
 
     else:
         pass
 
-dataset_cric_replicas('2022-01-17 03:00:00')
+
+def dataset_cric_replicas_v1(predefined_date = False):
+
+    # from_date, to_date = set_start_end_dates(predefined_date)
+    from_date, to_date = set_time_period(predefined_date, n_hours=24)
+
+    if not if_data_exists('datasets_snapshot_v1', from_date):
+
+        postgres_connection = PostgreSQL_engine.connect()
+        merged = SQL_DIR + '/postgreSQL/merge_datasets_cric_replicas_v1.sql'
+        from_date = day_rounder(datetime.strptime(from_date, "%Y-%m-%d %H:%M:%S"))
+        merged_df = pd.read_sql_query(text(open(merged).read()), postgres_connection,
+                                      parse_dates={'datetime': '%Y-%m-%d'},
+                                      params={'from_date': from_date})
+        merged_df[['corecount']].fillna(0, inplace=True)
+        insert_to_db(merged_df, 'datasets_snapshot_v1', from_date)
+
+    else:
+        pass
+
+#dataset_cric_replicas_v1('2022-01-24 00:00:00')

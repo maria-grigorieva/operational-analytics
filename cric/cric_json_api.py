@@ -25,7 +25,7 @@ url_site_all = urllib.parse.urljoin(cric_base_url, config['CRIC']['url_site_all'
 PostgreSQL_engine = create_engine(config['PostgreSQL']['sqlalchemy_engine_str'], echo=True)
 
 
-def enhance_queues(all=False):
+def enhance_queues(all=False, with_rse=False):
 
     cric_queues = requests.get(url_queue_all if all else url_queue,
                                cert=(os.path.join(BASE_DIR, config['CRIC']['ssl_cert']),
@@ -35,9 +35,7 @@ def enhance_queues(all=False):
 
     for queue, attrs in cric_queues.items():
         #datadisks = [[d for d in v if 'DATADISK' in d or 'VP_DISK' in d] for k, v in attrs['astorages'].items() if 'write_lan' in k]
-        datadisks = [[d for d in v if 'DATADISK' in d or 'VP_DISK' in d] for k, v in attrs['astorages'].items()]
-        flat_datadisks = list(set([item for sublist in datadisks for item in sublist]))
-        enhanced_queues.append({
+        queues_dict = {
             'queue': queue,
             'site': attrs['rc_site'],
             'cloud': attrs['cloud'],
@@ -49,12 +47,21 @@ def enhance_queues(all=False):
             'nodes': attrs['nodes'],
             'corepower': attrs['corepower'],
             'corecount': attrs['corecount'],
-            'region': attrs['region'],
-            'rse': flat_datadisks or 'no rse'
-        })
+            'region': attrs['region']
+        }
+
+        if with_rse:
+            datadisks = [[d for d in v if 'DATADISK' in d or 'VP_DISK' in d] for k, v in attrs['astorages'].items()]
+            flat_datadisks = list(set([item for sublist in datadisks for item in sublist]))
+            queues_dict['rse'] = flat_datadisks or 'no rse'
+
+        enhanced_queues.append(queues_dict)
 
     enhanced_queues = pd.DataFrame(enhanced_queues)
-    return enhanced_queues.explode('rse')
+    if with_rse:
+        return enhanced_queues.explode('rse')
+    else:
+        return enhanced_queues
 
 
 def cric_resources_to_db(predefined_date = False):

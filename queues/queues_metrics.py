@@ -107,17 +107,26 @@ def queues_to_db(metric, predefined_date = False):
         pass
 
 
-def queues_hourly_to_db(metric, predefined_date = False, n_hours=3):
+def queues_hourly_to_db(metric, predefined_date = False, n_hours=1):
 
-    from_time, to_time = set_time_period(predefined_date, n_hours=n_hours)
+    now = datetime.strftime(datetime.now(),"%Y-%m-%d %H:%M:%S") if not predefined_date else predefined_date
+    print(now)
 
-    if not if_data_exists(metrics.get(metric)["table_name"], from_time):
+    if not if_data_exists(metrics.get(metric)["table_name"], now):
         panda_connection = PanDA_engine.connect()
         query = text(open(metrics.get(metric)['sql']).read())
-        df = pd.read_sql_query(query, panda_connection, parse_dates={'datetime': '%Y-%m-%d'},
-                               params={'from_time': from_time,
-                                       'to_time': to_time})
-        insert_to_db(df, f'{metrics.get(metric)["table_name"]}{n_hours}h', from_time)
+        df = pd.read_sql_query(query, panda_connection,
+                               parse_dates={'datetime': '%Y-%m-%d %H:%M:%S'},
+                               params={'from_time': now,
+                                       'n_hours': n_hours})
+        from_cric = cric.cric_json_api.enhance_queues()
+        result = pd.merge(df, from_cric, left_on='queue', right_on='queue')
+        result['transferring_diff'] = result['transferring_limit'] - result['transferring']
+        insert_to_db(result,
+                     f'{metrics.get(metric)["table_name"]}_{n_hours}_hour',
+                     now,
+                     False,
+                     '%Y-%m-%d %H:%M:%S')
     else:
         pass
 
@@ -128,7 +137,7 @@ def calculate_metric(metric):
     query = text(open(metrics.get(metric)['sql']).read())
     df = pd.read_sql_query(query, panda_connection, parse_dates={'datetime':'%Y-%m-%d'})
     curr_date = df['datetime'].unique()[0]
-    from_cric = cric.cric_json_api.enhance_queues()
+    from_cric = cric.cric_json_api.enhance_queues(all=False, with_rse=True)
     result = pd.merge(df, from_cric, left_on='queue', right_on='queue')
     result['transferring_diff'] = result['transferring_limit'] - result['transferring']
 
@@ -181,7 +190,7 @@ def popularity_by_tasks(from_date, hours=4):
 
     query = text(open(SQL_DIR+'/PanDA/data_popularity.sql').read())
     df = pd.read_sql_query(query, panda_connection, parse_dates={'datetime': '%Y-%m-%d %H:%M:%S'}, params={'from_date':from_date,'hours':hours})
-    from_cric = cric.cric_json_api.enhance_queues(all=True)
+    from_cric = cric.cric_json_api.enhance_queues(all=True, with_rse=True)
     result = pd.merge(df, from_cric, left_on='queue', right_on='queue')
     # result.to_sql('datasets_popularity', postgres_connection,
     #                   if_exists='append',
@@ -254,4 +263,30 @@ def queues_statuslog_hourly(from_date):
 
 # popularity_by_tasks('2021-12-01 00:00:00',1)
 #queues_to_db('queues_statuslog_actual', '2022-01-17 00:10:00')
-#queues_hourly_to_db('queues_statuslog_hourly', predefined_date = False, n_hours=12)
+# queues_hourly_to_db('queues_statuslog_hourly', '2022-01-24 21:23:00', n_hours=1)
+# queues_hourly_to_db('queues_statuslog_hourly', '2022-01-24 22:23:00', n_hours=1)
+# queues_hourly_to_db('queues_statuslog_hourly', '2022-01-24 23:23:00', n_hours=1)
+# queues_hourly_to_db('queues_statuslog_hourly', '2022-01-25 00:23:00', n_hours=1)
+# queues_hourly_to_db('queues_statuslog_hourly', '2022-01-25 01:23:00', n_hours=1)
+# queues_hourly_to_db('queues_statuslog_hourly', '2022-01-25 02:23:00', n_hours=1)
+# queues_hourly_to_db('queues_statuslog_hourly', '2022-01-25 03:23:00', n_hours=1)
+# queues_hourly_to_db('queues_statuslog_hourly', '2022-01-25 04:23:00', n_hours=1)
+# queues_hourly_to_db('queues_statuslog_hourly', '2022-01-25 05:23:00', n_hours=1)
+# queues_hourly_to_db('queues_statuslog_hourly', '2022-01-25 06:23:00', n_hours=1)
+# queues_hourly_to_db('queues_statuslog_hourly', '2022-01-25 07:23:00', n_hours=1)
+# queues_hourly_to_db('queues_statuslog_hourly', '2022-01-25 08:23:00', n_hours=1)
+# queues_hourly_to_db('queues_statuslog_hourly', '2022-01-25 09:23:00', n_hours=1)
+# queues_hourly_to_db('queues_statuslog_hourly', '2022-01-25 10:23:00', n_hours=1)
+# queues_hourly_to_db('queues_statuslog_hourly', '2022-01-25 11:23:00', n_hours=1)
+#
+#
+# queues_hourly_to_db('queues_statuslog_hourly', '2022-01-24 22:22:57', n_hours=3)
+# queues_hourly_to_db('queues_statuslog_hourly', '2022-01-25 01:22:57', n_hours=3)
+# queues_hourly_to_db('queues_statuslog_hourly', '2022-01-25 04:22:57', n_hours=3)
+# queues_hourly_to_db('queues_statuslog_hourly', '2022-01-25 07:22:57', n_hours=3)
+# queues_hourly_to_db('queues_statuslog_hourly', '2022-01-25 10:22:57', n_hours=3)
+#
+# queues_hourly_to_db('queues_statuslog_hourly', '2022-01-25 01:22:57', n_hours=6)
+# queues_hourly_to_db('queues_statuslog_hourly', '2022-01-25 07:22:57', n_hours=6)
+#
+# queues_hourly_to_db('queues_statuslog_hourly', '2022-01-25 10:22:57', n_hours=12)

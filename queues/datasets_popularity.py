@@ -35,3 +35,21 @@ def save_popularity_to_db(predefined_date = False):
         pass
 #
 # save_popularity_to_db('2022-01-17 00:30:00')
+
+def save_dataset_task_user_to_db(predefined_date = False):
+
+    from_date, to_date = set_time_period(predefined_date, n_hours=24)
+
+    if not if_data_exists('datasets_tasks_users', from_date):
+        panda_connection = PanDA_engine.connect()
+        query = text(open(SQL_DIR+'/PanDA/datasets_tasks_users.sql').read())
+        from_date = day_rounder(datetime.strptime(from_date, "%Y-%m-%d %H:%M:%S"))
+        df = pd.read_sql_query(query, panda_connection, parse_dates={'datetime': '%Y-%m-%d'},
+                               params={'from_date': from_date})
+        # curr_date = df['datetime'].unique()[0]
+        insert_to_db(df, 'datasets_tasks_users', from_date)
+    else:
+        pass
+
+
+# save_dataset_task_user_to_db('2022-01-24 00:00:00')

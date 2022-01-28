@@ -50,6 +50,10 @@ app.conf.beat_schedule = {
         'task': 'save_popularity_to_db',
         'schedule': crontab(minute=30, hour=00)
     },
+    'datasets_info_daily_v1': {
+      'task': 'save_dataset_task_user_to_db',
+      'schedule': crontab(minute=40, hour=00)
+    },
     'dataset_replicas_to_db': {
         'task': 'dataset_replicas_to_db',
         'schedule': crontab(minute=00, hour=1)
@@ -62,10 +66,42 @@ app.conf.beat_schedule = {
         'task': 'merge_datasets',
         'schedule': crontab(minute=15, hour=3)
     },
+    'merge_datasets_v1': {
+        'task': 'merge_datasets_v1',
+        'schedule': crontab(minute=20, hour=3)
+    },
     # 'run-me-every-10-sec': {
     #     'task': 'checker.tasks.check',
     #     'schedule': 10.0
     # }
+    'queues_1hour': {
+        'task': 'queues_1hour',
+        'schedule': 3600
+    },
+    'queues_3hours': {
+        'task': 'queues_3hours',
+        'schedule': 10800
+    },
+    'queues_6hours': {
+        'task': 'queues_6hours',
+        'schedule': 21600
+    },
+    'queues_12hours': {
+        'task': 'queues_12hours',
+        'schedule': 43200
+    },
+    'queues_1day': {
+        'task': 'queues_1day',
+        'schedule': 86400
+    },
+    'queues_3days': {
+        'task': 'queues_3days',
+        'schedule': 259200
+    },
+    'queues_1week': {
+        'task': 'queues_1week',
+        'schedule': 604800
+    }
 }
 app.conf.timezone = 'Europe/Berlin'
 

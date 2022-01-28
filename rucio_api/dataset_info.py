@@ -71,8 +71,8 @@ def get_dataset_info(dataset: str):
                     cols_to_use = rules_df.columns.difference(replicas.columns)
                     all_replicas = pd.merge(replicas, rules_df[cols_to_use], left_on='rse', right_on='rse_expression',
                                             how='outer')
-                    all_replicas['available_terabytes'] = round(all_replicas['available_bytes'] / 1073741824 / 1024, 4)
-                    all_replicas['terabytes'] = round(all_replicas['bytes'] / 1073741824 / 1024, 4)
+                    all_replicas['available_terabytes'] = round(all_replicas['available_bytes'] / 1073741824 / 1024, 6)
+                    all_replicas['terabytes'] = round(all_replicas['bytes'] / 1073741824 / 1024, 6)
 
                     result = pd.merge(all_replicas, metadata_df, left_on='name', right_on='name')
                     result['replica_type'].fillna('tmp', inplace=True)
@@ -86,13 +86,13 @@ def get_dataset_info(dataset: str):
 
                     return result
                 except Exception as e:
-                    print(e)
+                    pass
             except Exception as e:
-                print(e)
+                pass
         except Exception as e:
-            print(e)
+            pass
     except Exception as e:
-        print(e)
+        pass
 
 
 
@@ -132,7 +132,7 @@ def split_data_type(data_type):
 
 
 
-#res = get_dataset_info('data16_13TeV:data16_13TeV.00299584.physics_Main.deriv.DAOD_TOPQ1.r9264_p3083_p4513_tid25513236_00')
+res = get_dataset_info('data18_13TeV.00350749.physics_Main.deriv.DAOD_MUON1.f936_m1972_p4144_tid21197820_00')
 
-#print(res.to_dict('records'))
+print(res.to_dict('records'))
 #print(update_from_rucio('mc16_13TeV:mc16_13TeV.830027.H7EG_jetjet_dipole_JZ7.recon.AOD.e7954_e7400_s3126_r10244_tid26730472_00'))
