@@ -1,0 +1,197 @@
+[
+  {
+    "mode": "NULLABLE",
+    "name": "scope",
+    "type": "STRING"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "name",
+    "type": "STRING"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "rse",
+    "type": "STRING"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "available_bytes",
+    "type": "INTEGER"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "available_length",
+    "type": "INTEGER"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "created_at",
+    "type": "TIMESTAMP"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "updated_at",
+    "type": "TIMESTAMP"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "accessed_at",
+    "type": "TIMESTAMP"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "length",
+    "type": "INTEGER"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "bytes",
+    "type": "INTEGER"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "state",
+    "type": "STRING"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "account",
+    "type": "STRING"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "activity",
+    "type": "STRING"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "comments",
+    "type": "STRING"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "copies",
+    "type": "FLOAT"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "did_type",
+    "type": "STRING"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "expires_at",
+    "type": "TIMESTAMP"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "replica_type",
+    "type": "STRING"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "rse_expression",
+    "type": "STRING"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "rule_id",
+    "type": "STRING"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "available_terabytes",
+    "type": "FLOAT"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "terabytes",
+    "type": "FLOAT"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "deleted_at",
+    "type": "TIMESTAMP"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "events",
+    "type": "FLOAT"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "project",
+    "type": "STRING"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "datatype",
+    "type": "STRING"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "run_number",
+    "type": "INTEGER"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "stream_name",
+    "type": "STRING"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "prod_step",
+    "type": "STRING"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "version",
+    "type": "STRING"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "campaign",
+    "type": "STRING"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "lumiblocknr",
+    "type": "STRING"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "provenance",
+    "type": "STRING"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "phys_group",
+    "type": "STRING"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "access_cnt",
+    "type": "FLOAT"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "datasetname",
+    "type": "STRING"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "data_type",
+    "type": "STRING"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "data_type_desc",
+    "type": "STRING"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "datetime",
+    "type": "TIMESTAMP"
+  }
+]

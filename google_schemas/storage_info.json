@@ -1,0 +1,82 @@
+[
+  {
+    "mode": "NULLABLE",
+    "name": "rse",
+    "type": "STRING"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "avg_tombstone",
+    "type": "FLOAT"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "difference",
+    "type": "FLOAT"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "free_storage",
+    "type": "FLOAT"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "min_space",
+    "type": "FLOAT"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "persistent",
+    "type": "FLOAT"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "primary_diff",
+    "type": "FLOAT"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "quota_other",
+    "type": "FLOAT"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "storage_timestamp",
+    "type": "TIMESTAMP"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "temporary",
+    "type": "FLOAT"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "total_storage",
+    "type": "FLOAT"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "unlocked",
+    "type": "FLOAT"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "used_dark",
+    "type": "FLOAT"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "used_other",
+    "type": "FLOAT"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "used_rucio",
+    "type": "FLOAT"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "datetime",
+    "type": "TIMESTAMP"
+  }
+]

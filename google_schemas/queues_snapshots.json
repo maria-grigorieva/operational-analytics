@@ -1,0 +1,117 @@
+[
+  {
+    "mode": "NULLABLE",
+    "name": "queue",
+    "type": "STRING"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "datetime",
+    "type": "TIMESTAMP"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "running",
+    "type": "INTEGER"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "queued",
+    "type": "INTEGER"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "finished",
+    "type": "INTEGER"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "failed",
+    "type": "INTEGER"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "cancelled",
+    "type": "INTEGER"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "closed",
+    "type": "INTEGER"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "transferring",
+    "type": "INTEGER"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "completed",
+    "type": "INTEGER"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "queue_utilization",
+    "type": "FLOAT"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "queue_fullness",
+    "type": "FLOAT"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "queue_efficiency",
+    "type": "FLOAT"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "avg_queue_time",
+    "type": "INTEGER"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "max_queue_time",
+    "type": "INTEGER"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "min_queue_time",
+    "type": "INTEGER"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "median_queue_time",
+    "type": "INTEGER"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "mode_queue_time",
+    "type": "INTEGER"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "avg_running_time",
+    "type": "INTEGER"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "max_running_time",
+    "type": "INTEGER"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "min_running_time",
+    "type": "INTEGER"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "median_running_time",
+    "type": "INTEGER"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "mode_running_time",
+    "type": "INTEGER"
+  }
+]

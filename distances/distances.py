@@ -8,6 +8,9 @@ sys.path.append(os.path.abspath(BASE_DIR))
 from sqlalchemy import create_engine, text, inspect
 import configparser
 from cric import cric_json_api
+from database_helpers.helpers import insert_to_db
+from datetime import datetime, timedelta
+
 
 config = configparser.ConfigParser()
 config.read(BASE_DIR+'/config.ini')
@@ -15,6 +18,7 @@ config.read(BASE_DIR+'/config.ini')
 PostgreSQL_engine = create_engine(config['PostgreSQL']['sqlalchemy_engine_str'], echo=True)
 
 def get_distances():
+
     distances_url = config['Rucio API']['sites_distances']
     distances = requests.get(distances_url).json()
     dist = []
@@ -26,7 +30,8 @@ def get_distances():
                          'dest': dst,
                          'closeness': closeness})
     df = pd.DataFrame(dist)
-    df['datetime'] = dt.datetime.today().strftime("%d-%m-%Y")
+    now = datetime.strftime(datetime.now(),"%Y-%m-%d")
+    df['datetime'] = now
 
     sites_info = cric_json_api.enhance_sites()
 
@@ -45,20 +50,6 @@ def get_distances():
                         'corepower': 'dest_corepower'}, inplace=True)
     dst.drop('site', axis=1, inplace=True)
 
-    postgres_connection = PostgreSQL_engine.connect()
-    if inspect(PostgreSQL_engine).has_table('distances'):
+    insert_to_db(dst, 'distances')
 
-        with postgres_connection.begin():
-            if postgres_connection.execute(text(f'SELECT distinct datetime from distances '
-                                                f'where datetime = \'{dt.datetime.today().strftime("%m-%d-%Y")}\'')).first() is not None:
-                # delete those rows that we are going to "upsert"
-                postgres_connection.execute(text(f'delete from distances '
-                                                 f'where datetime = \'{dt.datetime.today().strftime("%m-%d-%Y")}\''))
-
-    # insert changed rows
-    dst.to_sql('distances', postgres_connection,
-                  if_exists='append',
-                  method='multi',
-                  index=False)
-
-get_distances()
+# get_distances()

@@ -18,6 +18,7 @@ BASE_DIR = os.path.join(ROOT_DIR, '..' )
 sys.path.append(os.path.abspath(BASE_DIR))
 config = configparser.ConfigParser()
 config.read(BASE_DIR+'/config.ini')
+import pprint
 
 os.environ['X509_USER_PROXY'] = config['RUCIO']['x509_user_proxy']
 os.environ['RUCIO_ACCOUNT'] = config['RUCIO']['account']
@@ -76,13 +77,6 @@ def get_dataset_info(dataset: str):
 
                     result = pd.merge(all_replicas, metadata_df, left_on='name', right_on='name')
                     result['replica_type'].fillna('tmp', inplace=True)
-                    # result.drop(['child_rule_id', 'comments',
-                    #              'eol_at', 'error', 'grouping', 'id', 'ignore_account_limit',
-                    #              'ignore_availability', 'locked', 'locks_ok_cnt',
-                    #              'locks_replicating_cnt', 'locks_stuck_cnt', 'meta',
-                    #              'notification', 'priority', 'purge_replicas', 'rse_expression',
-                    #              'rule_id', 'source_replica_expression', 'stuck_at', 'subscription_id',
-                    #              'weight'], axis=1, inplace=True)
 
                     return result
                 except Exception as e:
@@ -132,7 +126,7 @@ def split_data_type(data_type):
 
 
 
-res = get_dataset_info('data18_13TeV.00350749.physics_Main.deriv.DAOD_MUON1.f936_m1972_p4144_tid21197820_00')
-
-print(res.to_dict('records'))
+# res = get_dataset_info('data15_13TeV:data15_13TeV.00266904.physics_Main.deriv.DAOD_MUON1.r9264_p3083_p4144_tid21196832_00')
+#
+# pprint.pprint(res.to_dict('records'))
 #print(update_from_rucio('mc16_13TeV:mc16_13TeV.830027.H7EG_jetjet_dipole_JZ7.recon.AOD.e7954_e7400_s3126_r10244_tid26730472_00'))

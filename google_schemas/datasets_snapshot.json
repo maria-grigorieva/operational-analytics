@@ -1,0 +1,202 @@
+[
+  {
+    "mode": "NULLABLE",
+    "name": "datasetname",
+    "type": "STRING"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "rse",
+    "type": "STRING"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "queue",
+    "type": "STRING"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "site",
+    "type": "STRING"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "cloud",
+    "type": "STRING"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "tier_level",
+    "type": "INTEGER"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "state",
+    "type": "STRING"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "status",
+    "type": "STRING"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "resource_type",
+    "type": "STRING"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "corepower",
+    "type": "FLOAT"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "corecount",
+    "type": "FLOAT"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "region",
+    "type": "STRING"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "datetime",
+    "type": "TIMESTAMP"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "available_length",
+    "type": "INTEGER"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "created_at",
+    "type": "TIMESTAMP"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "updated_at",
+    "type": "TIMESTAMP"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "accessed_at",
+    "type": "TIMESTAMP"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "length",
+    "type": "INTEGER"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "bytes",
+    "type": "INTEGER"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "replica_state",
+    "type": "STRING"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "account",
+    "type": "STRING"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "activity",
+    "type": "STRING"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "expires_at",
+    "type": "TIMESTAMP"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "replica_type",
+    "type": "STRING"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "available_bytes",
+    "type": "INTEGER"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "scope",
+    "type": "STRING"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "dataset_n_events",
+    "type": "INTEGER"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "project",
+    "type": "STRING"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "datatype",
+    "type": "STRING"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "run_number",
+    "type": "INTEGER"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "stream_name",
+    "type": "STRING"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "prod_step",
+    "type": "STRING"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "version",
+    "type": "STRING"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "campaign",
+    "type": "STRING"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "phys_group",
+    "type": "STRING"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "access_cnt",
+    "type": "INTEGER"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "data_type",
+    "type": "STRING"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "data_type_desc",
+    "type": "STRING"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "jeditaskid",
+    "type": "INTEGER"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "username",
+    "type": "STRING"
+  }
+]

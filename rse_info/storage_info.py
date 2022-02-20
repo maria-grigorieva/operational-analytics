@@ -3,7 +3,7 @@ import requests
 import pandas as pd
 # import datetime as dt
 from datetime import datetime, timedelta
-from database_helpers.helpers import insert_to_db, if_data_exists, day_rounder, set_time_period
+from database_helpers.helpers import insert_to_db, check_for_data_existance, day_rounder, set_time_period
 
 # All numbers in TB. Click on table headers to sort.
 # Used (other) is other RSEs sharing the same space token.
@@ -33,13 +33,18 @@ def get_agg_storage_data():
 
 def save_storage_attrs_to_db(predefined_date = False):
 
-    now = day_rounder(datetime.now()) if not predefined_date else predefined_date
-    if not if_data_exists('storage_info', now):
+    now = datetime.strftime(datetime.now(), "%Y-%m-%d %H:%M:%S") if not predefined_date else str(predefined_date)
+    if not check_for_data_existance('storage_info', now, delete=True):
         result = get_agg_storage_data()
-        result['datetime'] = now
-        insert_to_db(result, 'storage_info', now, True)
+        result['datetime'] = day_rounder(datetime.strptime(now, "%Y-%m-%d %H:%M:%S"))
+        result.rename(columns={'Avg tombstone':'avg_tombstone', 'Min space':'min_space', 'Free(storage)':'free_storage',
+                               'Primary diff': 'primary_diff', 'Quota(other)':'quota_other', 'Storage Timestamp': 'storage_timestamp',
+                               'Total(storage)': 'total_storage', 'Used(dark)': 'used_dark', 'Used(other)': 'used_other',
+                               'Used(rucio)': 'used_rucio', 'Difference': 'difference', 'Persistent': 'persistent',
+                               'Temporary': 'temporary', 'Unlocked': 'unlocked'}, inplace=True)
+        insert_to_db(result, 'storage_info')
     else:
         pass
 
 #
-#save_storage_attrs_to_db('2022-01-17')
+# save_storage_attrs_to_db('2022-02-01 01:00:00')

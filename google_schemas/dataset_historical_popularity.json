@@ -1,0 +1,257 @@
+[
+  {
+    "mode": "NULLABLE",
+    "name": "jeditaskid",
+    "type": "INTEGER"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "task_status",
+    "type": "STRING"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "gshare",
+    "type": "STRING"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "username",
+    "type": "STRING"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "task_creationdate",
+    "type": "TIMESTAMP"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "task_start_time",
+    "type": "TIMESTAMP"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "task_end_time",
+    "type": "TIMESTAMP"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "task_modificationtime",
+    "type": "TIMESTAMP"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "datasetname",
+    "type": "STRING"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "containername",
+    "type": "STRING"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "dataset_status",
+    "type": "STRING"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "task_attemptnr",
+    "type": "INTEGER"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "attempt_status",
+    "type": "STRING"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "queue",
+    "type": "STRING"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "jobstatus",
+    "type": "STRING"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "number_of_jobs",
+    "type": "INTEGER"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "jobs_creationtime",
+    "type": "TIMESTAMP"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "jobs_starttime",
+    "type": "TIMESTAMP"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "jobs_endtime",
+    "type": "TIMESTAMP"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "ds_nfilesfininshed",
+    "type": "INTEGER"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "ds_nfilesfailed",
+    "type": "INTEGER"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "ds_nfiles",
+    "type": "INTEGER"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "attempt_rerefined_first",
+    "type": "TIMESTAMP"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "jobs_total_duration",
+    "type": "INTEGER"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "jobs_total_walltime",
+    "type": "INTEGER"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "jobs_timetostart",
+    "type": "INTEGER"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "jobs_total_ninputdatafiles",
+    "type": "INTEGER"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "jobs_total_inputfilebytes",
+    "type": "INTEGER"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "jobs_total_outputfilebytes",
+    "type": "INTEGER"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "jobs_total_noutputdatafiles",
+    "type": "INTEGER"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "jobs_primary_input_fsize",
+    "type": "INTEGER"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "jobs_secondary_input_fsize",
+    "type": "INTEGER"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "jobs_cpuconsumptiontime",
+    "type": "INTEGER"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "attempt_total_duration",
+    "type": "INTEGER"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "attempt_defined_time",
+    "type": "INTEGER"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "attempt_defined_first",
+    "type": "TIMESTAMP"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "attempt_scouting_first",
+    "type": "TIMESTAMP"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "attempt_exhausted_time",
+    "type": "INTEGER"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "attempt_pending_time",
+    "type": "INTEGER"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "attempt_ready_time",
+    "type": "INTEGER"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "attempt_ready_first",
+    "type": "TIMESTAMP"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "attempt_running_time",
+    "type": "INTEGER"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "attempt_running_first",
+    "type": "TIMESTAMP"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "attempt_queue_time",
+    "type": "INTEGER"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "attempt_start",
+    "type": "TIMESTAMP"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "attempt_throttled_time",
+    "type": "INTEGER"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "attempt_finished",
+    "type": "TIMESTAMP"
+  },
+    {
+    "mode": "NULLABLE",
+    "name": "project",
+    "type": "STRING"
+  },
+    {
+    "mode": "NULLABLE",
+    "name": "prod_step",
+    "type": "STRING"
+  },
+    {
+    "mode": "NULLABLE",
+    "name": "data_format",
+    "type": "STRING"
+  },
+    {
+    "mode": "NULLABLE",
+    "name": "data_format_desc",
+    "type": "STRING"
+  }
+]

@@ -1,0 +1,72 @@
+[
+  {
+    "mode": "NULLABLE",
+    "name": "queue",
+    "type": "STRING"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "site",
+    "type": "STRING"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "cloud",
+    "type": "STRING"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "tier_level",
+    "type": "INTEGER"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "transferring_limit",
+    "type": "INTEGER"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "status",
+    "type": "STRING"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "state",
+    "type": "STRING"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "resource_type",
+    "type": "STRING"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "nodes",
+    "type": "INTEGER"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "corepower",
+    "type": "FLOAT"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "corecount",
+    "type": "FLOAT"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "region",
+    "type": "STRING"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "rse",
+    "type": "STRING"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "datetime",
+    "type": "TIMESTAMP"
+  }
+]

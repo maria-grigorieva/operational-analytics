@@ -1,5 +1,5 @@
 SELECT queue,
-       from_time as datetime,
+       TRUNC(to_date(:now, 'YYYY-MM-DD HH24:MI:SS'),'HH24') as datetime,
        NVL(running, 0)                                                          as running,
        NVL(queued, 0)                                                           as queued,
        NVL(finished, 0)                                                         as finished,
@@ -15,24 +15,22 @@ SELECT queue,
              4)                                                                 as queue_efficiency
     FROM (
         (SELECT computingsite                                           as queue,
-                to_date(:from_time, 'YYYY-MM-DD HH24:MI:SS') as from_time,
                 'queued'                                                as status,
                 NVL(count(distinct pandaid), 0)                         as n_jobs
          FROM ATLAS_PANDA.JOBS_STATUSLOG
-         WHERE modificationtime >= (to_date(:from_time, 'YYYY-MM-DD HH24:MI:SS') - :n_hours/24)
-           AND modificationtime < to_date(:from_time, 'YYYY-MM-DD HH24:MI:SS')
+         WHERE modificationtime >= (to_date(:now, 'YYYY-MM-DD HH24:MI:SS') - :n_hours/24)
+           AND modificationtime < to_date(:now, 'YYYY-MM-DD HH24:MI:SS')
            AND prodsourcelabel = 'user'
            AND jobstatus in ('activated', 'defined', 'starting', 'assigned')
          GROUP BY computingsite
         )
         UNION ALL
         (SELECT computingsite                                           as queue,
-                to_date(:from_time, 'YYYY-MM-DD HH24:MI:SS') as from_time,
                 jobstatus,
                 NVL(count(distinct pandaid), 0)                         as n_jobs
          FROM ATLAS_PANDA.JOBS_STATUSLOG
-         WHERE modificationtime >= (to_date(:from_time, 'YYYY-MM-DD HH24:MI:SS') - :n_hours/24)
-           AND modificationtime < to_date(:from_time, 'YYYY-MM-DD HH24:MI:SS')
+         WHERE modificationtime >= (to_date(:now, 'YYYY-MM-DD HH24:MI:SS') - :n_hours/24)
+           AND modificationtime < to_date(:now, 'YYYY-MM-DD HH24:MI:SS')
            AND prodsourcelabel = 'user'
            AND jobstatus in ('running', 'finished', 'failed', 'closed', 'cancelled', 'transferring')
          GROUP BY computingsite, jobstatus

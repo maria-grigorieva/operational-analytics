@@ -13,7 +13,8 @@ app = Celery('checker',
                       'datasets.tasks',
                       'rse_info.tasks',
                       'cric.tasks',
-                      'merging.tasks'])
+                      'merging.tasks',
+                      'decision_maker.tasks'])
 
 
 app.conf.beat_schedule = {
@@ -26,10 +27,10 @@ app.conf.beat_schedule = {
     #     'task': 'merged_queues_metrics',
     #     'schedule': 86400
     # },
-    # 'daily_distances': {
-    #     'task': 'get_distances',
-    #     'schedule': 86400
-    # },
+    'weekly_distances': {
+        'task': 'save_distances_to_db',
+        'schedule': crontab(minute=15, hour=22, day_of_week='sunday')
+    },
     # 'daily_datasets': {
     #     'task': 'datasets_collector',
     #     'schedule': crontab(minute=30, hour=23)
@@ -46,17 +47,17 @@ app.conf.beat_schedule = {
         'task': 'queues_statuslog_actual',
         'schedule': crontab(minute=10, hour=00)
     },
-    'datasets_info_daily': {
-        'task': 'save_popularity_to_db',
-        'schedule': crontab(minute=30, hour=00)
-    },
+    # 'datasets_info_daily': {
+    #     'task': 'save_popularity_to_db',
+    #     'schedule': crontab(minute=30, hour=00)
+    # },
     'datasets_info_daily_v1': {
       'task': 'save_dataset_task_user_to_db',
       'schedule': crontab(minute=40, hour=00)
     },
     'dataset_replicas_to_db': {
         'task': 'dataset_replicas_to_db',
-        'schedule': crontab(minute=00, hour=1)
+        'schedule': crontab(minute=00, hour=5)
     },
     'merge': {
         'task': 'merge',
@@ -64,11 +65,15 @@ app.conf.beat_schedule = {
     },
     'merge_datasets': {
         'task': 'merge_datasets',
-        'schedule': crontab(minute=15, hour=3)
+        'schedule': crontab(minute=00, hour=12)
     },
-    'merge_datasets_v1': {
-        'task': 'merge_datasets_v1',
-        'schedule': crontab(minute=20, hour=3)
+    'historical_popularity': {
+        'task': 'save_historical_popularity_to_db',
+        'schedule': crontab(minute=00, hour=8)
+    },
+    'resource_weights': {
+        'task': 'calculate_weights',
+        'schedule': crontab(minute=00, hour=6)
     },
     # 'run-me-every-10-sec': {
     #     'task': 'checker.tasks.check',
@@ -76,31 +81,23 @@ app.conf.beat_schedule = {
     # }
     'queues_1hour': {
         'task': 'queues_1hour',
-        'schedule': 3600
+        'schedule': crontab(minute=0, hour='0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23')
     },
     'queues_3hours': {
         'task': 'queues_3hours',
-        'schedule': 10800
+        'schedule': crontab(minute=0, hour='0,3,6,9,12,15,18,21')
     },
     'queues_6hours': {
         'task': 'queues_6hours',
-        'schedule': 21600
+        'schedule': crontab(minute=0, hour='0,6,12,18')
     },
     'queues_12hours': {
         'task': 'queues_12hours',
-        'schedule': 43200
+        'schedule': crontab(minute=0, hour='0,12')
     },
     'queues_1day': {
         'task': 'queues_1day',
-        'schedule': 86400
-    },
-    'queues_3days': {
-        'task': 'queues_3days',
-        'schedule': 259200
-    },
-    'queues_1week': {
-        'task': 'queues_1week',
-        'schedule': 604800
+        'schedule': crontab(minute=10, hour=0)
     }
 }
 app.conf.timezone = 'Europe/Berlin'

@@ -1,0 +1,132 @@
+[
+  {
+    "mode": "NULLABLE",
+    "name": "queue",
+    "type": "STRING"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "datetime",
+    "type": "TIMESTAMP"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "running",
+    "type": "INTEGER"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "queued",
+    "type": "INTEGER"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "finished",
+    "type": "INTEGER"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "failed",
+    "type": "INTEGER"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "cancelled",
+    "type": "INTEGER"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "closed",
+    "type": "INTEGER"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "transferring",
+    "type": "INTEGER"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "completed",
+    "type": "INTEGER"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "queue_utilization",
+    "type": "FLOAT"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "queue_fullness",
+    "type": "FLOAT"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "queue_efficiency",
+    "type": "FLOAT"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "site",
+    "type": "STRING"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "cloud",
+    "type": "STRING"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "tier_level",
+    "type": "INTEGER"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "transferring_limit",
+    "type": "INTEGER"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "status",
+    "type": "STRING"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "state",
+    "type": "STRING"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "resource_type",
+    "type": "STRING"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "nodes",
+    "type": "INTEGER"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "corepower",
+    "type": "FLOAT"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "corecount",
+    "type": "INTEGER"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "region",
+    "type": "STRING"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "transferring_diff",
+    "type": "INTEGER"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "interval_hours",
+    "type": "INTEGER"
+  }
+]

@@ -31,20 +31,20 @@ SELECT x.queue,
        x.corecount,
        x.region,
        x.rse,
-       si."Avg tombstone",
-       si."Difference",
-       si."Free(storage)",
-       si."Min space",
-       si."Persistent",
-       si."Primary diff",
-       si."Quota(other)",
-       si."Storage Timestamp",
-       si."Temporary",
-       si."Total(storage)",
-       si."Unlocked",
-       si."Used(dark)",
-       si."Used(other)",
-       si."Used(rucio)"
+       si.avg_tombstone,
+       si.difference,
+       si.free_storage,
+       si.min_space,
+       si.persistent,
+       si.primary_diff,
+       si.quota_other,
+       si.storage_timestamp,
+       si.temporary,
+       si.total_storage,
+       si.unlocked,
+       si.used_dark,
+       si.used_other,
+       si.used_rucio
 FROM (
 select qs.queue,
        qs.datetime,
@@ -81,8 +81,12 @@ select qs.queue,
        cr.rse
 from queues_snapshots qs
 INNER JOIN cric_resources cr ON (cr.queue = qs.queue)
-where qs.datetime = date_trunc('day', TIMESTAMP :from_date)
-and cr.datetime = date_trunc('day', TIMESTAMP :from_date)
+where (qs.datetime >= date_trunc('day', TIMESTAMP :from_date) and
+       qs.datetime < date_trunc('day', TIMESTAMP :from_date + INTERVAL '1day'))
+       and
+       (cr.datetime >= date_trunc('day', TIMESTAMP :from_date) and
+       cr.datetime < date_trunc('day', TIMESTAMP :from_date + INTERVAL '1day'))
 ) x
-INNER JOIN  storage_info si ON (si.rse = x.rse)
-    WHERE si.datetime = date_trunc('day', TIMESTAMP :from_date)
+INNER JOIN storage_info si ON (si.rse = x.rse)
+    WHERE (si.datetime >= date_trunc('day', TIMESTAMP :from_date) and
+       si.datetime < date_trunc('day', TIMESTAMP :from_date + INTERVAL '1day'))

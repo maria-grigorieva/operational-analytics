@@ -16,24 +16,24 @@ with statuses as (
                  4)                                                                 as queue_efficiency
     FROM (
      (SELECT computingsite                   as queue,
-                                 TRUNC(to_date(:from_date, 'YYYY-MM-DD'), 'DD')   as datetime,
+                                 TRUNC(to_date(:from_date, 'YYYY-MM-DD HH:MI:SS'), 'DD')   as datetime,
                                  'queued'                        as status,
                                  NVL(count(distinct pandaid), 0) as n_jobs
               FROM ATLAS_PANDA.JOBS_STATUSLOG
-              WHERE modificationtime >= to_date(:from_date, 'YYYY-MM-DD')
-                AND modificationtime < to_date(:from_date, 'YYYY-MM-DD') + 1
+              WHERE modificationtime >= TRUNC(to_date(:from_date, 'YYYY-MM-DD HH:MI:SS'), 'DD')
+                AND modificationtime < TRUNC(to_date(:from_date, 'YYYY-MM-DD HH:MI:SS') + 1, 'DD')
                 AND prodsourcelabel = 'user'
                 AND jobstatus in ('activated', 'defined', 'starting', 'assigned')
               GROUP BY computingsite
          )
          UNION ALL
         (SELECT computingsite                   as queue,
-                                  TRUNC(to_date(:from_date, 'YYYY-MM-DD'), 'DD')   as datetime,
+                                  TRUNC(to_date(:from_date, 'YYYY-MM-DD HH:MI:SS'), 'DD')   as datetime,
                                   jobstatus,
                                   NVL(count(distinct pandaid), 0) as n_jobs
                FROM ATLAS_PANDA.JOBS_STATUSLOG
-               WHERE modificationtime >= to_date(:from_date, 'YYYY-MM-DD')
-                 AND modificationtime < to_date(:from_date, 'YYYY-MM-DD') + 1
+               WHERE modificationtime >= TRUNC(to_date(:from_date, 'YYYY-MM-DD HH:MI:SS'), 'DD')
+                 AND modificationtime < TRUNC(to_date(:from_date, 'YYYY-MM-DD HH:MI:SS') + 1, 'DD')
                  AND prodsourcelabel = 'user'
                  AND jobstatus in ('running','finished','failed','closed','cancelled','transferring')
                GROUP BY computingsite, jobstatus
@@ -53,7 +53,7 @@ with statuses as (
 ),
      queue_time as (
          SELECT queue,
-               trunc(to_date(:from_date, 'YYYY-MM-DD'), 'DD') as datetime,
+               trunc(to_date(:from_date, 'YYYY-MM-DD HH:MI:SS'), 'DD') as datetime,
                NVL(round(avg(lag)),0) as avg_queue_time,
                NVL(max(lag),0) as max_queue_time,
                NVL(min(lag),0) as min_queue_time,
@@ -74,8 +74,8 @@ with statuses as (
                               60 * 60 * 24, 3)                                            as lag
                              FROM (SELECT pandaid, computingsite as queue, jobstatus, modificationtime
                                     FROM ATLAS_PANDA.JOBS_STATUSLOG
-                                   WHERE modificationtime >= to_date(:from_date, 'YYYY-MM-DD')
-                                     AND modificationtime < to_date(:from_date, 'YYYY-MM-DD') + 1
+                                   WHERE modificationtime >= TRUNC(to_date(:from_date, 'YYYY-MM-DD HH:MI:SS'), 'DD')
+                                     AND modificationtime < TRUNC(to_date(:from_date, 'YYYY-MM-DD HH:MI:SS') + 1, 'DD')
                                       AND prodsourcelabel = 'user'
                                       AND jobstatus in ('activated', 'running')
                                   )
@@ -86,7 +86,7 @@ with statuses as (
      running_time as (
          SELECT
            queue,
-           trunc(to_date(:from_date, 'YYYY-MM-DD'), 'DD') as datetime,
+           trunc(to_date(:from_date, 'YYYY-MM-DD HH:MI:SS'), 'DD') as datetime,
            NVL(round(avg(lead)),0) as avg_running_time,
            NVL(max(lead),0) as max_running_time,
            NVL(min(lead),0) as min_running_time,
@@ -107,8 +107,8 @@ with statuses as (
                             CAST(modificationtime as date)) * 60 * 60 * 24, 3) as       lead
               FROM (SELECT pandaid, computingsite as queue, jobstatus, modificationtime
                     FROM ATLAS_PANDA.JOBS_STATUSLOG
-                      WHERE modificationtime >= to_date(:from_date, 'YYYY-MM-DD')
-                      AND modificationtime < to_date(:from_date, 'YYYY-MM-DD') + 1
+                      WHERE modificationtime >= TRUNC(to_date(:from_date, 'YYYY-MM-DD HH:MI:SS'), 'DD')
+                      AND modificationtime < TRUNC(to_date(:from_date, 'YYYY-MM-DD HH:MI:SS') + 1, 'DD')
                       AND prodsourcelabel = 'user'
                       AND jobstatus in ('running', 'finished'))
                               )

@@ -4,7 +4,7 @@ import pandas as pd
 import configparser
 import os
 from sqlalchemy import create_engine, text, inspect
-from database_helpers.helpers import insert_to_db, if_data_exists, day_rounder
+from database_helpers.helpers import insert_to_db, check_for_data_existance, day_rounder
 from datetime import datetime
 
 ROOT_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -58,37 +58,30 @@ def enhance_queues(all=False, with_rse=False):
         enhanced_queues.append(queues_dict)
 
     enhanced_queues = pd.DataFrame(enhanced_queues)
-    if with_rse:
-        return enhanced_queues.explode('rse')
-    else:
-        return enhanced_queues
+
+    return enhanced_queues.explode('rse') if with_rse else enhanced_queues
 
 
 def cric_resources_to_db(predefined_date = False):
 
-    now = day_rounder(datetime.now()) if not predefined_date else predefined_date
-    if not if_data_exists('cric_resources', now):
-        result = enhance_queues()
-        result['datetime'] = now
-        insert_to_db(result, 'cric_resources', now, True)
+    now = datetime.strftime(datetime.now(), "%Y-%m-%d %H:%M:%S") if not predefined_date else str(predefined_date)
+
+    if not check_for_data_existance('cric_resources', now, delete=True):
+        result = enhance_queues(with_rse=True)
+        result['datetime'] = day_rounder(datetime.strptime(now, "%Y-%m-%d %H:%M:%S"))
+        int_columns = result.select_dtypes(include=['int', 'float']).columns
+        result[int_columns] = result[int_columns].fillna(0)
+        result['datetime'] = pd.to_datetime(result['datetime'])
+        result = result.astype({'nodes': 'int64',
+                                  'transferring_limit': 'int64',
+                                  'tier_level': 'int64',
+                                  'corepower': 'float64',
+                                  'corecount': 'float64',
+                                  'datetime': 'datetime64'
+                                  })
+        insert_to_db(result, 'cric_resources')
     else:
         pass
-    # try:
-    #     current_state = "select * from cric_resources where datetime = (select max(datetime) from cric_resources)"
-    #     current_state_df = pd.read_sql_query(current_state, postgres_connection, parse_dates={'datetime': '%Y-%m-%d'})
-    #     current_state_df.drop('datetime',axis=1,inplace=True)
-    #     if result.equals(current_state_df):
-    #         return None
-    #     else:
-    #         diff = pd.concat([result, current_state_df]).drop_duplicates(keep=False)
-    #         diff['datetime'] = pd.to_datetime('today')
-    #
-    #         diff.to_sql('cric_resources', postgres_connection,
-    #                     if_exists='append',
-    #                     method='multi',
-    #                     index=False)
-    # except Exception as e:
-    #     result['datetime'] = pd.to_datetime('today')
 
 
 def enhance_sites(all=False):
@@ -146,4 +139,5 @@ def get_replicas_sites(list_of_ddm_endpoints):
     return list(set(list_of_sites)), list(set(list_of_clouds)), nested
 
 
-#cric_resources_to_db('2022-01-17')
+# #
+# cric_resources_to_db('2022-01-31 00:00:00')

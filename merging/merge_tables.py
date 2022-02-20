@@ -4,10 +4,9 @@ BASE_DIR = os.path.join(ROOT_DIR, '..' )
 sys.path.append(os.path.abspath(BASE_DIR))
 import configparser
 SQL_DIR = BASE_DIR+'/sql'
-from sqlalchemy import create_engine, text, inspect
-from database_helpers.helpers import insert_to_db, if_data_exists, set_start_end_dates, set_time_period,day_rounder
+from sqlalchemy import create_engine, text
+from database_helpers.helpers import insert_to_db, check_for_data_existance, set_time_period,day_rounder,nulls_ints_to_zeroes
 import pandas as pd
-import numpy as np
 from datetime import datetime, timedelta
 
 
@@ -18,59 +17,49 @@ PostgreSQL_engine = create_engine(config['PostgreSQL']['sqlalchemy_engine_str'],
 
 def queues_rse_cric(predefined_date = False):
 
-    # from_date, to_date = set_start_end_dates(predefined_date)
     from_date, to_date = set_time_period(predefined_date, n_hours=24)
 
-    if not if_data_exists('resource_snapshot', from_date):
+    if not check_for_data_existance('resource_snapshot', from_date, 'day', True):
         query = SQL_DIR + '/postgreSQL/merge_queue_rse_cric.sql'
         postgres_connection = PostgreSQL_engine.connect()
-        from_date = day_rounder(datetime.strptime(from_date, "%Y-%m-%d %H:%M:%S"))
-        result = pd.read_sql_query(text(open(query).read()),
-                                   postgres_connection,
-                                   parse_dates={'datetime': '%Y-%m-%d'},
+        result = pd.read_sql_query(text(open(query).read()),postgres_connection,parse_dates={'datetime': '%Y-%m-%d'},
                                    params={'from_date': from_date})
-        insert_to_db(result, 'resource_snapshot', from_date)
+        postgres_connection.close()
+        insert_to_db(result, 'resource_snapshot')
     else:
         pass
 
 
 def dataset_cric_replicas(predefined_date = False):
 
-    # from_date, to_date = set_start_end_dates(predefined_date)
     from_date, to_date = set_time_period(predefined_date, n_hours=24)
 
-    if not if_data_exists('datasets_snapshot', from_date):
-
-        postgres_connection = PostgreSQL_engine.connect()
-        merged = SQL_DIR + '/postgreSQL/merge_datasets_cric_replicas.sql'
-        from_date = day_rounder(datetime.strptime(from_date, "%Y-%m-%d %H:%M:%S"))
-        merged_df = pd.read_sql_query(text(open(merged).read()), postgres_connection,
-                                      parse_dates={'datetime': '%Y-%m-%d'},
-                                      params={'from_date': from_date})
-        merged_df[['corecount','n_tasks','n_jobs','avg_queue_time','avg_running_time']].fillna(0, inplace=True)
-        insert_to_db(merged_df, 'datasets_snapshot', from_date)
-
-    else:
-        pass
-
-
-def dataset_cric_replicas_v1(predefined_date = False):
-
-    # from_date, to_date = set_start_end_dates(predefined_date)
-    from_date, to_date = set_time_period(predefined_date, n_hours=24)
-
-    if not if_data_exists('datasets_snapshot_v1', from_date):
+    if not check_for_data_existance('datasets_daily_snapshots', from_date, 'day', True):
 
         postgres_connection = PostgreSQL_engine.connect()
         merged = SQL_DIR + '/postgreSQL/merge_datasets_cric_replicas_v1.sql'
-        from_date = day_rounder(datetime.strptime(from_date, "%Y-%m-%d %H:%M:%S"))
         merged_df = pd.read_sql_query(text(open(merged).read()), postgres_connection,
                                       parse_dates={'datetime': '%Y-%m-%d'},
                                       params={'from_date': from_date})
+        postgres_connection.close()
         merged_df[['corecount']].fillna(0, inplace=True)
-        insert_to_db(merged_df, 'datasets_snapshot_v1', from_date)
+
+        insert_to_db(merged_df, 'datasets_daily_snapshots')
 
     else:
         pass
 
-#dataset_cric_replicas_v1('2022-01-24 00:00:00')
+# queues_rse_cric()
+# dataset_cric_replicas()
+# dataset_cric_replicas_v1('2022-02-03 04:00:00')
+
+# start_date = datetime(2021, 12, 10, 1, 0, 0)
+# end_date = datetime(2022, 2, 12, 1, 00, 0)
+# delta_day = timedelta(days=1)
+#
+#
+# while start_date <= end_date:
+#     print(start_date)
+#     dataset_cric_replicas(datetime.strftime(start_date,"%Y-%m-%d %H:%M:%S"))
+#     start_date += delta_day
+#     print('Data has been written!')

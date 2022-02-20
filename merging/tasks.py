@@ -9,7 +9,7 @@ from cric.tasks import cric_resources_to_db
 from celery import chain, group
 from merging.merge_tables import queues_rse_cric as queues_rse_cric_worker
 from merging.merge_tables import dataset_cric_replicas as dataset_cric_replicas_worker
-from merging.merge_tables import dataset_cric_replicas_v1 as dataset_cric_replicas_v1_worker
+# from merging.merge_tables import dataset_cric_replicas_v1 as dataset_cric_replicas_v1_worker
 
 
 # @app.task(name="etl", ignore_result=True)
@@ -31,17 +31,17 @@ def merge():
         raise e
 
 
+# @app.task(name="merge_datasets", ignore_result=True)
+# def merge_datasets():
+#     try:
+#         return dataset_cric_replicas_worker()
+#     except Exception as e:
+#         raise e
+
 @app.task(name="merge_datasets", ignore_result=True)
 def merge_datasets():
     try:
         return dataset_cric_replicas_worker()
-    except Exception as e:
-        raise e
-
-@app.task(name="merge_datasets_v1", ignore_result=True)
-def merge_datasets_v1():
-    try:
-        return dataset_cric_replicas_v1_worker()
     except Exception as e:
         raise e
 

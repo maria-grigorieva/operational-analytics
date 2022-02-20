@@ -5,15 +5,10 @@ sys.path.append(os.path.abspath(BASE_DIR))
 import cx_Oracle
 import cric
 import pandas as pd
-from sqlalchemy import create_engine, text, inspect
-from sqlalchemy.dialects.postgresql import insert
+from sqlalchemy import create_engine, text
 import configparser
 from cric.cric_json_api import enhance_queues
-from rse_info.storage_info import get_agg_storage_data
-from rucio_api.dataset_info import update_from_rucio
-import numpy as np
-from database_helpers.helpers import insert_to_db, if_data_exists, set_start_end_dates, set_time_period, day_rounder
-import time
+from database_helpers.helpers import insert_to_db, check_for_data_existance, set_time_period
 from datetime import datetime, timedelta
 
 import logging
@@ -64,7 +59,7 @@ metrics = {
     'queues_statuslog_hourly':
         {
             'sql': SQL_DIR + '/PanDA/queues_statuslog_hourly.sql',
-            'table_name': 'queues_snapshot_'
+            'table_name': 'queues_snapshot_intervals'
         },
     'queues_statuslog_actual':
         {
@@ -78,215 +73,97 @@ PanDA_engine = create_engine(config['PanDA DB']['sqlalchemy_engine_str'], echo=T
 PostgreSQL_engine = create_engine(config['PostgreSQL']['sqlalchemy_engine_str'], echo=True)
 
 
-# def queues_to_db(metric, predefined_date = False):
-#
-#     from_date, to_date = set_start_end_dates(predefined_date)
-#
-#     if not if_data_exists(metrics.get(metric)["table_name"], from_date):
-#         panda_connection = PanDA_engine.connect()
-#         query = text(open(metrics.get(metric)['sql']).read())
-#         df = pd.read_sql_query(query, panda_connection, parse_dates={'datetime': '%Y-%m-%d'},
-#                                params={'from_date': from_date,
-#                                        'to_date': to_date})
-#         insert_to_db(df, metrics.get(metric)["table_name"], from_date)
-#     else:
-#         pass
-
 def queues_to_db(metric, predefined_date = False):
 
     from_date, to_date = set_time_period(predefined_date, n_hours=24)
 
-    if not if_data_exists(metrics.get(metric)["table_name"], from_date):
+    if not check_for_data_existance(metrics.get(metric)["table_name"], from_date, delete=True):
         panda_connection = PanDA_engine.connect()
         query = text(open(metrics.get(metric)['sql']).read())
-        from_date = day_rounder(datetime.strptime(from_date, "%Y-%m-%d %H:%M:%S"))
         df = pd.read_sql_query(query, panda_connection, parse_dates={'datetime': '%Y-%m-%d'},
                                params={'from_date': from_date})
-        insert_to_db(df, metrics.get(metric)["table_name"], from_date)
+        panda_connection.close()
+        df.fillna(0, inplace=True)
+        insert_to_db(df, metrics.get(metric)["table_name"])
     else:
         pass
 
 
 def queues_hourly_to_db(metric, predefined_date = False, n_hours=1):
 
-    now = datetime.strftime(datetime.now(),"%Y-%m-%d %H:%M:%S") if not predefined_date else predefined_date
-    print(now)
+    now = datetime.strftime(datetime.now(),"%Y-%m-%d %H:%M:%S") if not predefined_date else str(predefined_date)
 
-    if not if_data_exists(metrics.get(metric)["table_name"], now):
-        panda_connection = PanDA_engine.connect()
-        query = text(open(metrics.get(metric)['sql']).read())
-        df = pd.read_sql_query(query, panda_connection,
-                               parse_dates={'datetime': '%Y-%m-%d %H:%M:%S'},
-                               params={'from_time': now,
-                                       'n_hours': n_hours})
-        from_cric = cric.cric_json_api.enhance_queues()
-        result = pd.merge(df, from_cric, left_on='queue', right_on='queue')
-        result['transferring_diff'] = result['transferring_limit'] - result['transferring']
-        insert_to_db(result,
-                     f'{metrics.get(metric)["table_name"]}_{n_hours}_hour',
-                     now,
-                     False,
-                     '%Y-%m-%d %H:%M:%S')
-    else:
-        pass
-
-
-def calculate_metric(metric):
     panda_connection = PanDA_engine.connect()
-    # postgres_connection = PostgreSQL_engine.connect()
+    postgresql_connection = PostgreSQL_engine.connect()
     query = text(open(metrics.get(metric)['sql']).read())
-    df = pd.read_sql_query(query, panda_connection, parse_dates={'datetime':'%Y-%m-%d'})
-    curr_date = df['datetime'].unique()[0]
-    from_cric = cric.cric_json_api.enhance_queues(all=False, with_rse=True)
+    df = pd.read_sql_query(query, panda_connection,parse_dates={'datetime': '%Y-%m-%d %H:%M:%S'},
+                           params={'now': now,'n_hours': n_hours})
+    panda_connection.close()
+    from_cric = cric.cric_json_api.enhance_queues()
     result = pd.merge(df, from_cric, left_on='queue', right_on='queue')
     result['transferring_diff'] = result['transferring_limit'] - result['transferring']
-
-    storage_info = get_agg_storage_data()
-    result = pd.merge(result, storage_info, left_on='rse', right_on='rse')
-
-    insert_to_db(df, metrics.get(metric)["table_name"], curr_date)
-
-
-def exclude_outliers():
-    postgres_connection = PostgreSQL_engine.connect()
-    query = text('select * from queues_metrics')
-    df = pd.read_sql_query(query, postgres_connection, parse_dates={'datetime': '%Y-%m-%d'})
-    curr_date = df['datetime'].unique()[0]
-    cols = ['queue_time_avg','queue_utilization','queue_filling','queue_efficiency']  # one or more
-
-    Q1 = df[cols].quantile(0.1)
-    Q3 = df[cols].quantile(0.9)
-    IQR = Q3 - Q1
-
-    lower_bound = Q1 - 1.5 * IQR
-    upper_bound = Q3 + 1.5 * IQR
-
-    reduced_df = df[~((df[cols] < lower_bound) | (df[cols] > upper_bound)).any(axis=1)]
-    reduced_df = reduced_df[reduced_df['status']!='test']
-    reduced_df = reduced_df[(reduced_df['Difference']>0) | (pd.isnull(reduced_df['Difference']))]
-    reduced_df = reduced_df[reduced_df['queue_efficiency'] > 0.7]
-
-    excluded_df = pd.concat([df, reduced_df]).drop_duplicates(keep=False)
-
-    insert_to_db(df, postgres_connection, 'filtered_metrics', curr_date)
-    insert_to_db(df, postgres_connection, 'excluded_metrics', curr_date)
+    result['interval_hours'] = n_hours
+    result['corecount'].fillna(0,inplace=True)
+    # Custom check for existance using datetime and interval_hours parameters
+    with postgresql_connection.begin():
+        if postgresql_connection.execute(text(f'SELECT * FROM queues_snapshot_intervals '
+                                              f'WHERE datetime = DATE_TRUNC(\'hour\', TIMESTAMP \'{now}\') '
+                                              f'AND interval_hours = {n_hours}')).rowcount == 0:
+            insert_to_db(result,metrics.get(metric)["table_name"])
+            postgresql_connection.close()
+        else:
+            pass
 
 
-def popularity_by_tasks(from_date, hours=4):
-    """
-    Calculates popularity (by number of tasks) of each input dataset used during the specified period,
-    resulted dataset list is sorted by popularity value (from max to min)
-    """
-    panda_connection = PanDA_engine.connect()
-    postgres_connection = PostgreSQL_engine.connect()
+def collect_queue_daily_for_period():
 
-    # get MAX modificationtime from datasets_popularity
-    try:
-        from_date = pd.read_sql_query(text('select max(task_modificationtime) from datasets_popularity'),
-                                   postgres_connection)['max'].values[0]
-        from_date = np.datetime_as_string(from_date, unit='s').replace('T',' ')
-    except Exception as e:
-        None
+    start_date = datetime(2022, 1, 29, 0, 0, 0)
+    end_date = datetime(2022, 1, 29, 17, 00, 0)
+    delta_day = timedelta(days=1)
 
-    query = text(open(SQL_DIR+'/PanDA/data_popularity.sql').read())
-    df = pd.read_sql_query(query, panda_connection, parse_dates={'datetime': '%Y-%m-%d %H:%M:%S'}, params={'from_date':from_date,'hours':hours})
-    from_cric = cric.cric_json_api.enhance_queues(all=True, with_rse=True)
-    result = pd.merge(df, from_cric, left_on='queue', right_on='queue')
-    # result.to_sql('datasets_popularity', postgres_connection,
-    #                   if_exists='append',
-    #                   method='multi',
-    #                   index=False)
-
-    ds_names = result['datasetname'].unique()
-    print(f'Total {len(ds_names)} datasets')
-    try:
-        datasets = pd.DataFrame([update_from_rucio(d) for d in ds_names])
-        datasets = datasets.add_prefix('ds_')
-        datasets_df = pd.merge(result, datasets, left_on='datasetname', right_on='ds_datasetname')
-        datasets_df.to_sql('datasets_popularity', postgres_connection,
-                      if_exists='append',
-                      method='multi',
-                      index=False)
-    except Exception as e:
-        print('Rucio API returned NO info about datasets')
-        return None
+    while start_date <= end_date:
+        print(start_date)
+        queues_hourly_to_db('queues_statuslog_actual', predefined_date = start_date, n_hours=24)
+        start_date += delta_day
 
 
-def queues_statuslog(from_date):
-    panda_connection = PanDA_engine.connect()
-    postgres_connection = PostgreSQL_engine.connect()
-    statuslog_query = open(metrics.get('queues_statuslog')['sql']['statuslog']).read()
-    queue_time_query = open(metrics.get('queues_statuslog')['sql']['queue_time']).read()
-    running_time_query = open(metrics.get('queues_statuslog')['sql']['running_time']).read()
-    statuslog_df = pd.read_sql_query(text(statuslog_query), panda_connection,
-                                     parse_dates={'datetime': '%Y-%m-%d'},
-                                     params={'datetime':from_date})
-    queue_time_df = pd.read_sql_query(text(queue_time_query), panda_connection,
-                                      parse_dates={'datetime': '%Y-%m-%d'},
-                                      params={'datetime':from_date})
-    running_time_df = pd.read_sql_query(text(running_time_query), panda_connection,
-                                        parse_dates={'datetime': '%Y-%m-%d'},
-                                        params={'datetime':from_date})
 
-    tmp = pd.merge(statuslog_df,queue_time_df,left_on=['queue','datetime'],right_on=['queue','datetime'])
-    result_df = pd.merge(tmp,running_time_df,left_on=['queue','datetime'],right_on=['queue','datetime'])
+def collect_hourly_data_for_period():
+    start_date = datetime(2022, 1, 29, 0, 0, 0)
+    end_date = datetime(2022, 1, 29, 17, 00, 0)
+    delta_day = timedelta(days=1)
+    delta_1hour = timedelta(hours=1)
+    delta_3hours = timedelta(hours=3)
+    delta_6hours = timedelta(hours=6)
+    delta_12hours = timedelta(hours=12)
 
-    from_cric = cric.cric_json_api.enhance_queues()
-    result = pd.merge(result_df, from_cric, left_on='queue', right_on='queue')
-    #
-    # storage_info = get_agg_storage_data()
-    # result = pd.merge(result, storage_info, left_on='rse', right_on='rse')
+    while start_date <= end_date:
+        print(start_date)
 
-    # insert changed rows
-    result.to_sql(metrics.get('queues_statuslog')['table_name'], postgres_connection,
-                  if_exists='append',
-                  method='multi',
-                  index=False)
+        curr_date = start_date
+        while curr_date <= start_date + delta_day:
+            print(curr_date)
+            queues_hourly_to_db('queues_statuslog_hourly', predefined_date = curr_date, n_hours=1)
+            curr_date += delta_1hour
 
+        curr_date = start_date
+        while curr_date <= start_date + delta_day:
+            print(curr_date)
+            queues_hourly_to_db('queues_statuslog_hourly', predefined_date = curr_date, n_hours=3)
+            curr_date += delta_3hours
 
-def queues_statuslog_hourly(from_date):
-    panda_connection = PanDA_engine.connect()
-    postgres_connection = PostgreSQL_engine.connect()
-    statuslog_query = open(metrics.get('queues_statuslog_hourly')['sql']).read()
-    statuslog_df = pd.read_sql_query(text(statuslog_query), panda_connection,
-                                     parse_dates={'datetime': '%Y-%m-%d'},
-                                     params={'datetime': from_date})
-    from_cric = cric.cric_json_api.enhance_queues()
-    result = pd.merge(statuslog_df, from_cric, left_on='queue', right_on='queue')
+        curr_date = start_date
+        while curr_date <= start_date + delta_day:
+            print(curr_date)
+            queues_hourly_to_db('queues_statuslog_hourly', predefined_date = curr_date, n_hours=6)
+            curr_date += delta_6hours
 
-    # insert changed rows
-    result.to_sql(metrics.get('queues_statuslog_hourly')['table_name'], postgres_connection,
-                  if_exists='append',
-                  method='multi',
-                  index=False)
+        curr_date = start_date
+        while curr_date <= start_date + delta_day:
+            print(curr_date)
+            queues_hourly_to_db('queues_statuslog_hourly', predefined_date = curr_date, n_hours=12)
+            curr_date += delta_12hours
 
+        queues_hourly_to_db('queues_statuslog_hourly', predefined_date = start_date, n_hours=24)
 
-# popularity_by_tasks('2021-12-01 00:00:00',1)
-#queues_to_db('queues_statuslog_actual', '2022-01-17 00:10:00')
-# queues_hourly_to_db('queues_statuslog_hourly', '2022-01-24 21:23:00', n_hours=1)
-# queues_hourly_to_db('queues_statuslog_hourly', '2022-01-24 22:23:00', n_hours=1)
-# queues_hourly_to_db('queues_statuslog_hourly', '2022-01-24 23:23:00', n_hours=1)
-# queues_hourly_to_db('queues_statuslog_hourly', '2022-01-25 00:23:00', n_hours=1)
-# queues_hourly_to_db('queues_statuslog_hourly', '2022-01-25 01:23:00', n_hours=1)
-# queues_hourly_to_db('queues_statuslog_hourly', '2022-01-25 02:23:00', n_hours=1)
-# queues_hourly_to_db('queues_statuslog_hourly', '2022-01-25 03:23:00', n_hours=1)
-# queues_hourly_to_db('queues_statuslog_hourly', '2022-01-25 04:23:00', n_hours=1)
-# queues_hourly_to_db('queues_statuslog_hourly', '2022-01-25 05:23:00', n_hours=1)
-# queues_hourly_to_db('queues_statuslog_hourly', '2022-01-25 06:23:00', n_hours=1)
-# queues_hourly_to_db('queues_statuslog_hourly', '2022-01-25 07:23:00', n_hours=1)
-# queues_hourly_to_db('queues_statuslog_hourly', '2022-01-25 08:23:00', n_hours=1)
-# queues_hourly_to_db('queues_statuslog_hourly', '2022-01-25 09:23:00', n_hours=1)
-# queues_hourly_to_db('queues_statuslog_hourly', '2022-01-25 10:23:00', n_hours=1)
-# queues_hourly_to_db('queues_statuslog_hourly', '2022-01-25 11:23:00', n_hours=1)
-#
-#
-# queues_hourly_to_db('queues_statuslog_hourly', '2022-01-24 22:22:57', n_hours=3)
-# queues_hourly_to_db('queues_statuslog_hourly', '2022-01-25 01:22:57', n_hours=3)
-# queues_hourly_to_db('queues_statuslog_hourly', '2022-01-25 04:22:57', n_hours=3)
-# queues_hourly_to_db('queues_statuslog_hourly', '2022-01-25 07:22:57', n_hours=3)
-# queues_hourly_to_db('queues_statuslog_hourly', '2022-01-25 10:22:57', n_hours=3)
-#
-# queues_hourly_to_db('queues_statuslog_hourly', '2022-01-25 01:22:57', n_hours=6)
-# queues_hourly_to_db('queues_statuslog_hourly', '2022-01-25 07:22:57', n_hours=6)
-#
-# queues_hourly_to_db('queues_statuslog_hourly', '2022-01-25 10:22:57', n_hours=12)
+        start_date += delta_day
