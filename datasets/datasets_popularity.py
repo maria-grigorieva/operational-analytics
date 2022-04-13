@@ -60,6 +60,28 @@ def save_historical_popularity_to_db(predefined_date = False):
         pass
 
 
+def production_save_historical_popularity_to_db(predefined_date = False):
+
+    from_date, to_date = set_time_period(predefined_date, n_hours=24)
+
+    if not check_for_data_existance('dataset_historical_popularity_prod', from_date, delete=True):
+        panda_connection = PanDA_engine.connect()
+        query = text(open(SQL_DIR+'/PanDA/data_popularity_prod.sql').read())
+        from_date = day_rounder(datetime.strptime(from_date, "%Y-%m-%d %H:%M:%S"))
+        df = pd.read_sql_query(query, panda_connection, parse_dates={'datetime': '%Y-%m-%d'},
+                               params={'from_date': from_date,
+                                       'hours': 24})
+        df['project'] = df['datasetname'].str.split(':').str.get(0)
+        df['prod_step'] = df['datasetname'].apply(prod_step_extractor)
+        df['data_format_full'] = df['datasetname'].apply(data_format_extractor)
+        df['data_format'] = df['data_format_full'].str.split('_').str.get(0)
+        df['data_format_desc'] = df['data_format_full'].str.split('_').str.get(1)
+        df.drop('data_format_full',axis=1,inplace=True)
+        insert_to_db(df, 'dataset_historical_popularity_prod')
+    else:
+        pass
+
+
 def save_processed_datasets_to_db(predefined_date = False):
 
     from_date, to_date = set_time_period(predefined_date, n_hours=24)
@@ -91,18 +113,19 @@ def save_dataset_task_user_to_db(predefined_date = False):
 
 
 def collect_data_for_period():
-    start_date = datetime(2021, 12, 10, 1, 0, 0)
-    end_date = datetime(2022, 2, 12, 1, 0, 0)
+    start_date = datetime(2022, 2, 10, 1, 0, 0)
+    end_date = datetime(2022, 3, 10, 1, 0, 0)
     delta_day = timedelta(days=1)
 
     while start_date <= end_date:
         print(start_date)
         try:
-            save_processed_datasets_to_db(datetime.strftime(start_date,"%Y-%m-%d %H:%M:%S"))
+            production_save_historical_popularity_to_db(datetime.strftime(start_date,"%Y-%m-%d %H:%M:%S"))
             print(f'{start_date} has been written to the database')
             start_date += delta_day
             print('Data has been written!')
         except:
             print(f'The process has been failed at date {start_date}. Please restart the app.')
 
-# collect_data_for_period()
+
+# save_dataset_task_user_to_db('2022-04-06 00:40:00')

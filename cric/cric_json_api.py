@@ -6,6 +6,9 @@ import os
 from sqlalchemy import create_engine, text, inspect
 from database_helpers.helpers import insert_to_db, check_for_data_existance, day_rounder
 from datetime import datetime
+import ssl
+import urllib3
+import json
 
 ROOT_DIR = os.path.dirname(os.path.abspath(__file__))
 BASE_DIR = os.path.join(ROOT_DIR, '..' )
@@ -24,13 +27,24 @@ url_site_all = urllib.parse.urljoin(cric_base_url, config['CRIC']['url_site_all'
 
 PostgreSQL_engine = create_engine(config['PostgreSQL']['sqlalchemy_engine_str'], echo=True)
 
+http = urllib3.PoolManager(
+    cert_file=os.path.join(BASE_DIR, config['CRIC']['ssl_cert']),
+    cert_reqs="CERT_REQUIRED",
+    key_file=os.path.join(BASE_DIR, config['CRIC']['ssl_key']),
+    key_password=config['CRIC']['cert_pwd'],
+    ca_certs=os.path.join(BASE_DIR, config['CRIC']['tls_ca_certificate'])
+)
 
 def enhance_queues(all=False, with_rse=False):
 
-    cric_queues = requests.get(url_queue_all if all else url_queue,
-                               cert=(os.path.join(BASE_DIR, config['CRIC']['ssl_cert']),
-                                    os.path.join(BASE_DIR, config['CRIC']['ssl_key'])),
-                               verify=os.path.join(BASE_DIR, config['CRIC']['tls_ca_certificate'])).json()
+    # cric_queues = requests.get(url_queue_all if all else url_queue,
+    #                            cert=(os.path.join(BASE_DIR, config['CRIC']['ssl_cert']),
+    #                                 os.path.join(BASE_DIR, config['CRIC']['ssl_key'])),
+    #                            verify=False).json()
+    response = http.request('GET',url_queue_all if all else url_queue)
+    data = response.data
+    cric_queues = json.loads(data)
+                               # os.path.join(BASE_DIR, config['CRIC']['tls_ca_certificate'])).json()
     enhanced_queues = []
 
     for queue, attrs in cric_queues.items():
@@ -87,10 +101,13 @@ def cric_resources_to_db(predefined_date = False):
 def enhance_sites(all=False):
     # cric_base_url = config['CRIC']['cric_base_url']
     # url_queue = urllib.parse.urljoin(cric_base_url, config['CRIC']['url_site'])
-    cric_sites = requests.get(url_site_all if all else url_site,
-                              cert=(os.path.join(BASE_DIR, config['CRIC']['ssl_cert']),
-                              os.path.join(BASE_DIR, config['CRIC']['ssl_key'])),
-                            verify=os.path.join(BASE_DIR, config['CRIC']['tls_ca_certificate'])).json()
+    response = http.request('GET',url_site_all if all else url_site)
+    data = response.data
+    cric_sites = json.loads(data)
+    # cric_sites = requests.get(url_site_all if all else url_site,
+    #                           cert=(os.path.join(BASE_DIR, config['CRIC']['ssl_cert']),
+    #                           os.path.join(BASE_DIR, config['CRIC']['ssl_key'])),
+    #                         verify=os.path.join(BASE_DIR, config['CRIC']['tls_ca_certificate'])).json()
     enhanced_sites = []
 
     for site, attrs in cric_sites.items():
@@ -116,10 +133,13 @@ def get_replicas_sites(list_of_ddm_endpoints):
     list_of_clouds = []
     nested = []
     for endpoint in list_of_ddm_endpoints:
-        for key, value in requests.get(url_site_all,
-                                       cert=(os.path.join(BASE_DIR, config['CRIC']['ssl_cert']),
-                                             os.path.join(BASE_DIR, config['CRIC']['ssl_key'])),
-                                       verify=os.path.join(BASE_DIR, config['CRIC']['tls_ca_certificate'])).json().items():
+        response = http.request('GET', url_site_all)
+        data = response.data
+        for key, value in json.loads(data).items():
+        # for key, value in requests.get(url_site_all,
+        #                                cert=(os.path.join(BASE_DIR, config['CRIC']['ssl_cert']),
+        #                                      os.path.join(BASE_DIR, config['CRIC']['ssl_key'])),
+        #                                verify=os.path.join(BASE_DIR, config['CRIC']['tls_ca_certificate'])).json().items():
             ddm_endpoints = value['ddmendpoints']
             if endpoint in ddm_endpoints:
                 site_info = {

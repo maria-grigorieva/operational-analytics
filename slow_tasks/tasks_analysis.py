@@ -1,0 +1,45 @@
+import os, sys
+ROOT_DIR = os.path.dirname(os.path.abspath(__file__))
+BASE_DIR = os.path.join(ROOT_DIR, '..' )
+sys.path.append(os.path.abspath(BASE_DIR))
+import cx_Oracle
+import cric
+import pandas as pd
+from sqlalchemy import create_engine, text
+import configparser
+from database_helpers.helpers import insert_to_db, check_for_data_existance, set_time_period
+from datetime import datetime, timedelta
+
+import logging
+
+logging.basicConfig()
+logging.getLogger('sqlalchemy.engine').setLevel(logging.ERROR)
+
+SQL_DIR = BASE_DIR+'/sql'
+
+cx_Oracle.init_oracle_client(lib_dir=r"/usr/lib/oracle/19.13/client64/lib")
+
+config = configparser.ConfigParser()
+config.read(BASE_DIR+'/config.ini')
+
+PanDA_engine = create_engine(config['PanDA DB']['sqlalchemy_engine_str'], echo=True, future=True)
+PostgreSQL_engine = create_engine(config['PostgreSQL']['sqlalchemy_engine_str'], echo=True)
+
+
+def long_tasks_to_db(predefined_date = False):
+
+    from_date, to_date = set_time_period(predefined_date, n_hours=24)
+
+    if not check_for_data_existance('long_tasks', from_date, delete=True):
+        panda_connection = PanDA_engine.connect()
+        query = text(open(SQL_DIR+'/PanDA/long_tasks.sql').read())
+        df = pd.read_sql_query(query, panda_connection, parse_dates={'datetime': '%Y-%m-%d'},
+                               params={'from_date': from_date})
+        panda_connection.close()
+        df.fillna(0, inplace=True)
+        insert_to_db(df, 'long_tasks')
+    else:
+        pass
+
+
+# long_tasks_to_db('2022-04-08 01:00:00')

@@ -53,6 +53,67 @@ def calculate_weights(predefined_date = False):
         pass
 
 
+def calculate_weights_overall(predefined_date = False):
+
+    from_date, to_date = set_time_period(predefined_date, n_hours=24)
+
+    if not check_for_data_existance('resource_weight_overall', from_date, delete=True):
+
+        postgres_connection = PostgreSQL_engine.connect()
+        query = text(open(SQL_DIR + '/postgreSQL/resource_weight_overall.sql').read())
+        df = pd.read_sql_query(query, postgres_connection, parse_dates={'datetime': '%Y-%m-%d'}, params={'now':from_date})
+        postgres_connection.close()
+        df.set_index(['queue', 'rse', 'site', 'cloud', 'tier_level', 'datetime'],inplace=True)
+        norm_df = df.apply(lambda x: round((x - np.mean(x)) / (np.max(x) - np.min(x)), 3))
+        norm_df[np.isnan(norm_df)] = 0
+        norm_df.reset_index(inplace=True)
+
+        norm_df['overall_weekly_weight'] = norm_df['queue_efficiency'] + \
+                                norm_df['difference'] + \
+                                norm_df['utilization_diff'] + \
+                                norm_df['fullness_diff'] + \
+                                norm_df['queue_time_diff'] + \
+                                norm_df['daily_jobs_number']
+
+        df.reset_index(inplace=True)
+
+        df['overall_weekly_weight'] = round(norm_df['overall_weekly_weight'], 3)
+
+        insert_to_db(df, 'resource_weight_overall')
+    else:
+        pass
+
+
+
+def calculate_queue_weights(predefined_date = False):
+
+    from_date, to_date = set_time_period(predefined_date, n_hours=24)
+
+    if not check_for_data_existance('queue_weights', from_date, delete=True):
+
+        postgres_connection = PostgreSQL_engine.connect()
+        query = text(open(SQL_DIR + '/postgreSQL/queue_weight.sql').read())
+        df = pd.read_sql_query(query, postgres_connection, parse_dates={'datetime': '%Y-%m-%d'}, params={'now':from_date})
+        postgres_connection.close()
+        df.set_index(['queue', 'site', 'cloud', 'tier_level', 'datetime'],inplace=True)
+        norm_df = df.apply(lambda x: round((x - np.mean(x)) / (np.max(x) - np.min(x)), 3))
+        norm_df[np.isnan(norm_df)] = 0
+        norm_df.reset_index(inplace=True)
+
+
+        norm_df['queue_weight'] = norm_df['queue_efficiency'] + \
+                                norm_df['utilization_diff'] + \
+                                norm_df['fullness_diff'] + \
+                                norm_df['queue_time_diff'] + \
+                                norm_df['daily_jobs_number']
+
+        df.reset_index(inplace=True)
+
+        df['queue_weight'] = round(norm_df['queue_weight'], 3)
+
+        insert_to_db(df, 'queue_weights')
+    else:
+        pass
 # def calculate_weights(datasetname):
 #     postgres_connection = PostgreSQL_engine.connect()
 #     query = text(open(SQL_DIR + '/postgreSQL/merging.sql').read())
@@ -92,13 +153,13 @@ def calculate_weights(predefined_date = False):
 
 # calculate_weights()
 # calculate_weights('data16_13TeV:data16_13TeV.00299584.physics_Main.deriv.DAOD_TOPQ1.r9264_p3083_p4513_tid25513236_00')
-# start_date = datetime(2021, 12, 10, 1, 0, 0)
-# end_date = datetime(2022, 2, 12, 1, 00, 0)
+# start_date = datetime(2021, 12, 20, 1, 0, 0)
+# end_date = datetime(2022, 4, 7, 1, 00, 0)
 # delta_day = timedelta(days=1)
 #
 # while start_date <= end_date:
 #     print(start_date)
-#     calculate_weights(datetime.strftime(start_date,"%Y-%m-%d %H:%M:%S"))
+#     calculate_queue_weights(datetime.strftime(start_date,"%Y-%m-%d %H:%M:%S"))
 #     start_date += delta_day
 #     print('Data has been written!')
 
