@@ -8,7 +8,7 @@ import pandas as pd
 from sqlalchemy import create_engine, text
 import configparser
 from cric.cric_json_api import enhance_queues
-from database_helpers.helpers import insert_to_db, check_for_data_existance, set_time_period
+from database_helpers.helpers import insert_to_db, check_for_data_existance, set_time_period, localized_now
 from datetime import datetime, timedelta
 
 import logging
@@ -61,12 +61,16 @@ metrics = {
             'sql': SQL_DIR + '/PanDA/queues_statuslog_hourly.sql',
             'table_name': 'queues_snapshot_intervals'
         },
+    'queues_hourly':
+        {
+            'sql': SQL_DIR + '/PanDA/queues_statuslog_hourly.sql',
+            'table_name': 'queues_intervals'
+        },
     'queues_statuslog_actual':
         {
             'sql': SQL_DIR+'/PanDA/queues_statuslog_actual.sql',
             'table_name': 'queues_snapshots'
         }
-
 }
 
 PanDA_engine = create_engine(config['PanDA DB']['sqlalchemy_engine_str'], echo=True, future=True)
@@ -91,7 +95,7 @@ def queues_to_db(metric, predefined_date = False):
 
 def queues_hourly_to_db(metric, predefined_date = False, n_hours=1):
 
-    now = datetime.strftime(datetime.now(),"%Y-%m-%d %H:%M:%S") if not predefined_date else str(predefined_date)
+    now = datetime.strftime(localized_now(),"%Y-%m-%d %H:%M:%S") if not predefined_date else str(predefined_date)
 
     panda_connection = PanDA_engine.connect()
     postgresql_connection = PostgreSQL_engine.connect()
@@ -99,6 +103,7 @@ def queues_hourly_to_db(metric, predefined_date = False, n_hours=1):
     df = pd.read_sql_query(query, panda_connection,parse_dates={'datetime': '%Y-%m-%d %H:%M:%S'},
                            params={'now': now,'n_hours': n_hours})
     panda_connection.close()
+    print(f'{df.shape[0]} rows has been returned from PanDA DB')
     from_cric = cric.cric_json_api.enhance_queues()
     result = pd.merge(df, from_cric, left_on='queue', right_on='queue')
     result['transferring_diff'] = result['transferring_limit'] - result['transferring']
@@ -106,31 +111,34 @@ def queues_hourly_to_db(metric, predefined_date = False, n_hours=1):
     result['corecount'].fillna(0,inplace=True)
     # Custom check for existance using datetime and interval_hours parameters
     with postgresql_connection.begin():
-        if postgresql_connection.execute(text(f'SELECT * FROM queues_snapshot_intervals '
+        try:
+            if postgresql_connection.execute(text(f'SELECT * FROM {metrics.get(metric)["table_name"]} '
                                               f'WHERE datetime = DATE_TRUNC(\'hour\', TIMESTAMP \'{now}\') '
                                               f'AND interval_hours = {n_hours}')).rowcount == 0:
-            insert_to_db(result,metrics.get(metric)["table_name"])
-            postgresql_connection.close()
-        else:
-            pass
-
-
-def collect_queue_daily_for_period():
-
-    start_date = datetime(2022, 1, 29, 0, 0, 0)
-    end_date = datetime(2022, 1, 29, 17, 00, 0)
-    delta_day = timedelta(days=1)
-
-    while start_date <= end_date:
-        print(start_date)
-        queues_hourly_to_db('queues_statuslog_actual', predefined_date = start_date, n_hours=24)
-        start_date += delta_day
+                insert_to_db(result,metrics.get(metric)["table_name"])
+                postgresql_connection.close()
+                print(f'The data has {len(result)} rows')
+        except Exception as e:
+            print('Insert data failed!')
 
 
 
-def collect_hourly_data_for_period():
-    start_date = datetime(2022, 1, 29, 0, 0, 0)
-    end_date = datetime(2022, 1, 29, 17, 00, 0)
+# def collect_queue_daily_for_period():
+#
+#     start_date = datetime(2022, 2, 10, 18, 0, 0)
+#     end_date = datetime(2022, 5, 15, 16, 00, 0)
+#     delta_day = timedelta(days=1)
+#
+#     while start_date <= end_date:
+#         print(start_date)
+#         queues_hourly_to_db('queues_statuslog_actual', predefined_date = start_date, n_hours=24)
+#         start_date += delta_day
+
+
+
+def collect_hourly_data_for_period(metric):
+    start_date = datetime(2022, 5, 16, 0, 0, 0)
+    end_date = datetime(2022, 5, 17, 0, 0, 0)
     delta_day = timedelta(days=1)
     delta_1hour = timedelta(hours=1)
     delta_3hours = timedelta(hours=3)
@@ -143,27 +151,34 @@ def collect_hourly_data_for_period():
         curr_date = start_date
         while curr_date <= start_date + delta_day:
             print(curr_date)
-            queues_hourly_to_db('queues_statuslog_hourly', predefined_date = curr_date, n_hours=1)
+            queues_hourly_to_db(metric, predefined_date = curr_date, n_hours=1)
             curr_date += delta_1hour
 
         curr_date = start_date
         while curr_date <= start_date + delta_day:
             print(curr_date)
-            queues_hourly_to_db('queues_statuslog_hourly', predefined_date = curr_date, n_hours=3)
+            queues_hourly_to_db(metric, predefined_date = curr_date, n_hours=3)
             curr_date += delta_3hours
 
         curr_date = start_date
         while curr_date <= start_date + delta_day:
             print(curr_date)
-            queues_hourly_to_db('queues_statuslog_hourly', predefined_date = curr_date, n_hours=6)
+            queues_hourly_to_db(metric, predefined_date = curr_date, n_hours=6)
             curr_date += delta_6hours
 
         curr_date = start_date
         while curr_date <= start_date + delta_day:
             print(curr_date)
-            queues_hourly_to_db('queues_statuslog_hourly', predefined_date = curr_date, n_hours=12)
+            queues_hourly_to_db(metric, predefined_date = curr_date, n_hours=12)
             curr_date += delta_12hours
 
-        queues_hourly_to_db('queues_statuslog_hourly', predefined_date = start_date, n_hours=24)
+        queues_hourly_to_db(metric, predefined_date = start_date, n_hours=24)
 
         start_date += delta_day
+
+#
+# collect_hourly_data_for_period('queues_hourly')
+
+#queues_hourly_to_db('queues_statuslog_hourly','2022-05-16 10:00:00',1)
+# queues_hourly_to_db('queues_hourly','2022-05-17 15:00:00',1)
+# queues_hourly_to_db('queues_hourly',False,1)

@@ -11,7 +11,16 @@ import json
 import os
 import pandas as pd
 import re
+import pytz
 os.environ["GOOGLE_APPLICATION_CREDENTIALS"]="/opt/data_placement/conf/atlas-336515-9bbd95e3dadf.json"
+
+import logging
+
+logging.basicConfig()
+logging.getLogger('sqlalchemy').setLevel(logging.ERROR)
+# sqla_logger = logging.getLogger('sqlalchemy')
+# sqla_logger.propagate = False
+# sqla_logger.addHandler(logging.FileHandler('sqla.log'))
 
 
 SQL_DIR = BASE_DIR+'/sql'
@@ -131,6 +140,7 @@ def check_bigquery(table_name, now):
 def delete_from_pgsql(table_name, now, accuracy='day'):
 
     conn = PostgreSQL_engine.connect()
+    # now = day_rounder(datetime.strptime(now, "%Y-%m-%d %H:%M:%S"))
     remove_statement = f'DELETE FROM {table_name} WHERE datetime >= date_trunc(\'{accuracy}\', TIMESTAMP \'{now}\') ' \
             f'AND datetime < date_trunc(\'{accuracy}\', TIMESTAMP \'{now}\' + INTERVAL \'1day\')'
     conn.execute(text(remove_statement))
@@ -152,25 +162,24 @@ def delete_from_bigquery(table_name, now):
 
 def set_start_end_dates(predefined_date):
 
-    if not predefined_date:
-        return datetime.strftime(datetime.now(),'%Y-%m-%d'), \
-               datetime.strftime(datetime.now() + timedelta(days=1),'%Y-%m-%d')
+    d = localized_now() if not predefined_date else datetime.strptime(predefined_date, "%Y-%m-%d")
+    return datetime.strftime(d, '%Y-%m-%d'), \
+           datetime.strftime(d + timedelta(days=1), '%Y-%m-%d')
 
-    else:
-        return datetime.strftime(datetime.strptime(predefined_date, "%Y-%m-%d"), "%Y-%m-%d"), \
-                             datetime.strftime(datetime.strptime(predefined_date, "%Y-%m-%d") + timedelta(days=1),"%Y-%m-%d")
+
+def localized_now():
+    oracle_tz = pytz.timezone("Europe/Zurich")
+    d = datetime.now()
+    local_datetime = oracle_tz.localize(d, is_dst=None)
+    utc_datetime = local_datetime.astimezone(pytz.utc)
+    return utc_datetime
 
 
 def set_time_period(predefined_date, n_hours = 1):
 
-    if not predefined_date:
-        return datetime.strftime(datetime.now()-timedelta(hours=n_hours),'%Y-%m-%d %H:%M:%S'), \
-               datetime.strftime(datetime.now(),'%Y-%m-%d %H:%M:%S')
-
-    else:
-        return datetime.strftime(datetime.strptime(predefined_date, "%Y-%m-%d %H:%M:%S") - timedelta(hours=n_hours),"%Y-%m-%d %H:%M:%S"), \
-               datetime.strftime(datetime.strptime(predefined_date, "%Y-%m-%d %H:%M:%S"), "%Y-%m-%d %H:%M:%S")
-
+    d = localized_now() if not predefined_date else datetime.strptime(predefined_date, "%Y-%m-%d %H:%M:%S")
+    return datetime.strftime(d - timedelta(hours=n_hours), '%Y-%m-%d %H:%M:%S'), \
+           datetime.strftime(d, '%Y-%m-%d %H:%M:%S')
 
 
 def hour_rounder(t):

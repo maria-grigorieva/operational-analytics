@@ -1,0 +1,211 @@
+[
+  {
+    "mode": "NULLABLE",
+    "name": "jeditaskid",
+    "type": "INTEGER"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "attemptnr",
+    "type": "INTEGER"
+  },
+    {
+    "mode": "NULLABLE",
+    "name": "startstatus",
+    "type": "STRING"
+  },
+      {
+    "mode": "NULLABLE",
+    "name": "endstatus",
+    "type": "STRING"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "attempt_status",
+    "type": "STRING"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "rerefined_tstamp",
+    "type": "STRING"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "defined_tstamp",
+    "type": "STRING"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "ready_tstamp",
+    "type": "STRING"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "running_tstamp",
+    "type": "STRING"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "scouting_tstamp",
+    "type": "STRING"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "defined_time",
+    "type": "FLOAT"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "ready_time",
+    "type": "FLOAT"
+  },
+    {
+    "mode": "NULLABLE",
+    "name": "scouting_time",
+    "type": "FLOAT"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "running_time",
+    "type": "FLOAT"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "pending_time",
+    "type": "FLOAT"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "throttled_time",
+    "type": "FLOAT"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "exhausted_time",
+    "type": "FLOAT"
+  },
+    {
+    "mode": "NULLABLE",
+    "name": "time_before_next_attempt",
+    "type": "FLOAT"
+  },
+    {
+    "mode": "NULLABLE",
+    "name": "waiting_time",
+    "type": "FLOAT"
+  },
+      {
+    "mode": "NULLABLE",
+    "name": "start_tstamp",
+    "type": "TIMESTAMP"
+  },
+    {
+    "mode": "NULLABLE",
+    "name": "end_tstamp",
+    "type": "TIMESTAMP"
+  },
+    {
+    "mode": "NULLABLE",
+    "name": "total_time",
+    "type": "FLOAT"
+  },
+      {
+    "mode": "NULLABLE",
+    "name": "processingtype",
+    "type": "STRING"
+  },
+      {
+    "mode": "NULLABLE",
+    "name": "taskpriority",
+    "type": "INTEGER"
+  },
+      {
+    "mode": "NULLABLE",
+    "name": "currentpriority",
+    "type": "INTEGER"
+  },
+      {
+    "mode": "NULLABLE",
+    "name": "architecture",
+    "type": "STRING"
+  },
+      {
+    "mode": "NULLABLE",
+    "name": "transuses",
+    "type": "STRING"
+  },
+      {
+    "mode": "NULLABLE",
+    "name": "transhome",
+    "type": "STRING"
+  },
+      {
+    "mode": "NULLABLE",
+    "name": "transpath",
+    "type": "STRING"
+  },
+      {
+    "mode": "NULLABLE",
+    "name": "resource_type",
+    "type": "STRING"
+  },
+      {
+    "mode": "NULLABLE",
+    "name": "splitrule",
+    "type": "STRING"
+  },
+      {
+    "mode": "NULLABLE",
+    "name": "nfiles",
+    "type": "INTEGER"
+  },
+      {
+    "mode": "NULLABLE",
+    "name": "nfilestobeused",
+    "type": "INTEGER"
+  },
+  {"mode": "NULLABLE",
+    "name": "nfilesused",
+    "type": "INTEGER"
+  },
+    {"mode": "NULLABLE",
+    "name": "nevents",
+    "type": "INTEGER"
+  },
+    {"mode": "NULLABLE",
+    "name": "neventstobeused",
+    "type": "INTEGER"
+  },
+    {"mode": "NULLABLE",
+    "name": "neventsused",
+    "type": "INTEGER"
+  },
+    {"mode": "NULLABLE",
+    "name": "nfilesfinished",
+    "type": "INTEGER"
+  },
+    {"mode": "NULLABLE",
+    "name": "nfilesfailed",
+    "type": "INTEGER"
+  },
+    {"mode": "NULLABLE",
+    "name": "input_format",
+    "type": "STRING"
+  },
+      {"mode": "NULLABLE",
+    "name": "input_format_short",
+    "type": "STRING"
+  },
+      {"mode": "NULLABLE",
+    "name": "input_format_desc",
+    "type": "STRING"
+  },
+    {"mode": "NULLABLE",
+    "name": "input_type",
+    "type": "STRING"
+  },
+    {"mode": "NULLABLE",
+    "name": "ndatasets",
+    "type": "INTEGER"
+  }
+]

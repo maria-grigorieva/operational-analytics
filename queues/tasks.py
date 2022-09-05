@@ -17,35 +17,35 @@ def check():
 
 
 @app.task(name="queues_1hour",autoretry_for=(Exception,),max_retries=5,default_retry_delay=600)
-def queues_1hour(metric='queues_statuslog_hourly',n_hours=1):
+def queues_1hour(metric='queues_hourly',n_hours=1):
     try:
         return queues_hourly_to_db_worker(metric,n_hours=n_hours)
     except Exception as e:
         raise e
 
 @app.task(name="queues_3hours",autoretry_for=(Exception,),max_retries=5,default_retry_delay=600)
-def queues_1hour(metric='queues_statuslog_hourly',n_hours=3):
+def queues_1hour(metric='queues_hourly',n_hours=3):
     try:
         return queues_hourly_to_db_worker(metric,n_hours=n_hours)
     except Exception as e:
         raise e
 
 @app.task(name="queues_6hours",autoretry_for=(Exception,),max_retries=5,default_retry_delay=600)
-def queues_1hour(metric='queues_statuslog_hourly',n_hours=6):
+def queues_1hour(metric='queues_hourly',n_hours=6):
     try:
         return queues_hourly_to_db_worker(metric,n_hours=n_hours)
     except Exception as e:
         raise e
 
 @app.task(name="queues_12hours",autoretry_for=(Exception,),max_retries=5,default_retry_delay=600)
-def queues_1hour(metric='queues_statuslog_hourly',n_hours=12):
+def queues_1hour(metric='queues_hourly',n_hours=12):
     try:
         return queues_hourly_to_db_worker(metric,n_hours=n_hours)
     except Exception as e:
         raise e
 
 @app.task(name="queues_1day",autoretry_for=(Exception,),max_retries=5,default_retry_delay=600)
-def queues_1hour(metric='queues_statuslog_hourly',n_hours=24):
+def queues_1hour(metric='queues_hourly',n_hours=24):
     try:
         return queues_hourly_to_db_worker(metric,n_hours=n_hours)
     except Exception as e:

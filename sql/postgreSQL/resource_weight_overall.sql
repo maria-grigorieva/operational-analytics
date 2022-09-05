@@ -4,9 +4,12 @@ WITH b as (
                rse as rse,
                cloud as cloud,
                tier_level as tier_level,
+               corepower,
+               corecount,
                queue_efficiency,
                queue_fullness,
-               (SELECT avg(queue_fullness) FROM queues_snapshots WHERE datetime >= date_trunc('day', TIMESTAMP :now) - INTERVAL '1 week') as fullness_hist,
+               (SELECT avg(queue_fullness) FROM queues_snapshots
+                WHERE datetime >= date_trunc('day', TIMESTAMP :now) - INTERVAL '1 week') as fullness_hist,
                queue_utilization,
                (SELECT avg(queue_utilization) FROM queues_snapshots WHERE datetime >= date_trunc('day', TIMESTAMP :now)- INTERVAL '1 week') as utilization_hist,
                avg_queue_time,
@@ -18,6 +21,7 @@ WITH b as (
                datetime
         FROM resource_snapshot
         WHERE datetime >= date_trunc('day', TIMESTAMP :now) - INTERVAL '1 day' and datetime < :now
+        AND state = 'ACTIVE' and status = 'online' and queue not LIKE '%TEST%'
     ),
      aft as (SELECT queue, avg(queue_fullness) as fullness_hist_pq FROM queues_snapshots
                      WHERE datetime >= date_trunc('day', TIMESTAMP :now) - INTERVAL '1 week'
@@ -45,6 +49,8 @@ SELECT b.site,
        b.rse,
        b.cloud,
        b.tier_level,
+       b.corepower,
+       b.corecount,
        b.queue_efficiency,
        b.queue_fullness,
        round(b.fullness_hist::numeric,4) as fullness_hist,
@@ -73,7 +79,6 @@ AND aut.queue = b.queue
 AND aqt.queue = b.queue
 AND djn.queue = b.queue
 AND art.queue = b.queue
-AND b.difference > 0
-AND b.queue_efficiency >= 0.75
-AND (b.queue_fullness > 0 AND b.queue_fullness <= b.fullness_hist)
-AND (b.queue_utilization > 0 AND b.queue_utilization <= b.utilization_hist)
+-- AND b.difference > 0
+-- AND (b.queue_fullness > 0 AND b.queue_fullness <= b.fullness_hist)
+-- AND (b.queue_utilization > 0 AND b.queue_utilization <= b.utilization_hist)

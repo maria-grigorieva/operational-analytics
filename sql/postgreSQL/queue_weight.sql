@@ -1,5 +1,5 @@
 WITH a AS (
-    SELECT queue, site, cloud, tier_level FROM cric_resources
+    SELECT queue, site, cloud, tier_level, corepower, corecount FROM cric_resources
     WHERE datetime >= date_trunc('day', TIMESTAMP :now) - INTERVAL '1 day' and datetime < :now
 ),
   b as (
@@ -41,6 +41,8 @@ SELECT b.queue,
        a.site,
        a.cloud,
        a.tier_level,
+       a.corepower,
+       a.corecount,
        b.queue_efficiency,
        b.queue_fullness,
        round(b.fullness_hist::numeric,4) as fullness_hist,

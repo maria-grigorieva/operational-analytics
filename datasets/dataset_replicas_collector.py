@@ -86,4 +86,4 @@ def collect_dataset(name):
                   index=False)
 
 #collect_dataset('mc20_13TeV:mc20_13TeV.700019.Sh_228_mmgamma_pty7_ptV90.deriv.DAOD_EGAM4.e7947_s3681_r13167_r13146_p4940_tid27820266_00')
-# dataset_replicas_to_db()
+# dataset_replicas_to_db('2022-04-11 05:00:00')

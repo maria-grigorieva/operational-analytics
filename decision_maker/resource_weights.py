@@ -4,6 +4,7 @@ from sqlalchemy import create_engine, text
 import configparser
 import numpy as np
 from database_helpers.helpers import insert_to_db, check_for_data_existance, set_time_period, day_rounder
+from sklearn.preprocessing import StandardScaler
 
 ROOT_DIR = os.path.dirname(os.path.abspath(__file__))
 BASE_DIR = os.path.join(ROOT_DIR, '..' )
@@ -63,21 +64,28 @@ def calculate_weights_overall(predefined_date = False):
         query = text(open(SQL_DIR + '/postgreSQL/resource_weight_overall.sql').read())
         df = pd.read_sql_query(query, postgres_connection, parse_dates={'datetime': '%Y-%m-%d'}, params={'now':from_date})
         postgres_connection.close()
-        df.set_index(['queue', 'rse', 'site', 'cloud', 'tier_level', 'datetime'],inplace=True)
-        norm_df = df.apply(lambda x: round((x - np.mean(x)) / (np.max(x) - np.min(x)), 3))
-        norm_df[np.isnan(norm_df)] = 0
-        norm_df.reset_index(inplace=True)
+        df.set_index(['queue', 'rse', 'site', 'cloud', 'tier_level', 'datetime'], inplace=True)
+        idx = df.index
+        cols = df.columns
+        # scaler = StandardScaler()
+        # scaled = scaler.fit_transform(df)
+        scaled_df = df.apply(lambda x: round((x - np.mean(x)) / (np.max(x) - np.min(x)), 3))
+        scaled_df[np.isnan(scaled_df)] = 0
+        # scaled_df = pd.DataFrame(scaled, index=idx, columns=cols)
+        scaled_df.reset_index(inplace=True)
 
-        norm_df['overall_weekly_weight'] = norm_df['queue_efficiency'] + \
-                                norm_df['difference'] + \
-                                norm_df['utilization_diff'] + \
-                                norm_df['fullness_diff'] + \
-                                norm_df['queue_time_diff'] + \
-                                norm_df['daily_jobs_number']
+        scaled_df['resource_weight'] = scaled_df['queue_efficiency'] + \
+                                scaled_df['difference'] + \
+                                scaled_df['utilization_diff'] + \
+                                scaled_df['fullness_diff'] + \
+                                scaled_df['queue_time_diff'] + \
+                                scaled_df['daily_jobs_diff'] + \
+                                scaled_df['corepower']
+
 
         df.reset_index(inplace=True)
 
-        df['overall_weekly_weight'] = round(norm_df['overall_weekly_weight'], 3)
+        df['resource_weight'] = round(scaled_df['resource_weight'], 3)
 
         insert_to_db(df, 'resource_weight_overall')
     else:
@@ -153,15 +161,17 @@ def calculate_queue_weights(predefined_date = False):
 
 # calculate_weights()
 # calculate_weights('data16_13TeV:data16_13TeV.00299584.physics_Main.deriv.DAOD_TOPQ1.r9264_p3083_p4513_tid25513236_00')
-# start_date = datetime(2021, 12, 20, 1, 0, 0)
-# end_date = datetime(2022, 4, 7, 1, 00, 0)
-# delta_day = timedelta(days=1)
-#
-# while start_date <= end_date:
-#     print(start_date)
-#     calculate_queue_weights(datetime.strftime(start_date,"%Y-%m-%d %H:%M:%S"))
-#     start_date += delta_day
-#     print('Data has been written!')
+start_date = datetime(2022, 7, 1, 1, 0, 0)
+end_date = datetime(2022, 7, 25, 1, 00, 0)
+delta_day = timedelta(days=1)
+
+while start_date <= end_date:
+    print(start_date)
+    calculate_weights_overall(datetime.strftime(start_date,"%Y-%m-%d %H:%M:%S"))
+    start_date += delta_day
+    print('Data has been written!')
+
+# calculate_queue_weights('2022-04-21 01:00:00')
 
 
 

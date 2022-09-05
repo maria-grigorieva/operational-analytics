@@ -14,54 +14,46 @@ app = Celery('checker',
                       'rse_info.tasks',
                       'cric.tasks',
                       'merging.tasks',
-                      'decision_maker.tasks'])
+                      'decision_maker.tasks',
+                      'slow_tasks.tasks'])
 
 
 app.conf.beat_schedule = {
-    # 'popularity_every_4_hours': {
-    #     'task': 'popularity_by_tasks',
-    #     'schedule': 3600,
-    #     'args': ('2021-12-01 00:00:00',),
-    # },
-    # 'daily_queueing_time': {
-    #     'task': 'merged_queues_metrics',
-    #     'schedule': 86400
-    # },
     'weekly_distances': {
         'task': 'save_distances_to_db',
         'schedule': crontab(minute=15, hour=22, day_of_week='sunday')
     },
-    # 'daily_datasets': {
-    #     'task': 'datasets_collector',
-    #     'schedule': crontab(minute=30, hour=23)
+    # 'long_tasks_to_db': {
+    #     'task': 'long_tasks_to_db',
+    #     'schedule': crontab(minute=10, hour=1)
     # },
     'storage_info': {
         'task': 'save_storage_attrs_to_db',
-        'schedule': crontab(minute=5, hour=22)
+        'schedule': crontab(minute=5, hour=23)
     },
     'cric': {
         'task': 'cric_resources_to_db',
-        'schedule': crontab(minute=30, hour=22)
+        'schedule': crontab(minute=30, hour=23)
     },
     'queues_statuslog_actual': {
         'task': 'queues_statuslog_actual',
-        'schedule': crontab(minute=10, hour=00)
+        'schedule': crontab(minute=10, hour=3)
     },
-    # 'datasets_info_daily': {
-    #     'task': 'save_popularity_to_db',
-    #     'schedule': crontab(minute=30, hour=00)
-    # },
+    'calculate_queue_weights': {
+        'task': 'calculate_queue_weights',
+        'schedule': crontab(minute=30, hour=3)
+    },
     'datasets_info_daily_v1': {
       'task': 'save_dataset_task_user_to_db',
-      'schedule': crontab(minute=40, hour=00)
+      'schedule': crontab(minute=40, hour=3)
     },
     'dataset_replicas_to_db': {
         'task': 'dataset_replicas_to_db',
-        'schedule': crontab(minute=00, hour=5)
+        'schedule': crontab(minute=00, hour=7)
     },
     'merge': {
         'task': 'merge',
-        'schedule': crontab(minute=00, hour=3)
+        'schedule': crontab(minute=00, hour=5)
     },
     'merge_datasets': {
         'task': 'merge_datasets',
@@ -73,7 +65,7 @@ app.conf.beat_schedule = {
     },
     'resource_weights': {
         'task': 'calculate_weights',
-        'schedule': crontab(minute=00, hour=6)
+        'schedule': crontab(minute=00, hour=8)
     },
     # 'run-me-every-10-sec': {
     #     'task': 'checker.tasks.check',
@@ -97,15 +89,17 @@ app.conf.beat_schedule = {
     },
     'queues_1day': {
         'task': 'queues_1day',
-        'schedule': crontab(minute=10, hour=0)
+        'schedule': crontab(minute=0, hour=3)
     }
 }
-app.conf.timezone = 'Europe/Berlin'
-
-#app.autodiscover_tasks(["tasks"])
+# app.conf.enable_utc = True
+# app.conf.timezone = 'Africa/Accra'
+#app.conf.timezone = 'Europe/London'
 
 app.conf.update(
     result_expires=3600,
+    # enable_utc=True,
+    timezone='Europe/Zurich'
 )
 
 if __name__ == '__main__':

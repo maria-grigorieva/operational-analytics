@@ -1,0 +1,182 @@
+[
+  {
+    "mode": "NULLABLE",
+    "name": "jeditaskid",
+    "type": "INTEGER"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "task_attemptnr",
+    "type": "INTEGER"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "pandaid",
+    "type": "INTEGER"
+  },
+    {
+    "mode": "NULLABLE",
+    "name": "queue",
+    "type": "STRING"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "datasetname",
+    "type": "STRING"
+  },
+    {
+    "mode": "NULLABLE",
+    "name": "ninputdatafiles",
+    "type": "INTEGER"
+  },
+    {
+    "mode": "NULLABLE",
+    "name": "noutputdatafiles",
+    "type": "INTEGER"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "inputfilebytes",
+    "type": "INTEGER"
+  },
+    {
+    "mode": "NULLABLE",
+    "name": "outputfilebytes",
+    "type": "INTEGER"
+  },
+    {
+    "mode": "NULLABLE",
+    "name": "lib_size",
+    "type": "INTEGER"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "inputfiletype",
+    "type": "STRING"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "inputfileproject",
+    "type": "STRING"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "corecount",
+    "type": "INTEGER"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "actualcorecount",
+    "type": "INTEGER"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "nevents",
+    "type": "INTEGER"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "cpuconsumptionunit",
+    "type": "STRING"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "cpuconsumptiontime",
+    "type": "INTEGER"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "status",
+    "type": "STRING"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "assignedpriority",
+    "type": "INTEGER"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "currentpriority",
+    "type": "INTEGER"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "atlasrelease",
+    "type": "STRING"
+  },
+    {
+    "mode": "NULLABLE",
+    "name": "transformation",
+    "type": "STRING"
+  },
+    {
+    "mode": "NULLABLE",
+    "name": "homepackage",
+    "type": "STRING"
+  },
+      {
+    "mode": "NULLABLE",
+    "name": "resource_type",
+    "type": "STRING"
+  },
+       {
+    "mode": "NULLABLE",
+    "name": "processingtype",
+    "type": "STRING"
+  },
+         {
+    "mode": "NULLABLE",
+    "name": "hs06sec",
+    "type": "INTEGER"
+  },
+        {
+    "mode": "NULLABLE",
+    "name": "execution_start_tstamp",
+    "type": "TIMESTAMP"
+  },
+          {
+    "mode": "NULLABLE",
+    "name": "execution_end_tstamp",
+    "type": "TIMESTAMP"
+  },
+        {
+    "mode": "NULLABLE",
+    "name": "transferring_tstamp",
+    "type": "STRING"
+  },
+          {
+    "mode": "NULLABLE",
+    "name": "creation_tstamp",
+    "type": "TIMESTAMP"
+  },
+            {
+    "mode": "NULLABLE",
+    "name": "completed_tstamp",
+    "type": "TIMESTAMP"
+  },
+        {
+    "mode": "NULLABLE",
+    "name": "waiting_time",
+    "type": "FLOAT"
+  },
+          {
+    "mode": "NULLABLE",
+    "name": "execution_time",
+    "type": "FLOAT"
+  },
+        {
+    "mode": "NULLABLE",
+    "name": "total_time",
+    "type": "FLOAT"
+  },
+        {
+    "mode": "NULLABLE",
+    "name": "transferring_time",
+    "type": "FLOAT"
+  },
+          {
+    "mode": "NULLABLE",
+    "name": "merging_time",
+    "type": "FLOAT"
+  }
+]

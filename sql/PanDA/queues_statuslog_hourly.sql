@@ -18,8 +18,8 @@ SELECT queue,
                 'queued'                                                as status,
                 NVL(count(distinct pandaid), 0)                         as n_jobs
          FROM ATLAS_PANDA.JOBS_STATUSLOG
-         WHERE modificationtime >= (to_date(:now, 'YYYY-MM-DD HH24:MI:SS') - :n_hours/24)
-           AND modificationtime < to_date(:now, 'YYYY-MM-DD HH24:MI:SS')
+         WHERE modificationtime >= (TRUNC(to_date(:now, 'YYYY-MM-DD HH24:MI:SS'),'HH24') - :n_hours/24)
+           AND modificationtime < TRUNC(to_date(:now, 'YYYY-MM-DD HH24:MI:SS'),'HH24')
            AND prodsourcelabel = 'user'
            AND jobstatus in ('activated', 'defined', 'starting', 'assigned')
          GROUP BY computingsite
@@ -29,8 +29,8 @@ SELECT queue,
                 jobstatus,
                 NVL(count(distinct pandaid), 0)                         as n_jobs
          FROM ATLAS_PANDA.JOBS_STATUSLOG
-         WHERE modificationtime >= (to_date(:now, 'YYYY-MM-DD HH24:MI:SS') - :n_hours/24)
-           AND modificationtime < to_date(:now, 'YYYY-MM-DD HH24:MI:SS')
+         WHERE modificationtime >= (TRUNC(to_date(:now, 'YYYY-MM-DD HH24:MI:SS'),'HH24') - :n_hours/24)
+           AND modificationtime < TRUNC(to_date(:now, 'YYYY-MM-DD HH24:MI:SS'),'HH24')
            AND prodsourcelabel = 'user'
            AND jobstatus in ('running', 'finished', 'failed', 'closed', 'cancelled', 'transferring')
          GROUP BY computingsite, jobstatus
