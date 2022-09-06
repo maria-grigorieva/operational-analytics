@@ -98,6 +98,28 @@ def cric_resources_to_db(predefined_date = False):
         pass
 
 
+def actual_cric_info():
+
+    now = datetime.strftime(datetime.now(), "%Y-%m-%d %H:%M:%S")
+
+    if not check_for_data_existance('actual_cric_info', now, delete=True):
+        result = enhance_queues()
+        result['datetime'] = day_rounder(datetime.strptime(now, "%Y-%m-%d %H:%M:%S"))
+        int_columns = result.select_dtypes(include=['int', 'float']).columns
+        result[int_columns] = result[int_columns].fillna(0)
+        result['datetime'] = pd.to_datetime(result['datetime'])
+        result = result.astype({'nodes': 'int64',
+                                  'transferring_limit': 'int64',
+                                  'tier_level': 'int64',
+                                  'corepower': 'float64',
+                                  'corecount': 'float64',
+                                  'datetime': 'datetime64'
+                                  })
+        insert_to_db(result, 'actual_cric_info')
+    else:
+        pass
+
+
 def enhance_sites(all=False):
     # cric_base_url = config['CRIC']['cric_base_url']
     # url_queue = urllib.parse.urljoin(cric_base_url, config['CRIC']['url_site'])
@@ -161,3 +183,4 @@ def get_replicas_sites(list_of_ddm_endpoints):
 
 # #
 # cric_resources_to_db('2022-01-31 00:00:00')
+# actual_cric_info()
