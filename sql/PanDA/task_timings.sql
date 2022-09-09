@@ -8,7 +8,12 @@ with tasks as (
                     t.transhome,
                     t.transpath,
                     t.resource_type,
-                    t.splitrule
+                    t.splitrule,
+                    t.corecount,
+                    t.basewalltime,
+                    t.ramcount,
+                    t.outdiskcount,
+                    t.termcondition
         FROM ATLAS_PANDA.JEDI_TASKS t
         INNER JOIN ATLAS_PANDA.TASKS_STATUSLOG s ON (t.jeditaskid = s.jeditaskid)
         INNER JOIN ATLAS_PANDA.jedi_datasets d ON (t.jeditaskid = d.jeditaskid)
@@ -16,7 +21,7 @@ with tasks as (
           t.tasktype = 'anal'
           AND t.modificationtime >= to_date(:from_date, 'YYYY-MM-DD HH24:MI:SS')
           AND t.modificationtime < to_date(:from_date, 'YYYY-MM-DD HH24:MI:SS') + :hours/24
-          AND t.status in ('finished','failed','done','broken','aborted')
+          AND t.status in ('finished','done')
           AND s.status in ('ready')
           AND s.attemptnr = 0
           AND (d.datasetname LIKE 'mc%' or d.datasetname LIKE 'data%')
@@ -38,7 +43,13 @@ with tasks as (
                     t.transhome,
                     t.transpath,
                     t.resource_type,
-                    t.splitrule
+                    t.splitrule,
+                    t.taskname,
+                    t.corecount,
+                    t.basewalltime,
+                    t.ramcount,
+                    t.outdiskcount,
+                    t.termcondition
     ),
     numbers as (
         SELECT d.jeditaskid,
@@ -65,6 +76,7 @@ with tasks as (
         INNER JOIN tasks t ON (t.jeditaskid = d.jeditaskid)
         WHERE (d.datasetname LIKE 'mc%' or d.datasetname LIKE 'data%')
         AND d.type = 'input' AND d.masterid is null
+        AND status in ('finished','done')
         GROUP BY d.jeditaskid
     ),
 attempts as (
@@ -166,6 +178,11 @@ SELECT r.*,t.username,t.task_status,t.gshare,t.task_creationdate,
                     t.transpath,
                     t.resource_type,
                     t.splitrule,
+                    t.corecount,
+                    t.basewalltime,
+                    t.ramcount,
+                    t.outdiskcount,
+                    t.termcondition,
        n.nfiles,
        n.nfilestobeused,
        n.nfilesused,

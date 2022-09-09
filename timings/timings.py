@@ -4,11 +4,12 @@ BASE_DIR = os.path.join(ROOT_DIR, '..' )
 sys.path.append(os.path.abspath(BASE_DIR))
 import cx_Oracle
 import pandas as pd
+import numpy as np
 from sqlalchemy import create_engine, text
 import configparser
 from database_helpers.helpers import insert_to_db, check_for_data_existance, set_time_period, localized_now
 from datetime import datetime, timedelta
-from sklearn.preprocessing import MinMaxScaler
+import json
 
 import logging
 
@@ -85,24 +86,54 @@ def jobs_agg(predefined_date = False):
         df = pd.read_sql_query(query,
                                postgresql_connection,
                                params={'from_date': from_date})
+        df = df.astype({'jeditaskid': np.int64,
+                 'task_attemptnr': np.int32,
+                 'lib_size': np.int64,
+                 'assigned_priority': np.int32,
+                 'current_priority': np.int32,
+                 'avg_hs06sec': np.float64,
+                 'sum_nevents': np.int64,
+                 'sum_ninputdatafiles': np.float64,
+                 'sum_noutputdatafiles': np.float64,
+                 'sum_inputfilebytes': np.float64,
+                 'sum_outputfilebytes': np.float64,
+                 'execution_start_tstamp': np.datetime64,
+                 'execution_end_tstamp': np.datetime64,
+                 'completed_tstamp': np.datetime64,
+                 'creation_tstamp': np.datetime64,
+                 'avg_waiting_time': np.float64,
+                 'avg_execution_time': np.float64,
+                 'avg_cpuconsumptiontime': np.float64,
+                 'cpu_walltime_ratio': np.float64,
+                 'avg_total_time': np.float64,
+                 'avg_transferring_time': np.float64,
+                 'avg_merging_time': np.float64,
+                 'weighted_waiting_time': np.float64,
+                 'weighted_cpuconsumptiontime': np.float64,
+                 'weighted_execution_time': np.float64,
+                 'weighted_total_time': np.float64,
+                 'weighted_transferring_time': np.float64,
+                 'weighted_merging_time': np.float64})
         # datetime_cols = ['transferring_tstamp',
         #                  'merging_tstamp']
         # for i in datetime_cols:
         #     df[i] = df[i].astype(str)
         postgresql_connection.close()
 
-        scaler = MinMaxScaler()
-        columns_to_scale = ['sum_inputfilebytes',
-                            'sum_outputfilebytes',
-                            'sum_ninputdatafiles',
-                            'sum_noutputdatafiles',
-                            'sum_nevents',
-                            'avg_cpuconsumptiontime']
-        idx = df.index
-        df_to_scale = df[columns_to_scale]
-        scaled = scaler.fit_transform(df_to_scale)
-        scaled = pd.DataFrame(scaled, columns=columns_to_scale,index=idx)
-        df['complexity']= scaled.sum(axis=1,skipna=True)
+        # scaler = MinMaxScaler()
+        # columns_to_scale = ['sum_inputfilebytes',
+        #                     'sum_outputfilebytes',
+        #                     'sum_ninputdatafiles',
+        #                     'sum_noutputdatafiles',
+        #                     'sum_nevents',
+        #                     'weighted_cpuconsumptiontime',
+        #                     'weighted_execution_time',
+        #                     'lib_size']
+        # idx = df.index
+        # df_to_scale = df[columns_to_scale]
+        # scaled = scaler.fit_transform(df_to_scale)
+        # scaled = pd.DataFrame(scaled, columns=columns_to_scale,index=idx)
+        # df['complexity']= scaled.sum(axis=1,skipna=True)
         # df.fillna(0, inplace=True)
         insert_to_db(df, 'jobs_agg')
     else:
@@ -111,19 +142,20 @@ def jobs_agg(predefined_date = False):
 def collection_for_time_period():
 
     start_date = datetime(2022, 6, 10, 0, 0, 0)
-    end_date = datetime(2022, 6, 11, 0, 0, 0)
+    end_date = datetime(2022, 9, 7, 0, 0, 0)
     delta_day = timedelta(days=1)
 
     while start_date <= end_date:
         print(start_date)
         # job_timings_to_db(predefined_date = datetime.strftime(start_date, "%Y-%m-%d %H:%M:%S"), hours=24) # 08.05.2022
-        # task_timings_to_db(predefined_date=datetime.strftime(start_date, "%Y-%m-%d %H:%M:%S"), hours=24)
-        jobs_agg(predefined_date=datetime.strftime(start_date, "%Y-%m-%d %H:%M:%S"), hours=24)
+        task_timings_to_db(predefined_date=datetime.strftime(start_date, "%Y-%m-%d %H:%M:%S"), hours=24)
+        # jobs_agg(predefined_date=datetime.strftime(start_date, "%Y-%m-%d %H:%M:%S"))
         start_date += delta_day
 
 
-# collection_for_time_period()
+collection_for_time_period()
 
 # job_timings_to_db('2022-08-02 00:00:00', hours=24)
-# task_timings_to_db('2022-06-30 00:00:00', hours=24)
-jobs_agg('2022-06-30 00:00:00')
+# task_timings_to_db('2022-09-07 00:00:00', hours=1)
+#
+# jobs_agg('2022-06-11 00:00:00')

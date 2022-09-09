@@ -1,0 +1,207 @@
+[
+      {
+        "mode": "NULLABLE",
+        "name": "jeditaskid",
+        "type": "INTEGER"
+      },
+      {
+        "mode": "NULLABLE",
+        "name": "task_attemptnr",
+        "type": "INTEGER"
+      },
+      {
+        "mode": "NULLABLE",
+        "name": "queue",
+        "type": "STRING"
+      },
+      {
+        "mode": "NULLABLE",
+        "name": "cpuconsumptionunit",
+        "type": "STRING"
+      },
+      {
+        "mode": "NULLABLE",
+        "name": "datasetname",
+        "type": "STRING"
+      },
+      {
+        "mode": "NULLABLE",
+        "name": "status",
+        "type": "STRING"
+      },
+      {
+        "mode": "NULLABLE",
+        "name": "inputfiletype",
+        "type": "STRING"
+      },
+      {
+        "mode": "NULLABLE",
+        "name": "input_format_short",
+        "type": "STRING"
+      },
+      {
+        "mode": "NULLABLE",
+        "name": "input_format_desc",
+        "type": "STRING"
+      },
+      {
+        "mode": "NULLABLE",
+        "name": "inputfileproject",
+        "type": "STRING"
+      },
+      {
+        "mode": "NULLABLE",
+        "name": "resource_type",
+        "type": "STRING"
+      },
+      {
+        "mode": "NULLABLE",
+        "name": "atlasrelease",
+        "type": "STRING"
+      },
+      {
+        "mode": "NULLABLE",
+        "name": "processingtype",
+        "type": "STRING"
+      },
+      {
+        "mode": "NULLABLE",
+        "name": "transformation",
+        "type": "STRING"
+      },
+      {
+        "mode": "NULLABLE",
+        "name": "homepackage",
+        "type": "STRING"
+      },
+      {
+        "mode": "NULLABLE",
+        "name": "assigned_priority",
+        "type": "INTEGER"
+      },
+      {
+        "mode": "NULLABLE",
+        "name": "current_priority",
+        "type": "INTEGER"
+      },
+      {
+        "mode": "NULLABLE",
+        "name": "avg_hs06sec",
+        "type": "FLOAT"
+      },
+      {
+        "mode": "NULLABLE",
+        "name": "sum_nevents",
+        "type": "INTEGER"
+      },
+      {
+        "mode": "NULLABLE",
+        "name": "sum_ninputdatafiles",
+        "type": "INTEGER"
+      },
+      {
+        "mode": "NULLABLE",
+        "name": "sum_noutputdatafiles",
+        "type": "INTEGER"
+      },
+      {
+        "mode": "NULLABLE",
+        "name": "sum_inputfilebytes",
+        "type": "INTEGER"
+      },
+      {
+        "mode": "NULLABLE",
+        "name": "sum_outputfilebytes",
+        "type": "INTEGER"
+      },
+      {
+        "mode": "NULLABLE",
+        "name": "lib_size",
+        "type": "INTEGER"
+      },
+      {
+        "mode": "NULLABLE",
+        "name": "execution_start_tstamp",
+        "type": "TIMESTAMP"
+      },
+      {
+        "mode": "NULLABLE",
+        "name": "execution_end_tstamp",
+        "type": "TIMESTAMP"
+      },
+      {
+        "mode": "NULLABLE",
+        "name": "completed_tstamp",
+        "type": "TIMESTAMP"
+      },
+      {
+        "mode": "NULLABLE",
+        "name": "creation_tstamp",
+        "type": "TIMESTAMP"
+      },
+      {
+        "mode": "NULLABLE",
+        "name": "avg_waiting_time",
+        "type": "FLOAT"
+      },
+      {
+        "mode": "NULLABLE",
+        "name": "avg_execution_time",
+        "type": "FLOAT"
+      },
+      {
+        "mode": "NULLABLE",
+        "name": "avg_cpuconsumptiontime",
+        "type": "FLOAT"
+      },
+      {
+        "mode": "NULLABLE",
+        "name": "cpu_wallime_ratio",
+        "type": "FLOAT"
+      },
+      {
+        "mode": "NULLABLE",
+        "name": "avg_total_time",
+        "type": "FLOAT"
+      },
+      {
+        "mode": "NULLABLE",
+        "name": "avg_transferring_time",
+        "type": "FLOAT"
+      },
+      {
+        "mode": "NULLABLE",
+        "name": "avg_merging_time",
+        "type": "FLOAT"
+      },
+      {
+        "mode": "NULLABLE",
+        "name": "weighted_waiting_time",
+        "type": "FLOAT"
+      },
+      {
+        "mode": "NULLABLE",
+        "name": "weighted_execution_time",
+        "type": "FLOAT"
+      },
+      {
+        "mode": "NULLABLE",
+        "name": "weighted_cpuconsumptiontime",
+        "type": "FLOAT"
+      },
+      {
+        "mode": "NULLABLE",
+        "name": "weighted_total_time",
+        "type": "FLOAT"
+      },
+      {
+        "mode": "NULLABLE",
+        "name": "weighted_transferring_time",
+        "type": "FLOAT"
+      },
+      {
+        "mode": "NULLABLE",
+        "name": "weighted_merging_time",
+        "type": "FLOAT"
+      }
+    ]

@@ -207,5 +207,25 @@
     {"mode": "NULLABLE",
     "name": "ndatasets",
     "type": "INTEGER"
+  },
+  {"mode": "NULLABLE",
+    "name": "corecount",
+    "type": "FLOAT"
+  },
+  {"mode": "NULLABLE",
+    "name": "basewalltime",
+    "type": "FLOAT"
+  },
+  {"mode": "NULLABLE",
+    "name": "ramcount",
+    "type": "FLOAT"
+  },
+  {"mode": "NULLABLE",
+    "name": "outdiskcount",
+    "type": "FLOAT"
+  },
+    {"mode": "NULLABLE",
+    "name": "termcondition",
+    "type": "STRING"
   }
 ]
