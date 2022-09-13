@@ -178,5 +178,50 @@
     "mode": "NULLABLE",
     "name": "merging_time",
     "type": "FLOAT"
+  },
+            {
+    "mode": "NULLABLE",
+    "name": "job_type",
+    "type": "STRING"
+  },
+            {
+    "mode": "NULLABLE",
+    "name": "avgrss",
+    "type": "INTEGER"
+  },
+            {
+    "mode": "NULLABLE",
+    "name": "avgpss",
+    "type": "INTEGER"
+  },
+            {
+    "mode": "NULLABLE",
+    "name": "avgswap",
+    "type": "INTEGER"
+  },
+            {
+    "mode": "NULLABLE",
+    "name": "avgvmem",
+    "type": "INTEGER"
+  },
+            {
+    "mode": "NULLABLE",
+    "name": "raterbytes",
+    "type": "INTEGER"
+  },
+            {
+    "mode": "NULLABLE",
+    "name": "ratewbytes",
+    "type": "INTEGER"
+  },
+            {
+    "mode": "NULLABLE",
+    "name": "totrbytes",
+    "type": "INTEGER"
+  },
+            {
+    "mode": "NULLABLE",
+    "name": "totwbytes",
+    "type": "INTEGER"
   }
 ]

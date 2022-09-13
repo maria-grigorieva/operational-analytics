@@ -142,20 +142,20 @@ def jobs_agg(predefined_date = False):
 def collection_for_time_period():
 
     start_date = datetime(2022, 6, 10, 0, 0, 0)
-    end_date = datetime(2022, 9, 7, 0, 0, 0)
-    delta_day = timedelta(days=1)
+    end_date = datetime(2022, 9, 10, 0, 0, 0)
+    delta_day = timedelta(hours=24)
 
     while start_date <= end_date:
         print(start_date)
-        # job_timings_to_db(predefined_date = datetime.strftime(start_date, "%Y-%m-%d %H:%M:%S"), hours=24) # 08.05.2022
-        task_timings_to_db(predefined_date=datetime.strftime(start_date, "%Y-%m-%d %H:%M:%S"), hours=24)
+        job_timings_to_db(predefined_date = datetime.strftime(start_date, "%Y-%m-%d %H:%M:%S"), hours=24) # 08.05.2022
+        # task_timings_to_db(predefined_date=datetime.strftime(start_date, "%Y-%m-%d %H:%M:%S"), hours=24)
         # jobs_agg(predefined_date=datetime.strftime(start_date, "%Y-%m-%d %H:%M:%S"))
         start_date += delta_day
 
 
 collection_for_time_period()
 
-# job_timings_to_db('2022-08-02 00:00:00', hours=24)
+# job_timings_to_db('2022-06-11 00:00:00', hours=1)
 # task_timings_to_db('2022-09-07 00:00:00', hours=1)
 #
 # jobs_agg('2022-06-11 00:00:00')

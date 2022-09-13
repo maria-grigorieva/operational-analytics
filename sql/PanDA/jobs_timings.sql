@@ -32,7 +32,20 @@ with jobs as (
                      j.creationtime,
                      j.hs06sec,
                      j.processingtype,
-                     f.fsize as lib_size
+                     f.fsize as lib_size,
+                    CASE WHEN j.specialhandling LIKE '%sj%' THEN 'scout'
+                         WHEN j.specialhandling LIKE '%debug%' THEN 'debug'
+                         WHEN j.specialhandling LIKE '%express%' THEN 'express'
+                     ELSE 'other'
+                     END as job_type,
+                     j.avgrss,
+                     j.avgpss,
+                     j.avgswap,
+                     j.avgvmem,
+                     j.raterbytes,
+                     j.ratewbytes,
+                     j.totrbytes,
+                     j.totwbytes
               FROM ATLAS_PANDA.JOBS_STATUSLOG s
                   INNER JOIN ATLAS_PANDAARCH.JOBSARCHIVED j ON (j.pandaid = s.pandaid)
                        INNER JOIN ATLAS_PANDAARCH.FILESTABLE_ARCH f ON (j.jeditaskid = f.jeditaskid AND f.pandaid = j.pandaid)
@@ -51,6 +64,7 @@ with jobs as (
                 OR j.proddblock NOT LIKE '%hlt%'
                 OR j.proddblock NOT LIKE '%calibration%')
               AND f.dataset LIKE '%.lib.%'
+              AND j.jobstatus = 'finished'
               UNION
               (
                 SELECT j.jeditaskid,
@@ -86,7 +100,20 @@ with jobs as (
                      j.creationtime,
                      j.hs06sec,
                      j.processingtype,
-                     f.fsize as lib_size
+                     f.fsize as lib_size,
+                    CASE WHEN j.specialhandling LIKE '%sj%' THEN 'scout'
+                         WHEN j.specialhandling LIKE '%debug%' THEN 'debug'
+                         WHEN j.specialhandling LIKE '%express%' THEN 'express'
+                     ELSE 'other'
+                     END as job_type,
+                     j.avgrss,
+                     j.avgpss,
+                     j.avgswap,
+                     j.avgvmem,
+                     j.raterbytes,
+                     j.ratewbytes,
+                     j.totrbytes,
+                     j.totwbytes
                   FROM ATLAS_PANDA.JOBS_STATUSLOG s
                   INNER JOIN ATLAS_PANDA.JOBSARCHIVED4 j ON (s.pandaid = j.pandaid)
                        INNER JOIN ATLAS_PANDA.FILESTABLE4 f ON (j.jeditaskid = f.jeditaskid AND f.pandaid = j.pandaid)
@@ -105,6 +132,7 @@ with jobs as (
                 OR j.proddblock NOT LIKE '%hlt%'
                 OR j.proddblock NOT LIKE '%calibration%')
               AND f.dataset LIKE '%.lib.%'
+              AND j.jobstatus = 'finished'
     )
 ),
     jobs_attempts as (SELECT jobs.*,
@@ -148,6 +176,15 @@ with jobs as (
                       endtime as execution_end_tstamp,
                       completed_tstamp,
                       creationtime                                       as creation_tstamp,
+                      job_type,
+                      avgrss,
+                      avgpss,
+                      avgswap,
+                      avgvmem,
+                      raterbytes,
+                      ratewbytes,
+                      totrbytes,
+                      totwbytes,
                       min(transferring_first)                            as transferring_tstamp,
                       min(merging_first)                                 as merging_tstamp,
                       ROUND((CAST(starttime as date) -
@@ -212,6 +249,15 @@ with jobs as (
                         starttime,
                         endtime,
                         completed_tstamp,
-                        creationtime)
+                        creationtime,
+                      job_type,
+                      avgrss,
+                      avgpss,
+                      avgswap,
+                      avgvmem,
+                      raterbytes,
+                      ratewbytes,
+                      totrbytes,
+                      totwbytes)
 SELECT result.*
 FROM result

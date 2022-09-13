@@ -1,20 +1,22 @@
 with statuses as (
         SELECT s.pandaid,
             s.computingsite                   as queue,
-         'queued'                          as status
+         'queued'                          as status,
+         modificationtime
   FROM ATLAS_PANDA.JOBS_STATUSLOG s
   WHERE s.modificationtime >=
-        (TRUNC(to_date(:now, 'YYYY-MM-DD HH24:MI:SS'),'HH24') - :n_hours/24)
-    AND s.modificationtime < TRUNC(to_date(:now, 'YYYY-MM-DD HH24:MI:SS'),'HH24')
+        (trunc(to_date(:from_date, 'YYYY-MM-DD HH24:MI:SS'),'HH24') - :hours/24)
+    AND s.modificationtime < trunc(to_date(:from_date, 'YYYY-MM-DD HH24:MI:SS'),'HH24')
     AND s.jobstatus in ('activated', 'defined', 'starting', 'assigned')
     UNION ALL
         SELECT s.pandaid,
             s.computingsite                   as queue,
-         s.jobstatus as status
+         s.jobstatus as status,
+         modificationtime
   FROM ATLAS_PANDA.JOBS_STATUSLOG s
   WHERE s.modificationtime >=
-        (TRUNC(to_date(:now, 'YYYY-MM-DD HH24:MI:SS'),'HH24') - :n_hours/24)
-    AND s.modificationtime < TRUNC(to_date(:now, 'YYYY-MM-DD HH24:MI:SS'),'HH24')
+        (trunc(to_date(:from_date, 'YYYY-MM-DD HH24:MI:SS'),'HH24') - :hours/24)
+    AND s.modificationtime < trunc(to_date(:from_date, 'YYYY-MM-DD HH24:MI:SS'),'HH24')
     AND s.jobstatus in
         ('running', 'finished', 'failed', 'closed', 'cancelled', 'transferring')
     ),
@@ -25,9 +27,9 @@ with statuses as (
            NVL(count(distinct s.pandaid), 0) as n_jobs
   FROM ATLAS_PANDAARCH.JOBSARCHIVED j
   INNER JOIN statuses s ON (j.pandaid = s.pandaid)
-    WHERE j.statechangetime >=
-        (TRUNC(to_date(:now, 'YYYY-MM-DD HH24:MI:SS'),'HH24') - :n_hours/24)
-    AND j.statechangetime < TRUNC(to_date(:now, 'YYYY-MM-DD HH24:MI:SS'),'HH24')
+  WHERE
+  j.modificationtime >= (trunc(to_date(:from_date, 'YYYY-MM-DD HH24:MI:SS'), 'DD') - 3)
+  AND j.modificationtime < trunc(to_date(:from_date, 'YYYY-MM-DD HH24:MI:SS'),'HH24')
   GROUP BY j.computingsite, j.cpuconsumptionunit, s.status
   UNION ALL
       SELECT j.computingsite                   as queue,
@@ -36,14 +38,12 @@ with statuses as (
            NVL(count(distinct s.pandaid), 0) as n_jobs
   FROM ATLAS_PANDA.JOBSARCHIVED4 j
     INNER JOIN statuses s ON (j.pandaid = s.pandaid)
-    WHERE j.statechangetime >=
-        (TRUNC(to_date(:now, 'YYYY-MM-DD HH24:MI:SS'),'HH24') - :n_hours/24)
-    AND j.statechangetime < TRUNC(to_date(:now, 'YYYY-MM-DD HH24:MI:SS'),'HH24')
+    WHERE j.statechangetime <= trunc(to_date(:from_date, 'YYYY-MM-DD HH24:MI:SS'),'HH24')
     GROUP BY j.computingsite, j.cpuconsumptionunit, s.status
 )
     SELECT queue,
      cpuconsumptionunit,
-     TRUNC(to_date(:now, 'YYYY-MM-DD HH24:MI:SS'),'HH24') as datetime,
+     trunc(to_date(:from_date, 'YYYY-MM-DD HH24:MI:SS'),'HH24') as datetime,
      NVL(running, 0)                                                          as running,
      NVL(queued, 0)                                                           as queued,
      NVL(finished, 0)                                                         as finished,
@@ -73,4 +73,4 @@ for status in ('running' as running,
   'finished' as finished,
   'transferring' as transferring
   ))
-ORDER BY queue, cpuconsumptionunit, TRUNC(to_date(:now, 'YYYY-MM-DD HH24:MI:SS'),'HH24')
+ORDER BY queue, cpuconsumptionunit, trunc(to_date(:from_date, 'YYYY-MM-DD HH24:MI:SS'),'HH24')
