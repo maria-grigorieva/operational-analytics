@@ -107,7 +107,7 @@ def queues_hourly_statuslog_to_db(metric, predefined_date = False):
     postgresql_connection = PostgreSQL_engine.connect()
     query = text(open(metrics.get(metric)['sql']).read())
     df = pd.read_sql_query(query, panda_connection,parse_dates={'datetime': '%Y-%m-%d %H:%M:%S'},
-                           params={'now': now, 'n_hours': 1})
+                           params={'from_date': now, 'hours': 1})
     panda_connection.close()
     print(f'{df.shape[0]} rows has been returned from PanDA DB')
     from_cric = cric.cric_json_api.enhance_queues()
