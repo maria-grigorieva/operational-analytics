@@ -85,8 +85,8 @@ def check_for_data_existance(table_name, now, accuracy='day', delete=True):
     :param accuracy: day | hour
     :return:
     """
-    pgsql_exists = check_postgreSQL(table_name, now, accuracy='day')
-    bigquery_exists = check_bigquery(table_name, now)
+    pgsql_exists = check_postgreSQL(table_name, now, accuracy=accuracy)
+    bigquery_exists = check_bigquery(table_name, now, accuracy=accuracy)
 
     if pgsql_exists and bigquery_exists:
         if delete:
@@ -111,24 +111,25 @@ def check_for_data_existance(table_name, now, accuracy='day', delete=True):
         return False
 
 
-def check_postgreSQL(table_name, now, accuracy='day'):
+def check_postgreSQL(table_name, now, accuracy):
 
     try:
         conn = PostgreSQL_engine.connect()
         query = f'SELECT * FROM {table_name} WHERE datetime >= date_trunc(\'{accuracy}\', TIMESTAMP \'{now}\') ' \
-                f'AND datetime < date_trunc(\'{accuracy}\', TIMESTAMP \'{now}\' + INTERVAL \'1day\')'
+                f'AND datetime < date_trunc(\'{accuracy}\', TIMESTAMP \'{now}\' + INTERVAL \'1 {accuracy}\')'
         result = conn.execute(text(query)).first()
         conn.close()
         return True if result is not None else False
     except Exception as e:
         return False
 
-def check_bigquery(table_name, now):
+def check_bigquery(table_name, now, accuracy):
 
     now = day_rounder(datetime.strptime(now, "%Y-%m-%d %H:%M:%S"))
+    freq = 'DAY' if accuracy=='day' else 'HOUR'
     query = f'SELECT * FROM `{bigquery_project_id}.{bigquery_dataset}.{table_name}` ' \
-            f'WHERE TIMESTAMP(datetime) >= TIMESTAMP(date_trunc(\'{now}\', DAY))' \
-            f'AND TIMESTAMP(datetime) < TIMESTAMP(date_trunc(DATE_ADD(DATE \'{now}\', INTERVAL 1 DAY), DAY))'
+            f'WHERE TIMESTAMP(datetime) >= TIMESTAMP(date_trunc(\'{now}\', {freq}))' \
+            f'AND TIMESTAMP(datetime) < TIMESTAMP(date_trunc(DATE_ADD(DATE \'{now}\', INTERVAL 1 {freq}), {freq}))'
 
     try:
         df = pandas_gbq.read_gbq(query)

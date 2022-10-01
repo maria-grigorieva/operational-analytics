@@ -56,6 +56,7 @@ def task_timings_to_db(predefined_date = False, hours=24):
 def job_timings_to_db(predefined_date = False, hours=24):
 
     from_date, to_date = set_time_period(predefined_date, n_hours=24)
+    #now = datetime.strftime(localized_now(),"%Y-%m-%d %H:%M:%S") if not predefined_date else str(predefined_date)
 
     if not check_for_data_existance('jobs_timings', from_date, delete=True):
         panda_connection = PanDA_engine.connect()
@@ -141,21 +142,21 @@ def jobs_agg(predefined_date = False):
 
 def collection_for_time_period():
 
-    start_date = datetime(2022, 6, 10, 0, 0, 0)
-    end_date = datetime(2022, 9, 10, 0, 0, 0)
+    start_date = datetime(2022, 9, 24, 0, 0, 0)
+    end_date = datetime(2022, 9, 25, 0, 0, 0)
     delta_day = timedelta(hours=24)
 
     while start_date <= end_date:
         print(start_date)
         job_timings_to_db(predefined_date = datetime.strftime(start_date, "%Y-%m-%d %H:%M:%S"), hours=24) # 08.05.2022
-        # task_timings_to_db(predefined_date=datetime.strftime(start_date, "%Y-%m-%d %H:%M:%S"), hours=24)
+        #task_timings_to_db(predefined_date=datetime.strftime(start_date, "%Y-%m-%d %H:%M:%S"), hours=24)
         # jobs_agg(predefined_date=datetime.strftime(start_date, "%Y-%m-%d %H:%M:%S"))
         start_date += delta_day
 
 
 collection_for_time_period()
 
-# job_timings_to_db('2022-06-11 00:00:00', hours=1)
+# job_timings_to_db('2022-09-14 00:00:00', hours=24)
 # task_timings_to_db('2022-09-07 00:00:00', hours=1)
 #
 # jobs_agg('2022-06-11 00:00:00')

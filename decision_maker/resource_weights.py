@@ -3,7 +3,7 @@ import pandas as pd
 from sqlalchemy import create_engine, text
 import configparser
 import numpy as np
-from database_helpers.helpers import insert_to_db, check_for_data_existance, set_time_period, day_rounder
+from database_helpers.helpers import localized_now, insert_to_db, check_for_data_existance, set_time_period, day_rounder
 from sklearn.preprocessing import StandardScaler
 
 ROOT_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -100,14 +100,16 @@ def calculate_queue_weights(predefined_date = False):
     if not check_for_data_existance('queue_weights', from_date, delete=True):
 
         postgres_connection = PostgreSQL_engine.connect()
-        query = text(open(SQL_DIR + '/postgreSQL/queue_weight.sql').read())
+        query = text(open(SQL_DIR + '/postgreSQL/queue_weights.sql').read())
         df = pd.read_sql_query(query, postgres_connection, parse_dates={'datetime': '%Y-%m-%d'}, params={'now':from_date})
+        print(df)
         postgres_connection.close()
-        df.set_index(['queue', 'site', 'cloud', 'tier_level', 'datetime'],inplace=True)
+        df.set_index(['queue', 'site',
+                      'cloud', 'tier_level',
+                      'datetime'], inplace=True)
         norm_df = df.apply(lambda x: round((x - np.mean(x)) / (np.max(x) - np.min(x)), 3))
         norm_df[np.isnan(norm_df)] = 0
         norm_df.reset_index(inplace=True)
-
 
         norm_df['queue_weight'] = norm_df['queue_efficiency'] + \
                                 norm_df['utilization_diff'] + \
@@ -122,6 +124,40 @@ def calculate_queue_weights(predefined_date = False):
         insert_to_db(df, 'queue_weights')
     else:
         pass
+
+
+def calculate_queue_weights_hourly_enhanced(predefined_date = False):
+
+    # from_date, to_date = set_time_period(predefined_date, n_hours=24)
+    now = datetime.strftime(localized_now(), "%Y-%m-%d %H:%M:%S") \
+        if not predefined_date else str(predefined_date)
+
+    if not check_for_data_existance('queue_weights_hourly_enhanced', now, accuracy='hour', delete=True):
+
+        postgres_connection = PostgreSQL_engine.connect()
+        query = text(open(SQL_DIR + '/postgreSQL/queue_weights_hourly_enhanced.sql').read())
+        df = pd.read_sql_query(query, postgres_connection, parse_dates={'datetime': '%Y-%m-%d'}, params={'now':now})
+        postgres_connection.close()
+        df.set_index(['queue', 'cpuconsumptionunit', 'site', 'cloud', 'tier_level', 'datetime', 'resource_type'],inplace=True)
+        norm_df = df.apply(lambda x: round((x - np.mean(x)) / (np.max(x) - np.min(x)), 3))
+        norm_df[np.isnan(norm_df)] = 0
+        norm_df.reset_index(inplace=True)
+
+        norm_df['queue_weight'] = norm_df['queue_efficiency'] + \
+                                norm_df['utilization_diff'] + \
+                                norm_df['fullness_diff'] + \
+                                norm_df['queue_time_diff'] + \
+                                norm_df['daily_jobs_number']
+
+        df.reset_index(inplace=True)
+
+        df['queue_weight'] = round(norm_df['queue_weight'], 3)
+
+        insert_to_db(df, 'queue_weights_hourly_enhanced')
+    else:
+        pass
+
+
 # def calculate_weights(datasetname):
 #     postgres_connection = PostgreSQL_engine.connect()
 #     query = text(open(SQL_DIR + '/postgreSQL/merging.sql').read())
@@ -159,19 +195,21 @@ def calculate_queue_weights(predefined_date = False):
 
 
 
-# calculate_weights()
-# calculate_weights('data16_13TeV:data16_13TeV.00299584.physics_Main.deriv.DAOD_TOPQ1.r9264_p3083_p4513_tid25513236_00')
-start_date = datetime(2022, 7, 1, 1, 0, 0)
-end_date = datetime(2022, 7, 25, 1, 00, 0)
-delta_day = timedelta(days=1)
+start_date = datetime(2022, 9, 17, 1, 0, 0)
+end_date = datetime(2022, 9, 25, 0, 0, 0)
+delta = timedelta(hours=1)
 
 while start_date <= end_date:
     print(start_date)
-    calculate_weights_overall(datetime.strftime(start_date,"%Y-%m-%d %H:%M:%S"))
-    start_date += delta_day
+    calculate_queue_weights_hourly_enhanced(datetime.strftime(start_date,"%Y-%m-%d %H:%M:%S"))
+    # calculate_queue_weights(datetime.strftime(start_date,"%Y-%m-%d %H:%M:%S"))
+    # calculate_weights_overall(datetime.strftime(start_date,"%Y-%m-%d %H:%M:%S"))
+    start_date += delta
     print('Data has been written!')
 
-# calculate_queue_weights('2022-04-21 01:00:00')
+
+# calculate_queue_weights_hourly_enhanced('2022-09-17 00:00:00')
+
 
 
 

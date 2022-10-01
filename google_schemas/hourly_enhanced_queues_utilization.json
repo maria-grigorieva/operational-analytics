@@ -1,0 +1,112 @@
+[
+      {
+        "mode": "NULLABLE",
+        "name": "datetime",
+        "type": "TIMESTAMP"
+      },
+      {
+        "mode": "NULLABLE",
+        "name": "queue",
+        "type": "STRING"
+      },
+      {
+        "mode": "NULLABLE",
+        "name": "cpuconsumptionunit",
+        "type": "STRING"
+      },
+      {
+        "mode": "NULLABLE",
+        "name": "site",
+        "type": "STRING"
+      },
+      {
+        "mode": "NULLABLE",
+        "name": "cloud",
+        "type": "STRING"
+      },
+      {
+        "mode": "NULLABLE",
+        "name": "tier_level",
+        "type": "INTEGER"
+      },
+      {
+        "mode": "NULLABLE",
+        "name": "resource_type",
+        "type": "STRING"
+      },
+      {
+        "mode": "NULLABLE",
+        "name": "queue_efficiency",
+        "type": "FLOAT"
+      },
+      {
+        "mode": "NULLABLE",
+        "name": "queue_fullness",
+        "type": "FLOAT"
+      },
+      {
+        "mode": "NULLABLE",
+        "name": "queue_utilization",
+        "type": "FLOAT"
+      },
+      {
+        "mode": "NULLABLE",
+        "name": "running",
+        "type": "INTEGER"
+      },
+      {
+        "mode": "NULLABLE",
+        "name": "queued",
+        "type": "INTEGER"
+      },
+      {
+        "mode": "NULLABLE",
+        "name": "completed",
+        "type": "INTEGER"
+      },
+      {
+        "mode": "NULLABLE",
+        "name": "transferring",
+        "type": "INTEGER"
+      },
+      {
+        "mode": "NULLABLE",
+        "name": "avg_execution_time",
+        "type": "FLOAT"
+      },
+      {
+        "mode": "NULLABLE",
+        "name": "avg_waiting_time",
+        "type": "FLOAT"
+      },
+      {
+        "mode": "NULLABLE",
+        "name": "avg_merging_time",
+        "type": "FLOAT"
+      },
+      {
+        "mode": "NULLABLE",
+        "name": "avg_transferring_time",
+        "type": "FLOAT"
+      },
+      {
+        "mode": "NULLABLE",
+        "name": "total_inputfilebytes",
+        "type": "FLOAT"
+      },
+      {
+        "mode": "NULLABLE",
+        "name": "total_outputfilebytes",
+        "type": "FLOAT"
+      },
+      {
+        "mode": "NULLABLE",
+        "name": "n_tasks",
+        "type": "INTEGER"
+      },
+      {
+        "mode": "NULLABLE",
+        "name": "n_jobs",
+        "type": "INTEGER"
+      }
+    ]
