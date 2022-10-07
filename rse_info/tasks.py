@@ -1,4 +1,4 @@
-from checker.celery import app
+from workers.celery import app
 from rse_info.storage_info import save_storage_attrs_to_db as save_storage_attrs_to_db_worker
 from rse_info.distances import save_distances_to_db as save_distances_to_db_worker
 

@@ -1,4 +1,4 @@
-from checker.celery import app
+from workers.celery import app
 from queues.queues_metrics import queues_to_db as queues_to_db_worker
 from queues.queues_metrics import queues_hourly_to_db as queues_hourly_to_db_worker
 

@@ -1,4 +1,4 @@
-from checker.celery import app
+from workers.celery import app
 from timings.timings import task_timings_to_db as task_timings_to_db_worker
 from timings.timings import job_timings_to_db as job_timings_to_db_worker
 

@@ -1,12 +1,12 @@
-from celery import Celery
+from workers import Celery
 import configparser
-from celery.schedules import crontab
+from workers.schedules import crontab
 #from merging.tasks import etl
 
 config = configparser.ConfigParser()
 config.read('config.ini')
 
-app = Celery('checker',
+app = Celery('workers',
              broker=config['Redis']['connection_string'],
              backend=config['Redis']['connection_string'],
              include=['queues.tasks',

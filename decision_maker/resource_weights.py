@@ -158,6 +158,54 @@ def calculate_queue_weights_hourly_enhanced(predefined_date = False):
         pass
 
 
+
+def calculate_queue_weights_weighted(predefined_date = False):
+
+    now = datetime.strftime(localized_now(), "%Y-%m-%d %H:%M:%S") \
+        if not predefined_date else str(predefined_date)
+
+    if not check_for_data_existance('queue_weighted_weighted', now, accuracy='hour', delete=True):
+
+        postgres_connection = PostgreSQL_engine.connect()
+        query = text(open(SQL_DIR + '/postgreSQL/queue_weights_weighted.sql').read())
+        df = pd.read_sql_query(query, postgres_connection, parse_dates={'datetime': '%Y-%m-%d'}, params={'now':now})
+        postgres_connection.close()
+        df.set_index(['queue', 'tend'],inplace=True)
+        df.fillna(0, inplace=True)
+        df.apply(pd.to_numeric)
+        norm_df = df.apply(lambda x: round((x - np.mean(x)) / (np.max(x) - np.min(x)), 3))
+        norm_df.fillna(0, inplace=True)
+        norm_df.reset_index(inplace=True)
+        print(norm_df)
+
+        norm_df['current_weight'] = norm_df['performance_weighted']-\
+                                    norm_df['utilization_weighted']-\
+                                    norm_df['fullness_weighted']+\
+                                    norm_df['capacity_weighted']-\
+                                    norm_df['avg_waiting_time']
+
+        print(norm_df['current_weight'].values)
+
+        # df.reset_index(inplace=True)
+        #
+        # df['current_weight'] = round(norm_df['current_weight'], 3)
+
+        norm_df['historical_weight'] = norm_df['performance_hist_pq'] - \
+                                    norm_df['utilization_hist_pq'] - \
+                                    norm_df['fullness_hist_pq'] + \
+                                    norm_df['capacity_hist_pq'] - \
+                                    norm_df['queue_time_hist_pq']
+
+        df.reset_index(inplace=True)
+
+        df['current_weight'] = round(norm_df['current_weight'], 3)
+        df['historical_weight'] = round(norm_df['historical_weight'], 3)
+
+        insert_to_db(df, 'queue_weights_weighted')
+    else:
+        pass
+
+
 # def calculate_weights(datasetname):
 #     postgres_connection = PostgreSQL_engine.connect()
 #     query = text(open(SQL_DIR + '/postgreSQL/merging.sql').read())
@@ -195,13 +243,14 @@ def calculate_queue_weights_hourly_enhanced(predefined_date = False):
 
 
 
-start_date = datetime(2022, 9, 17, 1, 0, 0)
-end_date = datetime(2022, 9, 25, 0, 0, 0)
-delta = timedelta(hours=1)
+start_date = datetime(2022, 9, 15, 3, 0, 0)
+end_date = datetime(2022, 10, 1, 0, 0, 0)
+delta = timedelta(hours=3)
 
 while start_date <= end_date:
     print(start_date)
-    calculate_queue_weights_hourly_enhanced(datetime.strftime(start_date,"%Y-%m-%d %H:%M:%S"))
+    calculate_queue_weights_weighted(datetime.strftime(start_date,"%Y-%m-%d %H:%M:%S"))
+    # calculate_queue_weights_hourly_enhanced(datetime.strftime(start_date,"%Y-%m-%d %H:%M:%S"))
     # calculate_queue_weights(datetime.strftime(start_date,"%Y-%m-%d %H:%M:%S"))
     # calculate_weights_overall(datetime.strftime(start_date,"%Y-%m-%d %H:%M:%S"))
     start_date += delta

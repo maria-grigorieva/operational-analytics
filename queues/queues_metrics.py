@@ -173,30 +173,48 @@ def enhanced_queues_utilization(predefined_date = False, mode='daily'):
         pass
 
 
+def queues_workload_weighted(predefined_date=False, hours=3):
+
+    now = datetime.strftime(localized_now(), "%Y-%m-%d %H:%M:%S") \
+        if not predefined_date else str(predefined_date)
+
+    if not check_for_data_existance(f'queues_utilization_weighted', now, accuracy='hour', delete=True):
+        PanDA_connection = PanDA_engine.connect()
+        query = text(open(SQL_DIR + f'/PanDA/queues_utilization_weighted.sql').read())
+        df = pd.read_sql_query(query, PanDA_connection, parse_dates={'datetime': '%Y-%m-%d'},
+                               params={'from_date': now,
+                                       'hours': hours})
+        PanDA_connection.close()
+        insert_to_db(df, 'queues_utilization_weighted')
+    else:
+        pass
+
 
 def collect_queues_for_period():
 
-    start_date = datetime(2022, 9, 25, 1, 0, 0)
-    end_date = datetime(2022, 9, 25, 2, 0, 0)
+    start_date = datetime(2022, 9, 15, 0, 0, 0)
+    end_date = datetime(2022, 10, 1, 0, 0, 0)
     # delta_day = timedelta(days=1)
-    delta_hours = timedelta(hours=1)
+    delta_hours = timedelta(hours=3)
 
     while start_date <= end_date:
         print(start_date)
         #queues_hourly_statuslog_to_db('queues_statuslog_detailed',
         #                             predefined_date=datetime.strftime(start_date, "%Y-%m-%d %H:%M:%S"))
-        enhanced_queues_utilization(predefined_date=datetime.strftime(start_date, "%Y-%m-%d %H:%M:%S"),
-                                     mode='hourly')
+        # enhanced_queues_utilization(predefined_date=datetime.strftime(start_date, "%Y-%m-%d %H:%M:%S"),
+        #                             mode='hourly')
  #       queues_to_db('queues_statuslog_actual',
  #                    predefined_date=datetime.strftime(start_date, "%Y-%m-%d %H:%M:%S"))
         #start_date += delta_day
+        queues_workload_weighted(predefined_date=datetime.strftime(start_date, "%Y-%m-%d %H:%M:%S"),
+                                 hours=3)
         start_date += delta_hours
 
 
 
 def collect_hourly_data_for_period(metric):
-    start_date = datetime(2022, 5, 16, 0, 0, 0)
-    end_date = datetime(2022, 5, 17, 0, 0, 0)
+    start_date = datetime(2022, 9, 15, 0, 0, 0)
+    end_date = datetime(2022, 10, 1, 0, 0, 0)
     delta_day = timedelta(days=1)
     delta_1hour = timedelta(hours=1)
     delta_3hours = timedelta(hours=3)

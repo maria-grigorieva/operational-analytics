@@ -1,4 +1,4 @@
-from checker.celery import app
+from workers.celery import app
 from datetime import datetime, timedelta
 from datasets.dataset_replicas_collector import dataset_replicas_to_db as dataset_replicas_to_db_worker
 from datasets.datasets_popularity import save_dataset_task_user_to_db as save_dataset_task_user_to_db_worker

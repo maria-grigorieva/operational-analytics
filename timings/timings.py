@@ -142,8 +142,8 @@ def jobs_agg(predefined_date = False):
 
 def collection_for_time_period():
 
-    start_date = datetime(2022, 9, 24, 0, 0, 0)
-    end_date = datetime(2022, 9, 25, 0, 0, 0)
+    start_date = datetime(2022, 9, 26, 0, 0, 0)
+    end_date = datetime(2022, 10, 6, 0, 0, 0)
     delta_day = timedelta(hours=24)
 
     while start_date <= end_date:
