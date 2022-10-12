@@ -18,10 +18,10 @@ logging.getLogger('sqlalchemy.engine').setLevel(logging.ERROR)
 
 SQL_DIR = BASE_DIR+'/sql'
 
-cx_Oracle.init_oracle_client(lib_dir=r"/usr/lib/oracle/19.13/client64/lib")
-
 config = configparser.ConfigParser()
 config.read(BASE_DIR+'/config.ini')
+
+cx_Oracle.init_oracle_client(lib_dir=config['PanDA DB']['client_path'])
 
 metrics = {
     'efficiency':
