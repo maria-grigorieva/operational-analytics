@@ -192,22 +192,15 @@ def queues_workload_weighted(predefined_date=False, hours=3):
 
 def collect_queues_for_period():
 
-    start_date = datetime(2022, 9, 15, 0, 0, 0)
-    end_date = datetime(2022, 10, 1, 0, 0, 0)
+    start_date = datetime(2022, 8, 1, 4, 0, 0)
+    end_date = datetime(2022, 10, 12, 4, 0, 0)
     # delta_day = timedelta(days=1)
-    delta_hours = timedelta(hours=3)
+    delta_hours = timedelta(hours=4)
 
     while start_date <= end_date:
         print(start_date)
-        #queues_hourly_statuslog_to_db('queues_statuslog_detailed',
-        #                             predefined_date=datetime.strftime(start_date, "%Y-%m-%d %H:%M:%S"))
-        # enhanced_queues_utilization(predefined_date=datetime.strftime(start_date, "%Y-%m-%d %H:%M:%S"),
-        #                             mode='hourly')
- #       queues_to_db('queues_statuslog_actual',
- #                    predefined_date=datetime.strftime(start_date, "%Y-%m-%d %H:%M:%S"))
-        #start_date += delta_day
         queues_workload_weighted(predefined_date=datetime.strftime(start_date, "%Y-%m-%d %H:%M:%S"),
-                                 hours=3)
+                                 hours=4)
         start_date += delta_hours
 
 
@@ -252,7 +245,7 @@ def collect_hourly_data_for_period(metric):
 
         start_date += delta_day
 
-# collect_queues_for_period()
+collect_queues_for_period()
 # collect_hourly_data_for_period('queues_hourly')
 # queues_to_db('queues_statuslog_actual', '2022-09-02 01:00:00')
 #queues_hourly_to_db('queues_statuslog_hourly','2022-05-16 10:00:00',1)
