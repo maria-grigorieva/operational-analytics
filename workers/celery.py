@@ -1,6 +1,6 @@
-from workers import Celery
+from celery import Celery
 import configparser
-from workers.schedules import crontab
+from celery.schedules import crontab
 #from merging.tasks import etl
 
 config = configparser.ConfigParser()
