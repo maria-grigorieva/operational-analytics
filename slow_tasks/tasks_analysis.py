@@ -22,7 +22,7 @@ SQL_DIR = BASE_DIR+'/sql'
 config = configparser.ConfigParser()
 config.read(BASE_DIR+'/config.ini')
 
-PanDA_engine = create_engine(config['PanDA DB']['sqlalchemy_engine_str'], echo=True, future=True)
+PanDA_engine = create_engine(config['PanDA DB']['sqlalchemy_engine_str'], echo=True)
 PostgreSQL_engine = create_engine(config['PostgreSQL']['sqlalchemy_engine_str'], echo=True)
 
 
