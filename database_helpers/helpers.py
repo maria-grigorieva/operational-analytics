@@ -12,8 +12,6 @@ import os
 import pandas as pd
 import re
 import pytz
-os.environ["GOOGLE_APPLICATION_CREDENTIALS"]="/opt/data_placement/conf/atlas-336515-9bbd95e3dadf.json"
-
 import logging
 
 logging.basicConfig()
@@ -33,6 +31,9 @@ bigquery_project_id = 'atlas-336515'
 bigquery_dataset = 'analytix'
 
 PostgreSQL_engine = create_engine(config['PostgreSQL']['sqlalchemy_engine_str'], echo=True)
+
+os.environ["GOOGLE_APPLICATION_CREDENTIALS"]=config['GOOGLE']['app']
+
 
 # def insert_to_db(df, table_name, curr_date, delete=True):
 #
