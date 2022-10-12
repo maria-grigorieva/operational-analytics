@@ -46,12 +46,7 @@ statuses as (
                min(failed_first) as failed_timestamp,
                min(cancelled_first) as cancelled_timestamp,
                min(closed_first) as closed_timestamp,
-               min(holding_first) as holding_timestamp,
-               CASE WHEN finished_first is not None THEN 'finished'
-                    WHEN failed_first is not None THEN 'failed'
-                    WHEN cancelled_first is not None THEN 'cancelled'
-                    WHEN closed_first is not None THEN 'closed'
-               END as final_status
+               min(holding_first) as holding_timestamp
     FROM statuses
 PIVOT (
                    min(modificationtime) as first,
@@ -84,7 +79,6 @@ pandaid, queue),
                tend,
                pandaid,
                queue,
-               final_status,
                waiting_time,
                running_time,
                merging_time,
@@ -143,7 +137,15 @@ pandaid, queue),
                                                                           closed_timestamp) < tend
                        THEN 1
                    ELSE 0
-                   END                    as completed
+                   END                    as completed,
+               CASE WHEN finished_timestamp >= tstart and finished_timestamp < tend
+                    THEN 1 ELSE 0 END as finished,
+               CASE WHEN failed_timestamp >= tstart and failed_timestamp < tend
+                    THEN 1 ELSE 0 END as failed,
+               CASE WHEN cancelled_timestamp >= tstart and cancelled_timestamp < tend
+                    THEN 1 ELSE 0 END as cancelled,
+               CASE WHEN closed_timestamp >= tstart and closed_timestamp < tend
+                    THEN 1 ELSE 0 END as closed
         FROM jobs
     ),
      r1 as (
@@ -162,11 +164,11 @@ SELECT tstart,
        sum(merging) as n_merging,
        sum(transferring) as n_transferring,
        sum(holding) as n_holding,
-       NVL(SELECT count(distinct pandaid) FROM result WHERE final_status='finished'),0) as n_finished,
-       NVL(SELECT count(distinct pandaid) FROM result WHERE final_status='failed'),0) as n_failed,
-       NVL(SELECT count(distinct pandaid) FROM result WHERE final_status='closed'),0) as n_closed,
-       NVL(SELECT count(distinct pandaid) FROM result WHERE final_status='cancelled'),0) as n_cancelled,
-       round(avg(running_time)) as av_running_time,
+       sum(finished) as n_finished,
+       sum(failed) as n_failed,
+       sum(cancelled) as n_cancelled,
+       sum(closed) as n_closed,
+       round(avg(running_time)) as avg_running_time,
        round(avg(waiting_time)) as avg_waiting_time,
        round(avg(transferring_time)) as avg_transferring_time,
        round(avg(merging_time)) as avg_merging_time,
@@ -182,12 +184,20 @@ SELECT tstart,
        queue,
        running_queued,
        running_running,
+       running_holding,
        running_completed,
        running_merging,
        running_transferring,
        n_queued,
        n_running,
        n_completed,
+       n_finished,
+       n_failed,
+       n_closed,
+       n_cancelled,
+       n_holding,
+       n_merging,
+       n_transferring,
        round(running_queued/nullif(running_queued + running_completed,0),2) as utilization_weighted,
        round(running_queued/nullif(running_queued + running_running + running_holding + running_merging + running_transferring,0), 2) as fullness_weighted,
        round(running_completed/nullif(running_completed + running_running + running_holding + running_merging + running_transferring,0), 2) as performance_weighted,
@@ -201,5 +211,5 @@ SELECT tstart,
        avg_holding_time,
        capacity,
        capacity_weighted,
-       n_finished/nullif((n_finished+n_failed+n_closed+n_cancelled),0) as efficiency
+       round(n_finished/nullif((n_finished+n_failed+n_closed+n_cancelled),0),2) as efficiency
 FROM r1
