@@ -23,7 +23,7 @@ config.read(BASE_DIR+'/config.ini')
 
 cx_Oracle.init_oracle_client(lib_dir=config['PanDA DB']['client_path'])
 
-PanDA_engine = create_engine(config['PanDA DB']['sqlalchemy_engine_str'], echo=True, future=True)
+PanDA_engine = create_engine(config['PanDA DB']['sqlalchemy_engine_str'], echo=True)
 PostgreSQL_engine = create_engine(config['PostgreSQL']['sqlalchemy_engine_str'], echo=True)
 
 def task_timings_to_db(predefined_date = False, hours=24):

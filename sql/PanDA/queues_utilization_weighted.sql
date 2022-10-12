@@ -162,7 +162,10 @@ SELECT tstart,
        sum(merging) as n_merging,
        sum(transferring) as n_transferring,
        sum(holding) as n_holding,
-       CASE WHEN final_status='finished'
+       NVL(SELECT count(distinct pandaid) FROM result WHERE final_status='finished'),0) as n_finished,
+       NVL(SELECT count(distinct pandaid) FROM result WHERE final_status='failed'),0) as n_failed,
+       NVL(SELECT count(distinct pandaid) FROM result WHERE final_status='closed'),0) as n_closed,
+       NVL(SELECT count(distinct pandaid) FROM result WHERE final_status='cancelled'),0) as n_cancelled,
        round(avg(running_time)) as av_running_time,
        round(avg(waiting_time)) as avg_waiting_time,
        round(avg(transferring_time)) as avg_transferring_time,
@@ -197,5 +200,6 @@ SELECT tstart,
        avg_transferring_time,
        avg_holding_time,
        capacity,
-       capacity_weighted
+       capacity_weighted,
+       n_finished/nullif((n_finished+n_failed+n_closed+n_cancelled),0) as efficiency
 FROM r1
