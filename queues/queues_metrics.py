@@ -78,7 +78,7 @@ metrics = {
         }
 }
 
-PanDA_engine = create_engine(config['PanDA DB']['sqlalchemy_engine_str'], echo=True, future=True)
+PanDA_engine = create_engine(config['PanDA DB']['sqlalchemy_engine_str'], echo=True)
 PostgreSQL_engine = create_engine(config['PostgreSQL']['sqlalchemy_engine_str'], echo=True)
 
 
