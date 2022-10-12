@@ -154,7 +154,7 @@ def collection_for_time_period():
         start_date += delta_day
 
 
-collection_for_time_period()
+# collection_for_time_period()
 
 # job_timings_to_db('2022-09-14 00:00:00', hours=24)
 # task_timings_to_db('2022-09-07 00:00:00', hours=1)

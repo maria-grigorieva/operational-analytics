@@ -6,7 +6,7 @@ from workers.celery import app
 from queues.tasks import queues_statuslog_actual
 from rse_info.tasks import save_storage_attrs_to_db
 from cric.tasks import cric_resources_to_db
-from workers import chain, group
+from celery import chain, group
 from merging.merge_tables import queues_rse_cric as queues_rse_cric_worker
 from merging.merge_tables import dataset_cric_replicas as dataset_cric_replicas_worker
 # from merging.merge_tables import dataset_cric_replicas_v1 as dataset_cric_replicas_v1_worker

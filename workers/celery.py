@@ -39,10 +39,10 @@ app.conf.beat_schedule = {
         'task': 'task_timings_to_db',
         'schedule': crontab(minute=30, hour=0)
     },
-    'jobs_timings': {
-        'task': 'job_timings_to_db',
-        'schedule': crontab(minute=0, hour='*1')
-    },
+    # 'jobs_timings': {
+    #     'task': 'job_timings_to_db',
+    #     'schedule': crontab(minute=0, hour='*/1')
+    # },
     'queues_statuslog_actual': {
         'task': 'queues_statuslog_actual',
         'schedule': crontab(minute=10, hour=3)

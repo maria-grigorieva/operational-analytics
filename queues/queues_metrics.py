@@ -252,7 +252,7 @@ def collect_hourly_data_for_period(metric):
 
         start_date += delta_day
 
-collect_queues_for_period()
+# collect_queues_for_period()
 # collect_hourly_data_for_period('queues_hourly')
 # queues_to_db('queues_statuslog_actual', '2022-09-02 01:00:00')
 #queues_hourly_to_db('queues_statuslog_hourly','2022-05-16 10:00:00',1)
