@@ -178,7 +178,8 @@ def queues_workload_weighted(predefined_date=False, hours=3):
     now = datetime.strftime(localized_now(), "%Y-%m-%d %H:%M:%S") \
         if not predefined_date else str(predefined_date)
 
-    if not check_for_data_existance(f'queues_utilization_weighted', now, accuracy='hour', delete=True):
+    if not check_for_data_existance(f'queues_utilization_weighted', now, accuracy='hour', delete=True,
+                                    dt='tend'):
         PanDA_connection = PanDA_engine.connect()
         query = text(open(SQL_DIR + f'/PanDA/queues_utilization_weighted.sql').read())
         df = pd.read_sql_query(query, PanDA_connection, parse_dates={'datetime': '%Y-%m-%d'},
@@ -192,7 +193,7 @@ def queues_workload_weighted(predefined_date=False, hours=3):
 
 def collect_queues_for_period():
 
-    start_date = datetime(2022, 8, 1, 4, 0, 0)
+    start_date = datetime(2022, 8, 4, 4, 0, 0)
     end_date = datetime(2022, 10, 12, 4, 0, 0)
     # delta_day = timedelta(days=1)
     delta_hours = timedelta(hours=4)

@@ -78,7 +78,7 @@ def insert_to_db(df, table_name):
     write_to_bigquery(df, table_name)
 
 
-def check_for_data_existance(table_name, now, accuracy='day', delete=True):
+def check_for_data_existance(table_name, now, accuracy='day', delete=True, dt='datetime'):
     """
     Check if a table have rows with the defined datetime value
     :param table_name:
@@ -86,25 +86,25 @@ def check_for_data_existance(table_name, now, accuracy='day', delete=True):
     :param accuracy: day | hour
     :return:
     """
-    pgsql_exists = check_postgreSQL(table_name, now, accuracy=accuracy)
-    bigquery_exists = check_bigquery(table_name, now, accuracy=accuracy)
+    pgsql_exists = check_postgreSQL(table_name, now, accuracy=accuracy, datetime_col_name=dt)
+    bigquery_exists = check_bigquery(table_name, now, accuracy=accuracy, datetime_col_name=dt)
 
     if pgsql_exists and bigquery_exists:
         if delete:
-            delete_from_pgsql(table_name, now)
-            delete_from_bigquery(table_name, now)
+            delete_from_pgsql(table_name, now, datetime_col_name=dt)
+            delete_from_bigquery(table_name, now, datetime_col_name=dt)
             return False
         else:
             return True
     elif pgsql_exists and not bigquery_exists:
         if delete:
-            delete_from_pgsql(table_name, now)
+            delete_from_pgsql(table_name, now, datetime_col_name=dt)
             return False
         else:
             return True
     elif bigquery_exists and not pgsql_exists:
         if delete:
-            delete_from_bigquery(table_name, now)
+            delete_from_bigquery(table_name, now, datetime_col_name=dt)
             return False
         else:
             return True
@@ -112,25 +112,25 @@ def check_for_data_existance(table_name, now, accuracy='day', delete=True):
         return False
 
 
-def check_postgreSQL(table_name, now, accuracy):
+def check_postgreSQL(table_name, now, accuracy, datetime_col_name='datetime'):
 
     try:
         conn = PostgreSQL_engine.connect()
-        query = f'SELECT * FROM {table_name} WHERE datetime >= date_trunc(\'{accuracy}\', TIMESTAMP \'{now}\') ' \
-                f'AND datetime < date_trunc(\'{accuracy}\', TIMESTAMP \'{now}\' + INTERVAL \'1 {accuracy}\')'
+        query = f'SELECT * FROM {table_name} WHERE {datetime_col_name} >= date_trunc(\'{accuracy}\', TIMESTAMP \'{now}\') ' \
+                f'AND {datetime_col_name} < date_trunc(\'{accuracy}\', TIMESTAMP \'{now}\' + INTERVAL \'1 {accuracy}\')'
         result = conn.execute(text(query)).first()
         conn.close()
         return True if result is not None else False
     except Exception as e:
         return False
 
-def check_bigquery(table_name, now, accuracy):
+def check_bigquery(table_name, now, accuracy, datetime_col_name='datetime'):
 
     now = day_rounder(datetime.strptime(now, "%Y-%m-%d %H:%M:%S"))
     freq = 'DAY' if accuracy=='day' else 'HOUR'
     query = f'SELECT * FROM `{bigquery_project_id}.{bigquery_dataset}.{table_name}` ' \
-            f'WHERE TIMESTAMP(datetime) >= TIMESTAMP(date_trunc(\'{now}\', {freq}))' \
-            f'AND TIMESTAMP(datetime) < TIMESTAMP(date_trunc(DATE_ADD(DATE \'{now}\', INTERVAL 1 {freq}), {freq}))'
+            f'WHERE TIMESTAMP({datetime_col_name}) >= TIMESTAMP(date_trunc(\'{now}\', {freq}))' \
+            f'AND TIMESTAMP({datetime_col_name}) < TIMESTAMP(date_trunc(DATE_ADD(DATE \'{now}\', INTERVAL 1 {freq}), {freq}))'
 
     try:
         df = pandas_gbq.read_gbq(query)
@@ -139,25 +139,25 @@ def check_bigquery(table_name, now, accuracy):
         return False
 
 
-def delete_from_pgsql(table_name, now, accuracy='day'):
+def delete_from_pgsql(table_name, now, accuracy='day', datetime_col_name='datetime'):
 
     conn = PostgreSQL_engine.connect()
     # now = day_rounder(datetime.strptime(now, "%Y-%m-%d %H:%M:%S"))
-    remove_statement = f'DELETE FROM {table_name} WHERE datetime >= date_trunc(\'{accuracy}\', TIMESTAMP \'{now}\') ' \
-            f'AND datetime < date_trunc(\'{accuracy}\', TIMESTAMP \'{now}\' + INTERVAL \'1day\')'
+    remove_statement = f'DELETE FROM {table_name} WHERE {datetime_col_name} >= date_trunc(\'{accuracy}\', TIMESTAMP \'{now}\') ' \
+            f'AND {datetime_col_name} < date_trunc(\'{accuracy}\', TIMESTAMP \'{now}\' + INTERVAL \'1day\')'
     conn.execute(text(remove_statement))
     conn.close()
 
 
-def delete_from_bigquery(table_name, now):
+def delete_from_bigquery(table_name, now, datetime_col_name='datetime'):
 
     client = bigquery.Client()
 
     now = day_rounder(datetime.strptime(now, "%Y-%m-%d %H:%M:%S"))
 
     remove_statement = f'DELETE FROM `{bigquery_project_id}.{bigquery_dataset}.{table_name}` ' \
-            f'WHERE TIMESTAMP(datetime) >= TIMESTAMP(date_trunc(\'{now}\', DAY))' \
-            f'AND TIMESTAMP(datetime) < TIMESTAMP(date_trunc(DATE_ADD(DATE \'{now}\', INTERVAL 1 DAY), DAY))'
+            f'WHERE TIMESTAMP({datetime_col_name}) >= TIMESTAMP(date_trunc(\'{now}\', DAY))' \
+            f'AND TIMESTAMP({datetime_col_name}) < TIMESTAMP(date_trunc(DATE_ADD(DATE \'{now}\', INTERVAL 1 DAY), DAY))'
     query_job = client.query(remove_statement)
     query_job.result()
 
