@@ -1,4 +1,7 @@
 import os, sys
+ROOT_DIR = os.path.dirname(os.path.abspath(__file__))
+BASE_DIR = os.path.join(ROOT_DIR, '..' )
+sys.path.append(os.path.abspath(BASE_DIR))
 import cx_Oracle
 import cric
 import pandas as pd
@@ -7,10 +10,6 @@ import configparser
 from cric.cric_json_api import enhance_queues
 from database_helpers.helpers import insert_to_db, check_for_data_existance, set_time_period, localized_now
 from datetime import datetime, timedelta
-
-ROOT_DIR = os.path.dirname(os.path.abspath(__file__))
-BASE_DIR = os.path.join(ROOT_DIR, '..' )
-sys.path.append(os.path.abspath(BASE_DIR))
 
 import logging
 
