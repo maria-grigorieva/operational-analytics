@@ -7,6 +7,7 @@ import pandas as pd
 import numpy as np
 from sqlalchemy import create_engine, text
 import configparser
+from cric.cric_json_api import enhance_queues
 from database_helpers.helpers import insert_to_db, check_for_data_existance, set_time_period, localized_now
 from datetime import datetime, timedelta
 import json
@@ -15,29 +16,29 @@ import logging
 
 logging.basicConfig()
 logging.getLogger('sqlalchemy').setLevel(logging.ERROR)
+logging.disable(logging.INFO)
 
 SQL_DIR = BASE_DIR+'/sql'
 
 config = configparser.ConfigParser()
 config.read(BASE_DIR+'/config.ini')
 
-cx_Oracle.init_oracle_client(lib_dir=config['PanDA DB']['client_path'])
+# cx_Oracle.init_oracle_client(lib_dir=config['PanDA DB']['client_path'])
 
-PanDA_engine = create_engine(config['PanDA DB']['sqlalchemy_engine_str'], echo=True)
-PostgreSQL_engine = create_engine(config['PostgreSQL']['sqlalchemy_engine_str'], echo=True)
+PanDA_engine = create_engine(config['PanDA DB']['sqlalchemy_engine_str'], echo=False, max_identifier_length=128)
+PostgreSQL_engine = create_engine(config['PostgreSQL']['sqlalchemy_engine_str'], echo=False)
 
-def task_timings_to_db(predefined_date = False, hours=24):
+def task_timings_to_db(predefined_date = False):
 
     from_date, to_date = set_time_period(predefined_date, n_hours=24)
 
-    if not check_for_data_existance('tasks_timings', from_date, delete=True):
+    if not check_for_data_existance('tasks_timings', from_date, delete=True, dt="end_time"):
         panda_connection = PanDA_engine.connect()
         query = text(open(SQL_DIR+'/PanDA/task_timings.sql').read())
         df = pd.read_sql_query(query,
                                panda_connection,
                                parse_dates={'datetime': '%Y-%m-%d'},
-                               params={'from_date': from_date,
-                                       'hours': hours})
+                               params={'from_date': from_date})
         datetime_cols = ['rerefined_tstamp',
                          'defined_tstamp',
                          'ready_tstamp',
@@ -56,9 +57,9 @@ def task_timings_to_db(predefined_date = False, hours=24):
 def job_timings_to_db(predefined_date = False, hours=24):
 
     from_date, to_date = set_time_period(predefined_date, n_hours=24)
-    #now = datetime.strftime(localized_now(),"%Y-%m-%d %H:%M:%S") if not predefined_date else str(predefined_date)
+    #from_date = datetime.strftime(localized_now(),"%Y-%m-%d %H:%M:%S") if not predefined_date else str(predefined_date)
 
-    if not check_for_data_existance('jobs_timings', from_date, delete=True):
+    if not check_for_data_existance('jobs_timings', from_date, delete=True, dt='completed_tstamp'):
         panda_connection = PanDA_engine.connect()
         query = text(open(SQL_DIR+'/PanDA/jobs_timings.sql').read())
         df = pd.read_sql_query(query,
@@ -70,9 +71,14 @@ def job_timings_to_db(predefined_date = False, hours=24):
                          'merging_tstamp']
         for i in datetime_cols:
             df[i] = df[i].astype(str)
-        panda_connection.close()
+
+        from_cric = enhance_queues()
+        from_cric.drop(['status','state','corecount','corepower','transferring_limit',
+                        'nodes'],axis=1,inplace=True)
+        result = pd.merge(df, from_cric, left_on='queue', right_on='queue')
         # df.fillna(0, inplace=True)
-        insert_to_db(df, 'jobs_timings')
+        panda_connection.close()
+        insert_to_db(result, 'jobs_timings')
     else:
         pass
 
@@ -142,21 +148,33 @@ def jobs_agg(predefined_date = False):
 
 def collection_for_time_period():
 
-    start_date = datetime(2022, 9, 26, 0, 0, 0)
-    end_date = datetime(2022, 10, 6, 0, 0, 0)
+    start_date = datetime(2022, 10, 10, 3, 0, 0)
+    end_date = datetime(2022, 10, 17, 3, 0, 0)
     delta_day = timedelta(hours=24)
 
     while start_date <= end_date:
         print(start_date)
         job_timings_to_db(predefined_date = datetime.strftime(start_date, "%Y-%m-%d %H:%M:%S"), hours=24) # 08.05.2022
-        #task_timings_to_db(predefined_date=datetime.strftime(start_date, "%Y-%m-%d %H:%M:%S"), hours=24)
+        # task_timings_to_db(predefined_date=datetime.strftime(start_date, "%Y-%m-%d %H:%M:%S"))
         # jobs_agg(predefined_date=datetime.strftime(start_date, "%Y-%m-%d %H:%M:%S"))
         start_date += delta_day
 
-
 # collection_for_time_period()
 
-# job_timings_to_db('2022-09-14 00:00:00', hours=24)
+
+def retrospective_dates():
+    start_date = datetime(2022, 7, 10)
+    end_date = datetime(2022, 10, 6)
+    list_of_dates = pd.date_range(start=datetime.strftime(start_date, "%Y-%m-%d"),
+                  end=datetime.strftime(end_date, "%Y-%m-%d"), freq='D')
+    for i in list_of_dates[::-1]:
+        job_timings_to_db(predefined_date = datetime.strftime(i, "%Y-%m-%d"), hours=24)
+
+
+
+# task_timings_to_db('2022-10-17 03:00:00')
+
+# job_timings_to_db('2022-10-07 03:00:00', hours=1)
 # task_timings_to_db('2022-09-07 00:00:00', hours=1)
 #
 # jobs_agg('2022-06-11 00:00:00')

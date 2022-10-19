@@ -1,7 +1,4 @@
 import os, sys
-ROOT_DIR = os.path.dirname(os.path.abspath(__file__))
-BASE_DIR = os.path.join(ROOT_DIR, '..' )
-sys.path.append(os.path.abspath(BASE_DIR))
 import cx_Oracle
 import cric
 import pandas as pd
@@ -11,10 +8,14 @@ from cric.cric_json_api import enhance_queues
 from database_helpers.helpers import insert_to_db, check_for_data_existance, set_time_period, localized_now
 from datetime import datetime, timedelta
 
+ROOT_DIR = os.path.dirname(os.path.abspath(__file__))
+BASE_DIR = os.path.join(ROOT_DIR, '..' )
+sys.path.append(os.path.abspath(BASE_DIR))
+
 import logging
 
 logging.basicConfig()
-logging.getLogger('sqlalchemy.engine').setLevel(logging.ERROR)
+logging.getLogger('sqlalchemy.engine').setLevel(logging.INFO)
 
 SQL_DIR = BASE_DIR+'/sql'
 
@@ -78,8 +79,8 @@ metrics = {
         }
 }
 
-PanDA_engine = create_engine(config['PanDA DB']['sqlalchemy_engine_str'], echo=True)
-PostgreSQL_engine = create_engine(config['PostgreSQL']['sqlalchemy_engine_str'], echo=True)
+PanDA_engine = create_engine(config['PanDA DB']['sqlalchemy_engine_str'], echo=False, max_identifier_length=128)
+PostgreSQL_engine = create_engine(config['PostgreSQL']['sqlalchemy_engine_str'], echo=False)
 
 
 def queues_to_db(metric, predefined_date = False):
@@ -102,13 +103,13 @@ def queues_to_db(metric, predefined_date = False):
 # detailed queues statuslog with computingelements
 def queues_hourly_statuslog_to_db(metric, predefined_date = False):
 
-    now = datetime.strftime(localized_now(),"%Y-%m-%d %H:%M:%S") if not predefined_date else str(predefined_date)
+    my_date = datetime.strftime(localized_now(),"%Y-%m-%d %H:%M:%S") if not predefined_date else str(predefined_date)
 
     panda_connection = PanDA_engine.connect()
     postgresql_connection = PostgreSQL_engine.connect()
     query = text(open(metrics.get(metric)['sql']).read())
     df = pd.read_sql_query(query, panda_connection,parse_dates={'datetime': '%Y-%m-%d %H:%M:%S'},
-                           params={'from_date': now, 'hours': 1})
+                           params={'from_date': my_date, 'hours': 1})
     panda_connection.close()
     # print(f'{df.shape[0]} rows has been returned from PanDA DB')
     from_cric = cric.cric_json_api.enhance_queues()
@@ -117,7 +118,7 @@ def queues_hourly_statuslog_to_db(metric, predefined_date = False):
     with postgresql_connection.begin():
         try:
             if postgresql_connection.execute(text(f'SELECT * FROM {metrics.get(metric)["table_name"]} '
-                                              f'WHERE datetime = DATE_TRUNC(\'hours\', TIMESTAMP \'{now}\')')).rowcount == 0:
+                                              f'WHERE datetime = DATE_TRUNC(\'hours\', TIMESTAMP \'{my_date}\')')).rowcount == 0:
                 insert_to_db(result,metrics.get(metric)["table_name"])
                 postgresql_connection.close()
                 print(f'The data has {len(result)} rows')
@@ -127,13 +128,13 @@ def queues_hourly_statuslog_to_db(metric, predefined_date = False):
 
 def queues_hourly_to_db(metric, predefined_date = False, n_hours=1):
 
-    now = datetime.strftime(localized_now(),"%Y-%m-%d %H:%M:%S") if not predefined_date else str(predefined_date)
+    from_date = datetime.strftime(localized_now(),"%Y-%m-%d %H:%M:%S") if not predefined_date else str(predefined_date)
 
     panda_connection = PanDA_engine.connect()
     postgresql_connection = PostgreSQL_engine.connect()
     query = text(open(metrics.get(metric)['sql']).read())
     df = pd.read_sql_query(query, panda_connection,parse_dates={'datetime': '%Y-%m-%d %H:%M:%S'},
-                           params={'now': now,'n_hours': n_hours})
+                           params={'now': from_date,'n_hours': n_hours})
     panda_connection.close()
     print(f'{df.shape[0]} rows has been returned from PanDA DB')
     from_cric = cric.cric_json_api.enhance_queues()
@@ -145,7 +146,7 @@ def queues_hourly_to_db(metric, predefined_date = False, n_hours=1):
     with postgresql_connection.begin():
         try:
             if postgresql_connection.execute(text(f'SELECT * FROM {metrics.get(metric)["table_name"]} '
-                                              f'WHERE datetime = DATE_TRUNC(\'hour\', TIMESTAMP \'{now}\') '
+                                              f'WHERE datetime = DATE_TRUNC(\'hour\', TIMESTAMP \'{from_date}\') '
                                               f'AND interval_hours = {n_hours}')).rowcount == 0:
                 insert_to_db(result,metrics.get(metric)["table_name"])
                 postgresql_connection.close()
@@ -156,16 +157,16 @@ def queues_hourly_to_db(metric, predefined_date = False, n_hours=1):
 
 def enhanced_queues_utilization(predefined_date = False, mode='daily'):
 
-    now = datetime.strftime(localized_now(), "%Y-%m-%d %H:%M:%S") \
+    from_date = datetime.strftime(localized_now(), "%Y-%m-%d %H:%M:%S") \
         if not predefined_date else str(predefined_date)
 
 #    from_date, to_date = set_time_period(predefined_date, n_hours=24 if mode=='daily' else 1)
 
-    if not check_for_data_existance(f'{mode}_enhanced_queues_utilization', now,  accuracy='hour', delete=True):
+    if not check_for_data_existance(f'{mode}_enhanced_queues_utilization', from_date,  accuracy='hour', delete=True):
         postgreSQL_connection = PostgreSQL_engine.connect()
         query = text(open(SQL_DIR + f'/postgreSQL/queues_utilization_enhanced_{mode}.sql').read())
         df = pd.read_sql_query(query, postgreSQL_connection, parse_dates={'datetime': '%Y-%m-%d'},
-                               params={'from_date': now})
+                               params={'from_date': from_date})
         postgreSQL_connection.close()
         #df.fillna(0, inplace=True)
         insert_to_db(df, f'{mode}_enhanced_queues_utilization')
@@ -173,28 +174,30 @@ def enhanced_queues_utilization(predefined_date = False, mode='daily'):
         pass
 
 
-def queues_workload_weighted(predefined_date=False, hours=3):
+def queues_workload_weighted(predefined_date=False, hours=4):
 
-    now = datetime.strftime(localized_now(), "%Y-%m-%d %H:%M:%S") \
+    from_date = datetime.strftime(localized_now(), "%Y-%m-%d %H:%M:%S") \
         if not predefined_date else str(predefined_date)
 
-    if not check_for_data_existance(f'queues_utilization_weighted', now, accuracy='hour', delete=True,
+    if not check_for_data_existance(f'queues_utilization_weighted', from_date, accuracy='hour', delete=True,
                                     dt='tend'):
         PanDA_connection = PanDA_engine.connect()
         query = text(open(SQL_DIR + f'/PanDA/queues_utilization_weighted.sql').read())
-        df = pd.read_sql_query(query, PanDA_connection, parse_dates={'datetime': '%Y-%m-%d'},
-                               params={'from_date': now,
+        df = pd.read_sql_query(query, PanDA_connection, parse_dates={'datetime': '%Y-%m-%d %H:%M:%S'},
+                               params={'from_date': from_date,
                                        'hours': hours})
+        from_cric = cric.cric_json_api.enhance_queues()
+        result = pd.merge(df, from_cric, left_on='queue', right_on='queue')
         PanDA_connection.close()
-        insert_to_db(df, 'queues_utilization_weighted')
+        insert_to_db(result, 'queues_utilization_weighted')
     else:
         pass
 
 
 def collect_queues_for_period():
 
-    start_date = datetime(2022, 8, 4, 4, 0, 0)
-    end_date = datetime(2022, 10, 12, 4, 0, 0)
+    start_date = datetime(2022, 10, 9, 20, 0, 0)
+    end_date = datetime(2022, 10, 17, 8, 0, 0)
     # delta_day = timedelta(days=1)
     delta_hours = timedelta(hours=4)
 
@@ -206,47 +209,49 @@ def collect_queues_for_period():
 
 
 
-def collect_hourly_data_for_period(metric):
-    start_date = datetime(2022, 9, 15, 0, 0, 0)
-    end_date = datetime(2022, 10, 1, 0, 0, 0)
-    delta_day = timedelta(days=1)
-    delta_1hour = timedelta(hours=1)
-    delta_3hours = timedelta(hours=3)
-    delta_6hours = timedelta(hours=6)
-    delta_12hours = timedelta(hours=12)
+# def collect_hourly_data_for_period(metric):
+#     start_date = datetime(2022, 9, 15, 0, 0, 0)
+#     end_date = datetime(2022, 10, 1, 0, 0, 0)
+#     delta_day = timedelta(days=1)
+#     delta_1hour = timedelta(hours=1)
+#     delta_3hours = timedelta(hours=3)
+#     delta_6hours = timedelta(hours=6)
+#     delta_12hours = timedelta(hours=12)
+#
+#     while start_date <= end_date:
+#         print(start_date)
+#
+#         curr_date = start_date
+#         while curr_date <= start_date + delta_day:
+#             print(curr_date)
+#             queues_hourly_to_db(metric, predefined_date = curr_date, n_hours=1)
+#             curr_date += delta_1hour
+#
+#         curr_date = start_date
+#         while curr_date <= start_date + delta_day:
+#             print(curr_date)
+#             queues_hourly_to_db(metric, predefined_date = curr_date, n_hours=3)
+#             curr_date += delta_3hours
+#
+#         curr_date = start_date
+#         while curr_date <= start_date + delta_day:
+#             print(curr_date)
+#             queues_hourly_to_db(metric, predefined_date = curr_date, n_hours=6)
+#             curr_date += delta_6hours
+#
+#         curr_date = start_date
+#         while curr_date <= start_date + delta_day:
+#             print(curr_date)
+#             queues_hourly_to_db(metric, predefined_date = curr_date, n_hours=12)
+#             curr_date += delta_12hours
+#
+#         queues_hourly_to_db(metric, predefined_date = start_date, n_hours=24)
+#
+#         start_date += delta_day
 
-    while start_date <= end_date:
-        print(start_date)
-
-        curr_date = start_date
-        while curr_date <= start_date + delta_day:
-            print(curr_date)
-            queues_hourly_to_db(metric, predefined_date = curr_date, n_hours=1)
-            curr_date += delta_1hour
-
-        curr_date = start_date
-        while curr_date <= start_date + delta_day:
-            print(curr_date)
-            queues_hourly_to_db(metric, predefined_date = curr_date, n_hours=3)
-            curr_date += delta_3hours
-
-        curr_date = start_date
-        while curr_date <= start_date + delta_day:
-            print(curr_date)
-            queues_hourly_to_db(metric, predefined_date = curr_date, n_hours=6)
-            curr_date += delta_6hours
-
-        curr_date = start_date
-        while curr_date <= start_date + delta_day:
-            print(curr_date)
-            queues_hourly_to_db(metric, predefined_date = curr_date, n_hours=12)
-            curr_date += delta_12hours
-
-        queues_hourly_to_db(metric, predefined_date = start_date, n_hours=24)
-
-        start_date += delta_day
-
-collect_queues_for_period()
+# collect_queues_for_period()
+# queues_workload_weighted(predefined_date='2022-08-09 20:00:00',
+#                          hours=4)
 # collect_hourly_data_for_period('queues_hourly')
 # queues_to_db('queues_statuslog_actual', '2022-09-02 01:00:00')
 #queues_hourly_to_db('queues_statuslog_hourly','2022-05-16 10:00:00',1)
@@ -254,3 +259,5 @@ collect_queues_for_period()
 # queues_hourly_to_db('queues_hourly',False,1)
 
 # queues_hourly_statuslog_to_db('queues_statuslog_detailed','2022-06-13 19:30:00')
+#
+# queues_workload_weighted()

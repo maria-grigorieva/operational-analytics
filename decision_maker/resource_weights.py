@@ -18,7 +18,7 @@ print(SQL_DIR)
 config = configparser.ConfigParser()
 config.read(BASE_DIR+'/config.ini')
 
-PostgreSQL_engine = create_engine(config['PostgreSQL']['sqlalchemy_engine_str'], echo=True)
+PostgreSQL_engine = create_engine(config['PostgreSQL']['sqlalchemy_engine_str'], echo=False)
 
 def calculate_weights(predefined_date = False):
 
@@ -129,14 +129,14 @@ def calculate_queue_weights(predefined_date = False):
 def calculate_queue_weights_hourly_enhanced(predefined_date = False):
 
     # from_date, to_date = set_time_period(predefined_date, n_hours=24)
-    now = datetime.strftime(localized_now(), "%Y-%m-%d %H:%M:%S") \
+    from_date = datetime.strftime(localized_now(), "%Y-%m-%d %H:%M:%S") \
         if not predefined_date else str(predefined_date)
 
-    if not check_for_data_existance('queue_weights_hourly_enhanced', now, accuracy='hour', delete=True):
+    if not check_for_data_existance('queue_weights_hourly_enhanced', from_date, accuracy='hour', delete=True):
 
         postgres_connection = PostgreSQL_engine.connect()
         query = text(open(SQL_DIR + '/postgreSQL/queue_weights_hourly_enhanced.sql').read())
-        df = pd.read_sql_query(query, postgres_connection, parse_dates={'datetime': '%Y-%m-%d'}, params={'now':now})
+        df = pd.read_sql_query(query, postgres_connection, parse_dates={'datetime': '%Y-%m-%d'}, params={'now':from_date})
         postgres_connection.close()
         df.set_index(['queue', 'cpuconsumptionunit', 'site', 'cloud', 'tier_level', 'datetime', 'resource_type'],inplace=True)
         norm_df = df.apply(lambda x: round((x - np.mean(x)) / (np.max(x) - np.min(x)), 3))
@@ -161,14 +161,14 @@ def calculate_queue_weights_hourly_enhanced(predefined_date = False):
 
 def calculate_queue_weights_weighted(predefined_date = False):
 
-    now = datetime.strftime(localized_now(), "%Y-%m-%d %H:%M:%S") \
+    from_date = datetime.strftime(localized_now(), "%Y-%m-%d %H:%M:%S") \
         if not predefined_date else str(predefined_date)
 
-    if not check_for_data_existance('queue_weighted_weighted', now, accuracy='hour', delete=True):
+    if not check_for_data_existance('queue_weighted_weighted', from_date, accuracy='hour', delete=True):
 
         postgres_connection = PostgreSQL_engine.connect()
         query = text(open(SQL_DIR + '/postgreSQL/queue_weights_weighted.sql').read())
-        df = pd.read_sql_query(query, postgres_connection, parse_dates={'datetime': '%Y-%m-%d'}, params={'now':now})
+        df = pd.read_sql_query(query, postgres_connection, parse_dates={'datetime': '%Y-%m-%d'}, params={'now':from_date})
         postgres_connection.close()
         df.set_index(['queue', 'tend'],inplace=True)
         df.fillna(0, inplace=True)

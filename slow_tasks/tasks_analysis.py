@@ -28,13 +28,13 @@ PostgreSQL_engine = create_engine(config['PostgreSQL']['sqlalchemy_engine_str'],
 
 def long_tasks_to_db(predefined_date = False):
 
-    now = datetime.strftime(datetime.now(), "%Y-%m-%d %H:%M:%S") if not predefined_date else str(predefined_date)
+    from_date = datetime.strftime(datetime.now(), "%Y-%m-%d %H:%M:%S") if not predefined_date else str(predefined_date)
 
-    if not check_for_data_existance('long_tasks', now, delete=True):
+    if not check_for_data_existance('long_tasks', from_date, delete=True):
         panda_connection = PanDA_engine.connect()
         query = text(open(SQL_DIR+'/PanDA/long_tasks.sql').read())
         df = pd.read_sql_query(query, panda_connection, parse_dates={'datetime': '%Y-%m-%d'},
-                               params={'from_date': now})
+                               params={'from_date': from_date})
         panda_connection.close()
         df.fillna(0, inplace=True)
         insert_to_db(df, 'long_tasks')

@@ -26,7 +26,6 @@ with jobs as (
                      j.atlasrelease,
                      j.transformation,
                      j.homepackage,
-                     j.resource_type,
                      j.starttime,
                      j.endtime,
                      j.creationtime,
@@ -51,8 +50,8 @@ with jobs as (
                        INNER JOIN ATLAS_PANDAARCH.FILESTABLE_ARCH f ON (j.jeditaskid = f.jeditaskid AND f.pandaid = j.pandaid)
                        INNER JOIN ATLAS_PANDA.TASK_ATTEMPTS ta ON (ta.jeditaskid = j.jeditaskid AND j.creationtime >= ta.starttime and j.modificationtime <= ta.endtime)
               WHERE
-                  j.modificationtime >= to_date(:from_date, 'YYYY-MM-DD HH24:MI:SS')
-              AND j.modificationtime < to_date(:from_date, 'YYYY-MM-DD HH24:MI:SS') + :hours / 24
+                  j.modificationtime >= trunc(to_date(:from_date, 'YYYY-MM-DD HH24:MI:SS'),'DD')
+              AND j.modificationtime < trunc(to_date(:from_date, 'YYYY-MM-DD HH24:MI:SS'),'DD') + :hours / 24
               AND ta.endstatus in ('finished','failed','done','broken','aborted')
               AND j.prodsourcelabel = 'user'
               AND j.processingtype not like 'gangarobot%'
@@ -94,7 +93,6 @@ with jobs as (
                      j.atlasrelease,
                      j.transformation,
                      j.homepackage,
-                     j.resource_type,
                      j.starttime,
                      j.endtime,
                      j.creationtime,
@@ -119,8 +117,8 @@ with jobs as (
                        INNER JOIN ATLAS_PANDA.FILESTABLE4 f ON (j.jeditaskid = f.jeditaskid AND f.pandaid = j.pandaid)
                        INNER JOIN ATLAS_PANDA.TASK_ATTEMPTS ta ON (ta.jeditaskid = j.jeditaskid AND j.creationtime >= ta.starttime and j.modificationtime <= ta.endtime)
               WHERE
-                  j.modificationtime >= to_date(:from_date, 'YYYY-MM-DD HH24:MI:SS')
-              AND j.modificationtime < to_date(:from_date, 'YYYY-MM-DD HH24:MI:SS') + :hours / 24
+                  j.modificationtime >= trunc(to_date(:from_date, 'YYYY-MM-DD HH24:MI:SS'),'DD')
+              AND j.modificationtime < trunc(to_date(:from_date, 'YYYY-MM-DD HH24:MI:SS'),'DD') + :hours / 24
               AND ta.endstatus in ('finished','failed','done','broken','aborted')
               AND j.prodsourcelabel = 'user'
               AND j.processingtype not like 'gangarobot%'
@@ -155,21 +153,28 @@ with jobs as (
                       inputfilebytes,
                       outputfilebytes,
                       lib_size,
-                      inputfiletype,
-                      inputfileproject,
+                    MIN(regexp_replace(SUBSTR(datasetname, REGEXP_INSTR(datasetname, '\.', 1, 4) + 1,
+                       (REGEXP_INSTR(datasetname, '\.', 1, 5) -
+                       REGEXP_INSTR(datasetname, '\.', 1, 4)-1)),'[0-9]','')) as input_format,
+                MIN(regexp_substr(regexp_replace(SUBSTR(datasetname, REGEXP_INSTR(datasetname, '\.', 1, 4) + 1,
+                       (REGEXP_INSTR(datasetname, '\.', 1, 5) -
+                       REGEXP_INSTR(datasetname, '\.', 1, 4)-1)),'[0-9]',''),'[^_]+',1,1)) as input_format_short,
+                MIN(regexp_substr(regexp_replace(SUBSTR(datasetname, REGEXP_INSTR(datasetname, '\.', 1, 4) + 1,
+                       (REGEXP_INSTR(datasetname, '\.', 1, 5) -
+                       REGEXP_INSTR(datasetname, '\.', 1, 4)-1)),'[0-9]',''),'[^_]+',1,2)) as input_format_desc,
+                    MIN(SUBSTR(datasetname, 1, Instr(datasetname, ':', -1, 1)-1)) as input_project,
                       corecount,
                       actualcorecount,
                       nevents,
                       computingelement,
                       cpuconsumptionunit,
                       cpuconsumptiontime,
-                      status,
+                      status as job_status,
                       assignedpriority,
                       currentpriority,
                       atlasrelease,
                       transformation,
                       homepackage,
-                      resource_type,
                       processingtype,
                       hs06sec,
                       starttime as execution_start_tstamp,
@@ -229,8 +234,6 @@ with jobs as (
                       inputfilebytes,
                       outputfilebytes,
                       lib_size,
-                      inputfiletype,
-                      inputfileproject,
                       corecount,
                       actualcorecount,
                       nevents,
@@ -243,7 +246,6 @@ with jobs as (
                       atlasrelease,
                       transformation,
                       homepackage,
-                      resource_type,
                       hs06sec,
                       processingtype,
                         starttime,

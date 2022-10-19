@@ -13,7 +13,7 @@ from datetime import datetime, timedelta
 config = configparser.ConfigParser()
 config.read(BASE_DIR+'/config.ini')
 
-PostgreSQL_engine = create_engine(config['PostgreSQL']['sqlalchemy_engine_str'], echo=True)
+PostgreSQL_engine = create_engine(config['PostgreSQL']['sqlalchemy_engine_str'], echo=False)
 
 def queues_rse_cric(predefined_date = False):
 

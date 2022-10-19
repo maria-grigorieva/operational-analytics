@@ -30,7 +30,7 @@ config.read(BASE_DIR+'/config.ini')
 bigquery_project_id = 'atlas-336515'
 bigquery_dataset = 'analytix'
 
-PostgreSQL_engine = create_engine(config['PostgreSQL']['sqlalchemy_engine_str'], echo=True)
+PostgreSQL_engine = create_engine(config['PostgreSQL']['sqlalchemy_engine_str'], echo=False)
 
 os.environ["GOOGLE_APPLICATION_CREDENTIALS"]=config['GOOGLE']['app']
 
@@ -126,7 +126,7 @@ def check_postgreSQL(table_name, now, accuracy, datetime_col_name='datetime'):
 
 def check_bigquery(table_name, now, accuracy, datetime_col_name='datetime'):
 
-    now = day_rounder(datetime.strptime(now, "%Y-%m-%d %H:%M:%S"))
+    #from_date = day_rounder(datetime.strptime(now, "%Y-%m-%d %H:%M:%S"))
     freq = 'DAY' if accuracy=='day' else 'HOUR'
     query = f'SELECT * FROM `{bigquery_project_id}.{bigquery_dataset}.{table_name}` ' \
             f'WHERE TIMESTAMP({datetime_col_name}) >= TIMESTAMP(date_trunc(\'{now}\', {freq}))' \
@@ -142,22 +142,22 @@ def check_bigquery(table_name, now, accuracy, datetime_col_name='datetime'):
 def delete_from_pgsql(table_name, now, accuracy='day', datetime_col_name='datetime'):
 
     conn = PostgreSQL_engine.connect()
-    # now = day_rounder(datetime.strptime(now, "%Y-%m-%d %H:%M:%S"))
+    # from_date = day_rounder(datetime.strptime(now, "%Y-%m-%d %H:%M:%S"))
     remove_statement = f'DELETE FROM {table_name} WHERE {datetime_col_name} >= date_trunc(\'{accuracy}\', TIMESTAMP \'{now}\') ' \
             f'AND {datetime_col_name} < date_trunc(\'{accuracy}\', TIMESTAMP \'{now}\' + INTERVAL \'1day\')'
     conn.execute(text(remove_statement))
     conn.close()
 
 
-def delete_from_bigquery(table_name, now, datetime_col_name='datetime'):
+def delete_from_bigquery(table_name, now, accuracy='day', datetime_col_name='datetime'):
 
     client = bigquery.Client()
 
-    now = day_rounder(datetime.strptime(now, "%Y-%m-%d %H:%M:%S"))
-
+    #from_date = day_rounder(datetime.strptime(now, "%Y-%m-%d %H:%M:%S"))
+    freq = 'DAY' if accuracy == 'day' else 'HOUR'
     remove_statement = f'DELETE FROM `{bigquery_project_id}.{bigquery_dataset}.{table_name}` ' \
-            f'WHERE TIMESTAMP({datetime_col_name}) >= TIMESTAMP(date_trunc(\'{now}\', DAY))' \
-            f'AND TIMESTAMP({datetime_col_name}) < TIMESTAMP(date_trunc(DATE_ADD(DATE \'{now}\', INTERVAL 1 DAY), DAY))'
+            f'WHERE TIMESTAMP({datetime_col_name}) >= TIMESTAMP(date_trunc(\'{now}\', {freq}))' \
+            f'AND TIMESTAMP({datetime_col_name}) < TIMESTAMP(date_trunc(DATE_ADD(DATE \'{now}\', INTERVAL 1 {freq}), {freq}))'
     query_job = client.query(remove_statement)
     query_job.result()
 

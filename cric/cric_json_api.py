@@ -25,7 +25,7 @@ url_site = urllib.parse.urljoin(cric_base_url, config['CRIC']['url_site'])
 url_queue_all = urllib.parse.urljoin(cric_base_url, config['CRIC']['url_queue_all'])
 url_site_all = urllib.parse.urljoin(cric_base_url, config['CRIC']['url_site_all'])
 
-PostgreSQL_engine = create_engine(config['PostgreSQL']['sqlalchemy_engine_str'], echo=True)
+PostgreSQL_engine = create_engine(config['PostgreSQL']['sqlalchemy_engine_str'], echo=False)
 
 http = urllib3.PoolManager(
     cert_file=os.path.join(BASE_DIR, config['CRIC']['ssl_cert']),
@@ -78,11 +78,11 @@ def enhance_queues(all=False, with_rse=False):
 
 def cric_resources_to_db(predefined_date = False):
 
-    now = datetime.strftime(datetime.now(), "%Y-%m-%d %H:%M:%S") if not predefined_date else str(predefined_date)
+    from_date = datetime.strftime(datetime.now(), "%Y-%m-%d %H:%M:%S") if not predefined_date else str(predefined_date)
 
-    if not check_for_data_existance('cric_resources', now, delete=True):
+    if not check_for_data_existance('cric_resources', from_date, delete=True):
         result = enhance_queues(with_rse=True)
-        result['datetime'] = day_rounder(datetime.strptime(now, "%Y-%m-%d %H:%M:%S"))
+        result['datetime'] = day_rounder(datetime.strptime(from_date, "%Y-%m-%d %H:%M:%S"))
         int_columns = result.select_dtypes(include=['int', 'float']).columns
         result[int_columns] = result[int_columns].fillna(0)
         result['datetime'] = pd.to_datetime(result['datetime'])
@@ -100,11 +100,11 @@ def cric_resources_to_db(predefined_date = False):
 
 def actual_cric_info():
 
-    now = datetime.strftime(datetime.now(), "%Y-%m-%d %H:%M:%S")
+    from_date = datetime.strftime(datetime.now(), "%Y-%m-%d %H:%M:%S")
 
-    if not check_for_data_existance('actual_cric_info', now, delete=True):
+    if not check_for_data_existance('actual_cric_info', from_date, delete=True):
         result = enhance_queues()
-        result['datetime'] = day_rounder(datetime.strptime(now, "%Y-%m-%d %H:%M:%S"))
+        result['datetime'] = day_rounder(datetime.strptime(from_date, "%Y-%m-%d %H:%M:%S"))
         int_columns = result.select_dtypes(include=['int', 'float']).columns
         result[int_columns] = result[int_columns].fillna(0)
         result['datetime'] = pd.to_datetime(result['datetime'])
@@ -182,5 +182,5 @@ def get_replicas_sites(list_of_ddm_endpoints):
 
 
 # #
-# cric_resources_to_db('2022-01-31 00:00:00')
+# cric_resources_to_db()
 # actual_cric_info()

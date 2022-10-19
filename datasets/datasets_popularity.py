@@ -18,7 +18,7 @@ SQL_DIR = BASE_DIR+'/sql'
 config = configparser.ConfigParser()
 config.read(BASE_DIR+'/config.ini')
 
-PanDA_engine = create_engine(config['PanDA DB']['sqlalchemy_engine_str'], echo=True)
+PanDA_engine = create_engine(config['PanDA DB']['sqlalchemy_engine_str'], echo=False)
 
 
 def data_format_extractor(row):

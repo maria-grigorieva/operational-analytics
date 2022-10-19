@@ -15,7 +15,7 @@ from datetime import datetime, timedelta
 config = configparser.ConfigParser()
 config.read(BASE_DIR+'/config.ini')
 
-PostgreSQL_engine = create_engine(config['PostgreSQL']['sqlalchemy_engine_str'], echo=True)
+PostgreSQL_engine = create_engine(config['PostgreSQL']['sqlalchemy_engine_str'], echo=False)
 
 def get_distances():
 
@@ -30,8 +30,8 @@ def get_distances():
                          'dest': dst,
                          'closeness': closeness})
     df = pd.DataFrame(dist)
-    now = datetime.strftime(datetime.now(),"%Y-%m-%d")
-    df['datetime'] = now
+    from_date = datetime.strftime(datetime.now(),"%Y-%m-%d")
+    df['datetime'] = from_date
 
     sites_info = cric_json_api.enhance_sites()
 

@@ -17,7 +17,7 @@ SQL_DIR = BASE_DIR+'/sql'
 config = configparser.ConfigParser()
 config.read(BASE_DIR+'/config.ini')
 
-PostgreSQL_engine = create_engine(config['PostgreSQL']['sqlalchemy_engine_str'], echo=True, pool_size=10, max_overflow=20)
+PostgreSQL_engine = create_engine(config['PostgreSQL']['sqlalchemy_engine_str'], echo=False, pool_size=10, max_overflow=20)
 
 
 def dataset_replicas_to_db(predefined_date = False):
@@ -56,7 +56,7 @@ def dataset_replicas_to_db(predefined_date = False):
 
 
 def collect_dataset(name):
-    panda = create_engine(config['PanDA DB']['sqlalchemy_engine_str'], echo=True, future=True)
+    panda = create_engine(config['PanDA DB']['sqlalchemy_engine_str'], echo=False, future=True)
     panda_connection = panda.connect()
     postgres_connection = PostgreSQL_engine.connect()
     query = text(open(SQL_DIR+'/PanDA/dataset_popularity_single.sql').read())

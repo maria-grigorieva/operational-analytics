@@ -49,17 +49,7 @@
     "name": "lib_size",
     "type": "INTEGER"
   },
-  {
-    "mode": "NULLABLE",
-    "name": "inputfiletype",
-    "type": "STRING"
-  },
-  {
-    "mode": "NULLABLE",
-    "name": "inputfileproject",
-    "type": "STRING"
-  },
-  {
+    {
     "mode": "NULLABLE",
     "name": "corecount",
     "type": "INTEGER"
@@ -83,11 +73,6 @@
     "mode": "NULLABLE",
     "name": "cpuconsumptiontime",
     "type": "INTEGER"
-  },
-  {
-    "mode": "NULLABLE",
-    "name": "status",
-    "type": "STRING"
   },
   {
     "mode": "NULLABLE",
@@ -223,5 +208,50 @@
     "mode": "NULLABLE",
     "name": "totwbytes",
     "type": "INTEGER"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "site",
+    "type": "STRING"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "cloud",
+    "type": "STRING"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "tier_level",
+    "type": "INTEGER"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "resource_type",
+    "type": "STRING"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "region",
+    "type": "STRING"
+  },
+    {
+    "mode": "NULLABLE",
+    "name": "input_format",
+    "type": "STRING"
+  },
+    {
+    "mode": "NULLABLE",
+    "name": "input_project",
+    "type": "STRING"
+  },
+    {
+    "mode": "NULLABLE",
+    "name": "input_format_short",
+    "type": "STRING"
+  },
+    {
+    "mode": "NULLABLE",
+    "name": "input_format_desc",
+    "type": "STRING"
   }
 ]

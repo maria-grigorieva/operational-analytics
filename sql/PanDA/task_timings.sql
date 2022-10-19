@@ -19,8 +19,8 @@ with tasks as (
         INNER JOIN ATLAS_PANDA.jedi_datasets d ON (t.jeditaskid = d.jeditaskid)
     WHERE
           t.tasktype = 'anal'
-          AND t.modificationtime >= to_date(:from_date, 'YYYY-MM-DD HH24:MI:SS')
-          AND t.modificationtime < to_date(:from_date, 'YYYY-MM-DD HH24:MI:SS') + :hours/24
+          AND t.modificationtime >= trunc(to_date(:from_date, 'YYYY-MM-DD HH24:MI:SS'),'DD')
+          AND t.modificationtime < trunc(to_date(:from_date, 'YYYY-MM-DD HH24:MI:SS'),'DD')+1
           AND t.status in ('finished','done')
           AND s.status in ('ready')
           AND s.attemptnr = 0
