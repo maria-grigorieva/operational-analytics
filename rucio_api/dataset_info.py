@@ -123,10 +123,3 @@ def update_from_rucio(dataset: str):
 def split_data_type(data_type):
     data_type, data_type_desc = data_type.split("_") if len(data_type.split("_")) > 1 else (data_type, "")
     return data_type, data_type_desc
-
-
-
-# res = get_dataset_info('data15_13TeV:data15_13TeV.00266904.physics_Main.deriv.DAOD_MUON1.r9264_p3083_p4144_tid21196832_00')
-#
-# pprint.pprint(res.to_dict('records'))
-#print(update_from_rucio('mc16_13TeV:mc16_13TeV.830027.H7EG_jetjet_dipole_JZ7.recon.AOD.e7954_e7400_s3126_r10244_tid26730472_00'))

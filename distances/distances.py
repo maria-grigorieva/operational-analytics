@@ -51,5 +51,3 @@ def get_distances():
     dst.drop('site', axis=1, inplace=True)
 
     insert_to_db(dst, 'distances')
-
-# get_distances()

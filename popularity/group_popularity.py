@@ -42,5 +42,3 @@ def group_popularity_to_db(predefined_date = False):
         insert_to_db(df, 'group_popularity')
     else:
         pass
-
-# group_popularity_to_db()

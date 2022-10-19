@@ -179,8 +179,3 @@ def get_replicas_sites(list_of_ddm_endpoints):
                 list_of_clouds.append(value.get('cloud', None))
                 break
     return list(set(list_of_sites)), list(set(list_of_clouds)), nested
-
-
-# #
-# cric_resources_to_db()
-# actual_cric_info()

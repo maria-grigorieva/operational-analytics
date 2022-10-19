@@ -40,15 +40,3 @@ def long_tasks_to_db(predefined_date = False):
         insert_to_db(df, 'long_tasks')
     else:
         pass
-
-#
-# start_date = datetime(2022, 1, 1, 1, 0, 0)
-# end_date = datetime(2022, 4, 20, 1, 00, 0)
-# delta_day = timedelta(days=1)
-#
-# while start_date <= end_date:
-#     print(start_date)
-#     long_tasks_to_db(start_date)
-#     start_date += delta_day
-# #
-# long_tasks_to_db('2022-04-22 01:00:00')

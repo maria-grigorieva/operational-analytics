@@ -206,59 +206,6 @@ def calculate_queue_weights_weighted(predefined_date = False):
         pass
 
 
-# def calculate_weights(datasetname):
-#     postgres_connection = PostgreSQL_engine.connect()
-#     query = text(open(SQL_DIR + '/postgreSQL/merging.sql').read())
-#     df = pd.read_sql_query(query, postgres_connection, parse_dates={'datetime': '%Y-%m-%d'}, params={'ds_name':datasetname})
-#     df.drop('Storage Timestamp', axis=1, inplace=True)
-#     df.set_index(['queue', 'rse', 'site', 'cloud', 'tier_level', 'datetime', 'src','dest',
-#                   'queue_type','state','status','resource_type','region','datasetname', 'timestamp'],inplace=True)
-#     df['queue_utilization_'] = round(1/df['queue_utilization'],4)
-#     df['closeness_'] = round(1 / df['closeness'],4)
-#     df['queue_filling_'] = round(1 / df['queue_filling'],4)
-#     norm_df = df.apply(lambda x: round((x - np.mean(x)) / (np.max(x) - np.min(x)), 3))
-#     norm_df[np.isnan(norm_df)] = 0
-#     norm_df.reset_index(inplace=True)
-#
-#     norm_df['rse_weight'] = norm_df['queue_efficiency'] + \
-#                             norm_df['queue_utilization_'] + \
-#                             norm_df['Difference'] + \
-#                             norm_df['Unlocked'] + \
-#                             norm_df['closeness_'] + \
-#                             norm_df['queue_filling_']
-#
-#     df.reset_index(inplace=True)
-#
-#     df['rse_weight'] = round(norm_df['rse_weight'], 3)
-#     df['datasetname'] = datasetname
-#
-#     df.drop(['queue_utilization_','closeness_','queue_filling_'],axis=1, inplace=True)
-#
-#
-#     df.to_sql('resource_weights',
-#               postgres_connection,
-#               if_exists='append',
-#               method='multi',
-#               index=False)
-
-
-
-# start_date = datetime(2022, 9, 15, 3, 0, 0)
-# end_date = datetime(2022, 10, 1, 0, 0, 0)
-# delta = timedelta(hours=3)
-#
-# while start_date <= end_date:
-#     print(start_date)
-#     calculate_queue_weights_weighted(datetime.strftime(start_date,"%Y-%m-%d %H:%M:%S"))
-#     # calculate_queue_weights_hourly_enhanced(datetime.strftime(start_date,"%Y-%m-%d %H:%M:%S"))
-#     # calculate_queue_weights(datetime.strftime(start_date,"%Y-%m-%d %H:%M:%S"))
-#     # calculate_weights_overall(datetime.strftime(start_date,"%Y-%m-%d %H:%M:%S"))
-#     start_date += delta
-#     print('Data has been written!')
-
-
-# calculate_queue_weights_hourly_enhanced('2022-09-17 00:00:00')
-
 
 
 
