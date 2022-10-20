@@ -6,7 +6,7 @@ import pandas as pd
 def retrospective_collector():
 
     start_date = datetime(2022, 7, 1, 0, 0, 0)
-    end_date = datetime(2022, 7, 31, 20, 0, 0)
+    end_date = datetime(2022, 7, 16, 0, 0, 0)
 
     list_of_dates = pd.date_range(start=datetime.strftime(start_date, "%Y-%m-%d %H:%M:%S"),
                   end=datetime.strftime(end_date, "%Y-%m-%d %H:%M:%S"), freq='4h')

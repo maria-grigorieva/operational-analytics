@@ -1,10 +1,10 @@
 #!/bin/bash
 
-rm -r /opt/data_placement/logs/*
+rm -r /opt/4maria/operational-analytics/logs/*
 echo "Celery Log Files has been removed"
 
->/opt/data_placement/logs/celery.log
+>/opt/4maria/operational-analytics/logs/celery.log
 
->/opt/data_placement/logs/celerybeat.log
+>/opt/4maria/operational-analytics/logs/celerybeat.log
 
 echo "New Log Files were created"
