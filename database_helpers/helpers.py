@@ -6,6 +6,7 @@ import configparser
 from sqlalchemy import create_engine, text, inspect
 from datetime import datetime, timedelta
 from google.cloud import bigquery
+from google.oauth2 import service_account
 import pandas_gbq
 import json
 import os
@@ -27,6 +28,7 @@ BG_DATETYPES = BASE_DIR+'/BigQuery/data_types.json'
 
 config = configparser.ConfigParser()
 config.read(BASE_DIR+'/config.ini')
+
 bigquery_project_id = 'atlas-336515'
 bigquery_dataset = 'analytix'
 
@@ -34,6 +36,9 @@ PostgreSQL_engine = create_engine(config['PostgreSQL']['sqlalchemy_engine_str'],
 
 os.environ["GOOGLE_APPLICATION_CREDENTIALS"]=config['GOOGLE']['app']
 
+credentials = service_account.Credentials.from_service_account_file(
+    config['GOOGLE']['app'],
+)
 
 # def insert_to_db(df, table_name, curr_date, delete=True):
 #
@@ -69,7 +74,8 @@ def write_to_bigquery(df, table_name):
 
     df = fix_datetypes(df)
     pandas_gbq.to_gbq(df, 'analytix.' + table_name, project_id='atlas-336515', if_exists='append',
-                      table_schema=get_google_schema(table_name))
+                      table_schema=get_google_schema(table_name),
+                      credentials=credentials)
 
 
 def insert_to_db(df, table_name):
