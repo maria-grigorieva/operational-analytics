@@ -1,4 +1,4 @@
-SELECT trunc(t.modificationtime,'IW') as datetime,
+SELECT trunc(to_date(:from_date, 'YYYY-MM-DD'),'DD') as datetime,
        t.workinggroup,
         regexp_substr(regexp_replace(SUBSTR(d.datasetname, REGEXP_INSTR(d.datasetname, '\.', 1, 4) + 1,
                (REGEXP_INSTR(d.datasetname, '\.', 1, 5) -
@@ -20,7 +20,7 @@ WHERE t.tasktype='anal' and
       (d.datasetname LIKE 'mc%' or d.datasetname LIKE 'data%') and
       d.masterid is null and
       t.status in ('finished','done')
-GROUP BY trunc(t.modificationtime,'IW'),
+GROUP BY trunc(to_date(:from_date, 'YYYY-MM-DD'),'DD'),
          t.workinggroup,
          regexp_substr(regexp_replace(SUBSTR(d.datasetname, REGEXP_INSTR(d.datasetname, '\.', 1, 4) + 1,
                (REGEXP_INSTR(d.datasetname, '\.', 1, 5) -

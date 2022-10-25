@@ -173,7 +173,7 @@ def enhanced_queues_utilization(predefined_date = False, mode='daily'):
         pass
 
 
-def queues_workload_weighted(predefined_date=False, hours=4):
+def queues_workload_weighted(predefined_date=False, hours=4, queues='actual'):
 
     from_date = datetime.strftime(localized_now(), "%Y-%m-%d %H:%M:%S") \
         if not predefined_date else str(predefined_date)
@@ -185,7 +185,19 @@ def queues_workload_weighted(predefined_date=False, hours=4):
         df = pd.read_sql_query(query, PanDA_connection, parse_dates={'datetime': '%Y-%m-%d %H:%M:%S'},
                                params={'from_date': from_date,
                                        'hours': hours})
-        from_cric = cric.cric_json_api.enhance_queues()
+        if queues == 'actual':
+            from_cric = cric.cric_json_api.enhance_queues()
+        elif queues == 'db':
+            PostgreSQL_connection = PostgreSQL_engine.connect()
+            query = text('SELECT queue,cloud,site,resource_type,'
+                         'tier_level, status, state, nodes,'
+                         'corepower, corecount, region, transferring_limit '
+                         'FROM cric_resources WHERE '
+                         'datetime = (SELECT max(datetime) FROM cric_resources)'
+                         'GROUP by queue,cloud,site,resource_type,'
+                         'tier_level, status, state, nodes,'
+                         'corepower, corecount, region, transferring_limit')
+            from_cric = pd.read_sql_query(query, PostgreSQL_connection)
         result = pd.merge(df, from_cric, left_on='queue', right_on='queue')
         PanDA_connection.close()
         insert_to_db(result, 'queues_utilization_weighted')
