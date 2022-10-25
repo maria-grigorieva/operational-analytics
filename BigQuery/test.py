@@ -9,7 +9,11 @@ import io
 from sqlalchemy import create_engine, text, inspect
 import configparser
 import json
-os.environ["GOOGLE_APPLICATION_CREDENTIALS"]="/opt/data_placement/conf/atlas-336515-9bbd95e3dadf.json"
+
+config = configparser.ConfigParser()
+config.read(BASE_DIR+'/config.ini')
+
+os.environ["GOOGLE_APPLICATION_CREDENTIALS"]=config['GOOGLE']['app']
 
 SQL_DIR = BASE_DIR+'/sql'
 BG_SCHEMAS = BASE_DIR+'/google_schemas/'
@@ -17,8 +21,6 @@ BG_DATETYPES = BASE_DIR+'/BigQuery/data_types.json'
 
 project_id = 'atlas-336515'
 
-config = configparser.ConfigParser()
-config.read(BASE_DIR+'/config.ini')
 
 PostgreSQL_engine = create_engine(config['PostgreSQL']['sqlalchemy_engine_str'], echo=True)
 
@@ -60,7 +62,7 @@ def postgres2google(table_name, query):
                       table_schema=get_google_schema(table_name))
     print(f'Table {table_name} has been import to Google BigQuery')
 
-postgres2google('dataset_historical_popularity', query)
+# postgres2google('dataset_historical_popularity', query)
 
 # table_names = ['dataset_replicas']
 # for i in table_names:
@@ -105,4 +107,4 @@ def get_table_schema(project, dataset_id, table_id):
 # pandas_gbq.to_gbq(df, 'digital_cases.test', project_id='atlas-336515', if_exists='append')
 
 
-#get_table_schema('atlas-336515', 'analytix', 'dataset_historical_popularity')
+get_table_schema('atlas-336515', 'analytix', 'group_popularity')
