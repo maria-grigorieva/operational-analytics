@@ -37,7 +37,8 @@ def group_popularity_to_db(predefined_date = False):
         query = text(open(SQL_DIR+'/PanDA/group_popularity.sql').read())
         df = pd.read_sql_query(query,
                                panda_connection,
-                               parse_dates={'datetime': '%Y-%m-%d'})
+                               parse_dates={'datetime': '%Y-%m-%d'},
+                               params={'from_date': from_date})
         panda_connection.close()
         insert_to_db(df, 'group_popularity')
     else:
