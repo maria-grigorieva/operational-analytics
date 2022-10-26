@@ -4,3 +4,7 @@ celerybeat-schedule.db
 config.ini
 .DS_Store
 __pycache__/
+celerybeat-schedule.bak
+celerybeat-schedule.dat
+celerybeat-schedule.dir
+celeryd
