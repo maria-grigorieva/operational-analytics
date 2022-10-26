@@ -10,10 +10,6 @@ config.read(BASE_DIR+'/config.ini')
 
 os.environ["GOOGLE_APPLICATION_CREDENTIALS"]=config['GOOGLE']['app']
 
-credentials = service_account.Credentials.from_service_account_file(
-    config['GOOGLE']['app'],
-)
-
 records =[
     {
         "Name": "Alex",
