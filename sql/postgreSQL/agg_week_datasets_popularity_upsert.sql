@@ -30,4 +30,4 @@ ON CONFLICT (datasetname)
 DO
    UPDATE SET end_usage = EXCLUDED.end_usage,
               n_tasks = n_tasks + EXCLUDED.n_tasks,
-              usage_period = DATE_PART('day', (end_usage - start_usage))
+              usage_period = DATE_PART('day', (EXCLUDED.end_usage - start_usage))

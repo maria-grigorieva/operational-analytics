@@ -16,7 +16,7 @@ import pytz
 import logging
 
 logging.basicConfig()
-logging.getLogger('sqlalchemy').setLevel(logging.ERROR)
+logging.getLogger('sqlalchemy').setLevel(logging.INFO)
 # sqla_logger = logging.getLogger('sqlalchemy')
 # sqla_logger.propagate = False
 # sqla_logger.addHandler(logging.FileHandler('sqla.log'))

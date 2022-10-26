@@ -47,7 +47,11 @@ app.conf.beat_schedule = {
     },
     'group_popularity_to_db': {
         'task': 'group_popularity_to_db',
-        'schedule': crontab(minute=0, hour=5, day_of_week='tuesday')
+        'schedule': crontab(minute=0, hour=5, day_of_week='monday')
+    },
+    'datasets_popularity_to_db': {
+        'task': 'datasets_popularity_to_db',
+        'schedule': crontab(minute=30, hour=3, day_of_week='monday')
     }
 }
 # app.conf.enable_utc = True

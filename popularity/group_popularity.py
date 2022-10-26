@@ -14,7 +14,6 @@ from datetime import datetime, timedelta
 import logging
 
 logging.basicConfig()
-logging.getLogger('sqlalchemy.engine').setLevel(logging.ERROR)
 
 SQL_DIR = BASE_DIR+'/sql'
 
@@ -29,7 +28,7 @@ PostgreSQL_engine = create_engine(config['PostgreSQL']['sqlalchemy_engine_str'],
 
 def group_popularity_to_db(predefined_date = False):
 
-    from_date = set_time_period(predefined_date, n_hours=24)
+    from_date = datetime.strftime(localized_now(), "%Y-%m-%d %H:%M:%S") if not predefined_date else str(predefined_date)
 
     if not check_for_data_existance('group_popularity', from_date, delete=True):
         panda_connection = PanDA_engine.connect()

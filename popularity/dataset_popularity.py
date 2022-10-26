@@ -12,7 +12,6 @@ from datetime import datetime, timedelta
 import logging
 
 logging.basicConfig()
-logging.getLogger('sqlalchemy.engine').setLevel(logging.ERROR)
 
 SQL_DIR = BASE_DIR+'/sql'
 
@@ -25,13 +24,15 @@ PostgreSQL_engine = create_engine(config['PostgreSQL']['sqlalchemy_engine_str'],
 
 def datasets_popularity_to_db(predefined_date = False):
 
-    if not check_for_data_existance('datasets_popularity', predefined_date, delete=True):
+    from_date = datetime.strftime(localized_now(), "%Y-%m-%d %H:%M:%S") if not predefined_date else str(predefined_date)
+
+    if not check_for_data_existance('datasets_popularity', from_date, delete=True):
         panda_connection = PanDA_engine.connect()
         query = text(open(SQL_DIR+'/PanDA/datasets_popularity.sql').read())
         df = pd.read_sql_query(query,
                                panda_connection,
                                parse_dates={'datetime': '%Y-%m-%d'},
-                               params={'from_date': predefined_date})
+                               params={'from_date': from_date})
         panda_connection.close()
         write_to_postgreSQL(df, 'datasets_popularity')
     else:
