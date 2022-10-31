@@ -9,7 +9,7 @@ from database_helpers.helpers import write_to_postgreSQL
 import logging
 from datetime import datetime, timedelta
 from group_popularity import group_popularity_to_db
-from dataset_popularity import datasets_popularity_to_db, aggregation
+from dataset_popularity import datasets_popularity_to_db, aggregation_week
 
 
 logging.basicConfig()
@@ -21,6 +21,8 @@ config = configparser.ConfigParser()
 config.read(BASE_DIR+'/config.ini')
 
 PostgreSQL_engine = create_engine(config['PostgreSQL']['sqlalchemy_engine_str'], echo=False)
+
+# aggregation_week('2022-10-24')
 
 # PostgreSQL_connection = PostgreSQL_engine.connect()
 # query = text('SELECT * FROM datasets_popularity')

@@ -10,8 +10,8 @@ def task_timings_to_db():
         raise e
 
 @app.task(name="job_timings_to_db",autoretry_for=(Exception,),max_retries=5,default_retry_delay=600)
-def job_timings_to_db(hours=1):
+def job_timings_to_db():
     try:
-        return job_timings_to_db_worker(hours=hours)
+        return job_timings_to_db_worker()
     except Exception as e:
         raise e

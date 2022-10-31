@@ -1,4 +1,4 @@
-INSERT INTO aggregated_datasets_popularity (datasetname,
+INSERT INTO aggregated_datasets_popularity(datasetname,
                                             input_format_desc,
                                             input_format_short,
                                             format_desc,
@@ -18,7 +18,7 @@ VALUES(:datasetname,
        :format_desc,
        :input_project,
        :prod_step,
-       :process_step,
+       :process_desc,
        :n_dataset,
        :tid,
        :process_tags,
@@ -29,5 +29,5 @@ VALUES(:datasetname,
 ON CONFLICT (datasetname)
 DO
    UPDATE SET end_usage = EXCLUDED.end_usage,
-              n_tasks = n_tasks + EXCLUDED.n_tasks,
-              usage_period = DATE_PART('day', (EXCLUDED.end_usage - start_usage))
+              n_tasks = EXCLUDED.n_tasks + aggregated_datasets_popularity.n_tasks,
+              usage_period = DATE_PART('day', (EXCLUDED.end_usage - aggregated_datasets_popularity.start_usage))

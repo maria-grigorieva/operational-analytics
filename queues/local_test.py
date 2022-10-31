@@ -20,8 +20,8 @@ def retrospective_collector():
 
 def collect_queues_for_period():
 
-    start_date = datetime(2022, 10, 21, 12, 0, 0)
-    end_date = datetime(2022, 10, 26, 12, 0, 0)
+    start_date = datetime(2022, 10, 30, 0, 0, 0)
+    end_date = datetime(2022, 10, 31, 8, 0, 0)
     # delta_day = timedelta(days=1)
     delta_hours = timedelta(hours=4)
 

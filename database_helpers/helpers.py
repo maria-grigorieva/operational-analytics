@@ -92,20 +92,20 @@ def check_for_data_existance(table_name, now, accuracy='day', delete=True, dt='d
 
     if pgsql_exists and bigquery_exists:
         if delete:
-            delete_from_pgsql(table_name, now, datetime_col_name=dt)
-            delete_from_bigquery(table_name, now, datetime_col_name=dt)
+            delete_from_pgsql(table_name, now, accuracy=accuracy, datetime_col_name=dt)
+            delete_from_bigquery(table_name, now, accuracy=accuracy, datetime_col_name=dt)
             return False
         else:
             return True
     elif pgsql_exists and not bigquery_exists:
         if delete:
-            delete_from_pgsql(table_name, now, datetime_col_name=dt)
+            delete_from_pgsql(table_name, now, accuracy=accuracy, datetime_col_name=dt)
             return False
         else:
             return True
     elif bigquery_exists and not pgsql_exists:
         if delete:
-            delete_from_bigquery(table_name, now, datetime_col_name=dt)
+            delete_from_bigquery(table_name, now, accuracy=accuracy, datetime_col_name=dt)
             return False
         else:
             return True
@@ -140,17 +140,18 @@ def check_bigquery(table_name, now, accuracy, datetime_col_name='datetime'):
         return False
 
 
-def delete_from_pgsql(table_name, now, accuracy='day', datetime_col_name='datetime'):
+def delete_from_pgsql(table_name, now, accuracy, datetime_col_name='datetime'):
 
     conn = PostgreSQL_engine.connect()
+    freq = 'day' if accuracy == 'day' else 'hour'
     # from_date = day_rounder(datetime.strptime(now, "%Y-%m-%d %H:%M:%S"))
     remove_statement = f'DELETE FROM {table_name} WHERE {datetime_col_name} >= date_trunc(\'{accuracy}\', TIMESTAMP \'{now}\') ' \
-            f'AND {datetime_col_name} < date_trunc(\'{accuracy}\', TIMESTAMP \'{now}\' + INTERVAL \'1day\')'
+            f'AND {datetime_col_name} < date_trunc(\'{accuracy}\', TIMESTAMP \'{now}\' + INTERVAL \'1{freq}\')'
     conn.execute(text(remove_statement))
     conn.close()
 
 
-def delete_from_bigquery(table_name, now, accuracy='day', datetime_col_name='datetime'):
+def delete_from_bigquery(table_name, now, accuracy, datetime_col_name='datetime'):
 
     client = bigquery.Client()
 

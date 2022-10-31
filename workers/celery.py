@@ -43,7 +43,7 @@ app.conf.beat_schedule = {
     },
     'queues_workload_weighted': {
         'task': 'queues_workload_weighted',
-        'schedule': crontab(minute=0, hour='0,4,8,12,16,20')
+        'schedule': crontab(minute=0, hour='1,5,9,13,17,21')
     },
     'group_popularity_to_db': {
         'task': 'group_popularity_to_db',
@@ -52,6 +52,10 @@ app.conf.beat_schedule = {
     'datasets_popularity_to_db': {
         'task': 'datasets_popularity_to_db',
         'schedule': crontab(minute=30, hour=3, day_of_week='monday')
+    },
+    'aggregation_week': {
+        'task': 'aggregation_week',
+        'schedule': crontab(minute=0, hour=10, day_of_week='monday')
     }
 }
 # app.conf.enable_utc = True

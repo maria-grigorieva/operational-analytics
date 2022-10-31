@@ -39,14 +39,20 @@ def datasets_popularity_to_db(predefined_date = False):
         pass
 
 
-def aggregation_week():
+def aggregation_week(predefined_date = False):
+
+    from_date = datetime.strftime(localized_now(), "%Y-%m-%d %H:%M:%S") if not predefined_date else str(predefined_date)
+
     conn = PostgreSQL_engine.connect()
     query = text(open(SQL_DIR+'/postgreSQL/agg_week_datasets_popularity.sql').read())
-    df = pd.read_sql_query(query, conn)
+    df = pd.read_sql_query(query, conn,
+                           parse_dates={'datetime': '%Y-%m-%d'},
+                           params={'from_date': from_date}
+                           )
 
     for row in df.to_dict('records'):
-        q = text(open(SQL_DIR + '/postgreSQL/agg_week_datasets_popularity_upsert.sql'))
-        conn.execute(q, row)
+        q = text(open(SQL_DIR + '/postgreSQL/agg_week_datasets_popularity_upsert.sql').read())
+        conn.execute(q, row, params=row)
 
     conn.close()
 

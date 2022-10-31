@@ -21,7 +21,7 @@ with tasks as (
           t.tasktype = 'anal'
           AND t.modificationtime >= trunc(to_date(:from_date, 'YYYY-MM-DD HH24:MI:SS'),'DD')
           AND t.modificationtime < trunc(to_date(:from_date, 'YYYY-MM-DD HH24:MI:SS'),'DD')+1
-          AND t.status in ('finished','done')
+          AND t.status = 'done'
           AND s.status in ('ready')
           AND s.attemptnr = 0
           AND (d.datasetname LIKE 'mc%' or d.datasetname LIKE 'data%')
@@ -76,7 +76,7 @@ with tasks as (
         INNER JOIN tasks t ON (t.jeditaskid = d.jeditaskid)
         WHERE (d.datasetname LIKE 'mc%' or d.datasetname LIKE 'data%')
         AND d.type = 'input' AND d.masterid is null
-        AND status in ('finished','done')
+        AND d.status = 'done'
         GROUP BY d.jeditaskid
     ),
 attempts as (

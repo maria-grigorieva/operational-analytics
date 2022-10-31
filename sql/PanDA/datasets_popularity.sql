@@ -1,4 +1,4 @@
-SELECT trunc(to_date(:from_date , 'YYYY-MM-DD'),'DD') as datetime,
+SELECT trunc(to_date(:from_date , 'YYYY-MM-DD HH24:MI:SS'),'DD') as datetime,
        d.datasetname,
         regexp_substr(SUBSTR(d.datasetname, REGEXP_INSTR(d.datasetname, '\.', 1, 4) + 1,
                (REGEXP_INSTR(d.datasetname, '\.', 1, 5) -
@@ -25,8 +25,8 @@ SELECT trunc(to_date(:from_date , 'YYYY-MM-DD'),'DD') as datetime,
 FROM ATLAS_PANDA.JEDI_TASKS t
 INNER JOIN ATLAS_PANDA.JEDI_DATASETS d ON (d.jeditaskid = t.jeditaskid)
 WHERE t.tasktype='anal' and
-      t.modificationtime >= trunc(to_date(:from_date,'YYYY-MM-DD'),'DD') - 7 and
-      t.modificationtime < trunc(to_date(:from_date , 'YYYY-MM-DD'),'DD') AND
+      t.modificationtime >= trunc(to_date(:from_date,'YYYY-MM-DD HH24:MI:SS'),'DD') - 7 and
+      t.modificationtime < trunc(to_date(:from_date , 'YYYY-MM-DD HH24:MI:SS'),'DD') AND
       t.username not in ('artprod','gangarbt') and
       d.type = 'input' and
       ((d.datasetname LIKE 'mc%.DAOD%') or (d.datasetname LIKE 'data%.DAOD%')) and
