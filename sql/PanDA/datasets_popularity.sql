@@ -32,7 +32,7 @@ WHERE t.tasktype='anal' and
       ((d.datasetname LIKE 'mc%.DAOD%') or (d.datasetname LIKE 'data%.DAOD%')) and
       d.masterid is null
       and t.status in ('finished','done')
-GROUP BY trunc(to_date(:from_date , 'YYYY-MM-DD'),'DD'),
+GROUP BY trunc(to_date(:from_date , 'YYYY-MM-DD HH24:MI:SS'),'DD'),
                 d.datasetname,
          regexp_substr(SUBSTR(d.datasetname, REGEXP_INSTR(d.datasetname, '\.', 1, 4) + 1,
                (REGEXP_INSTR(d.datasetname, '\.', 1, 5) -
