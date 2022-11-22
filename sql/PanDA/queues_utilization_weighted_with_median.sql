@@ -25,7 +25,7 @@ statuses as (
                            PARTITION BY s.pandaid ORDER BY s.modificationtime ASC) -
                   CAST(s.modificationtime as date)) * 60 * 60 * 24, 3)       lead
     FROM ATLAS_PANDA.JOBS_STATUSLOG s
-    INNER JOIN all_jobs a ON (s.pandaid = a.pandaid)
+    INNER JOIN jobs_filter a ON (s.pandaid = a.pandaid)
     WHERE s.jobstatus in ('pending', 'defined', 'assigned', 'activated', 'sent', 'starting',
                         'running', 'holding', 'transferring', 'merging',
                         'finished', 'failed', 'closed', 'cancelled')
