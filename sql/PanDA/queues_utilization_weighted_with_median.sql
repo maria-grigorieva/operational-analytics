@@ -1,34 +1,37 @@
 with all_jobs as (
-    SELECT distinct pandaid FROM ATLAS_PANDA.JOBS_STATUSLOG
+    SELECT distinct pandaid,
+                    computingsite as queue,
+                    jobstatus as status,
+                    modificationtime,
+            LEAD(CAST(modificationtime as date), 1)
+                OVER (
+                    PARTITION BY pandaid ORDER BY modificationtime ASC) as lead_timestamp,
+           ROUND((LEAD(CAST(modificationtime as date), 1)
+                       OVER (
+                           PARTITION BY pandaid ORDER BY modificationtime ASC) -
+                  CAST(modificationtime as date)) * 60 * 60 * 24, 3)       lead
+    FROM ATLAS_PANDA.JOBS_STATUSLOG
     WHERE modificationtime >=
           (trunc(to_date(:from_date, 'YYYY-MM-DD HH24:MI:SS'), 'HH24') - :hours / 24)
       AND modificationtime < trunc(to_date(:from_date, 'YYYY-MM-DD HH24:MI:SS'), 'HH24')
     AND prodsourcelabel = 'user'
 ),
 jobs_filter as (
-    SELECT a.pandaid FROM all_jobs a, ATLAS_PANDAARCH.JOBSARCHIVED j
+    SELECT a.*
+    FROM all_jobs a, ATLAS_PANDAARCH.JOBSARCHIVED j
     WHERE a.pandaid = j.pandaid AND (j.proddblock LIKE 'mc%' or j.proddblock LIKE 'data%')
+    AND j.prodsourcelabel = 'user'
+    AND j.modificationtime >=
+          (trunc(to_date(:from_date, 'YYYY-MM-DD HH24:MI:SS'), 'HH24') - :hours / 24)
+      AND j.modificationtime < trunc(to_date(:from_date, 'YYYY-MM-DD HH24:MI:SS'), 'HH24')
     UNION ALL
-    SELECT a.pandaid FROM all_jobs a, ATLAS_PANDA.JOBSARCHIVED4 j
+    SELECT a.*
+    FROM all_jobs a, ATLAS_PANDA.JOBSARCHIVED4 j
     WHERE a.pandaid = j.pandaid AND (j.proddblock LIKE 'mc%' or j.proddblock LIKE 'data%')
-),
-statuses as (
-    SELECT s.pandaid,
-           s.computingsite                                                as queue,
-           s.jobstatus                                                    as status,
-           s.modificationtime,
-           LEAD(CAST(s.modificationtime as date), 1)
-                OVER (
-                    PARTITION BY s.pandaid ORDER BY s.modificationtime ASC) as lead_timestamp,
-           ROUND((LEAD(CAST(s.modificationtime as date), 1)
-                       OVER (
-                           PARTITION BY s.pandaid ORDER BY s.modificationtime ASC) -
-                  CAST(s.modificationtime as date)) * 60 * 60 * 24, 3)       lead
-    FROM ATLAS_PANDA.JOBS_STATUSLOG s
-    INNER JOIN jobs_filter a ON (s.pandaid = a.pandaid)
-    WHERE s.jobstatus in ('pending', 'defined', 'assigned', 'activated', 'sent', 'starting',
-                        'running', 'holding', 'transferring', 'merging',
-                        'finished', 'failed', 'closed', 'cancelled')
+    AND j.prodsourcelabel = 'user'
+    AND j.modificationtime >=
+          (trunc(to_date(:from_date, 'YYYY-MM-DD HH24:MI:SS'), 'HH24') - :hours / 24)
+      AND j.modificationtime < trunc(to_date(:from_date, 'YYYY-MM-DD HH24:MI:SS'), 'HH24')
 ),
     jobs as (
         SELECT (trunc(to_date(:from_date, 'YYYY-MM-DD HH24:MI:SS'), 'HH24') - :hours / 24) as tstart,
@@ -54,7 +57,7 @@ statuses as (
                min(cancelled_first) as cancelled_timestamp,
                min(closed_first) as closed_timestamp,
                min(holding_first) as holding_timestamp
-    FROM statuses
+    FROM jobs_filter
 PIVOT (
                    min(modificationtime) as first,
                    sum(lead) as lead
