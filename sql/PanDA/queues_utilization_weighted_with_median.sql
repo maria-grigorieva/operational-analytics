@@ -1,37 +1,28 @@
 with all_jobs as (
-    SELECT distinct pandaid,
-                    computingsite as queue,
-                    jobstatus as status,
-                    modificationtime,
-            LEAD(CAST(modificationtime as date), 1)
-                OVER (
-                    PARTITION BY pandaid ORDER BY modificationtime ASC) as lead_timestamp,
-           ROUND((LEAD(CAST(modificationtime as date), 1)
-                       OVER (
-                           PARTITION BY pandaid ORDER BY modificationtime ASC) -
-                  CAST(modificationtime as date)) * 60 * 60 * 24, 3)       lead
-    FROM ATLAS_PANDA.JOBS_STATUSLOG
+    SELECT distinct pandaid FROM ATLAS_PANDA.JOBS_STATUSLOG
     WHERE modificationtime >=
           (trunc(to_date(:from_date, 'YYYY-MM-DD HH24:MI:SS'), 'HH24') - :hours / 24)
       AND modificationtime < trunc(to_date(:from_date, 'YYYY-MM-DD HH24:MI:SS'), 'HH24')
     AND prodsourcelabel = 'user'
 ),
-jobs_filter as (
-    SELECT a.*
-    FROM all_jobs a, ATLAS_PANDAARCH.JOBSARCHIVED j
-    WHERE a.pandaid = j.pandaid AND (j.proddblock LIKE 'mc%' or j.proddblock LIKE 'data%')
-    AND j.prodsourcelabel = 'user'
-    AND j.modificationtime >=
-          (trunc(to_date(:from_date, 'YYYY-MM-DD HH24:MI:SS'), 'HH24') - :hours / 24)
-      AND j.modificationtime < trunc(to_date(:from_date, 'YYYY-MM-DD HH24:MI:SS'), 'HH24')
-    UNION ALL
-    SELECT a.*
-    FROM all_jobs a, ATLAS_PANDA.JOBSARCHIVED4 j
-    WHERE a.pandaid = j.pandaid AND (j.proddblock LIKE 'mc%' or j.proddblock LIKE 'data%')
-    AND j.prodsourcelabel = 'user'
-    AND j.modificationtime >=
-          (trunc(to_date(:from_date, 'YYYY-MM-DD HH24:MI:SS'), 'HH24') - :hours / 24)
-      AND j.modificationtime < trunc(to_date(:from_date, 'YYYY-MM-DD HH24:MI:SS'), 'HH24')
+statuses as (
+    SELECT s.pandaid,
+           s.computingsite                                                as queue,
+           s.jobstatus                                                    as status,
+           s.modificationtime,
+           LEAD(CAST(s.modificationtime as date), 1)
+                OVER (
+                    PARTITION BY s.pandaid ORDER BY s.modificationtime ASC) as lead_timestamp,
+           ROUND((LEAD(CAST(s.modificationtime as date), 1)
+                       OVER (
+                           PARTITION BY s.pandaid ORDER BY s.modificationtime ASC) -
+                  CAST(s.modificationtime as date)) * 60 * 60 * 24, 3)       lead
+    FROM ATLAS_PANDA.JOBS_STATUSLOG s
+    INNER JOIN all_jobs a ON (s.pandaid = a.pandaid)
+    WHERE s.jobstatus in ('pending', 'defined', 'assigned', 'activated', 'sent', 'starting',
+                        'running', 'holding', 'transferring', 'merging',
+                        'finished', 'failed', 'closed', 'cancelled')
+         and s.modificationtime < trunc(to_date(:from_date, 'YYYY-MM-DD HH24:MI:SS'), 'HH24')
 ),
     jobs as (
         SELECT (trunc(to_date(:from_date, 'YYYY-MM-DD HH24:MI:SS'), 'HH24') - :hours / 24) as tstart,
@@ -57,7 +48,7 @@ jobs_filter as (
                min(cancelled_first) as cancelled_timestamp,
                min(closed_first) as closed_timestamp,
                min(holding_first) as holding_timestamp
-    FROM jobs_filter
+    FROM statuses
 PIVOT (
                    min(modificationtime) as first,
                    sum(lead) as lead
@@ -168,6 +159,8 @@ SELECT tstart,
        round(sum(running_time*completed),2) as running_completed,
        round(sum(running_time*merging),2) as running_merging,
        round(sum(running_time*transferring),2) as running_transferring,
+       round(sum(running_time*finished),2) as running_finished,
+       round(sum(running_time*failed+running_time*cancelled+running_time*closed,2)) as running_failed,
        sum(queued) as n_queued,
        sum(running) as n_running,
        sum(completed) as n_completed,
@@ -223,11 +216,11 @@ SELECT tstart,
        n_holding,
        n_merging,
        n_transferring,
-       round(running_queued/nullif(running_completed,0),2) as utilization_weighted,
+       round(n_queued/nullif(n_finished,0),2) as utilization,
+       round(running_queued/nullif(running_finished,0),2) as utilization_weighted,
+       round(n_queued/nullif(n_running+n_merging+n_transferring+n_holding,0),2) as fullness,
        round(running_queued/nullif(running_running + running_holding + running_merging + running_transferring,0), 2) as fullness_weighted,
        round(running_completed/nullif(running_running + running_holding + running_merging + running_transferring,0), 2) as performance_weighted,
-       round(n_queued/nullif(n_completed,0),2) as utilization,
-       round(n_queued/nullif(n_running+n_merging+n_transferring+n_holding,0),2) as fullness,
        round(n_completed/nullif(n_running+n_holding+n_transferring+n_merging,0),2) as performance,
        avg_waiting_time,
        avg_running_time,
@@ -251,5 +244,5 @@ SELECT tstart,
        high_holding_time,
        capacity,
        capacity_weighted,
-       round(n_finished/nullif((n_finished+n_failed+n_closed+n_cancelled),0),2) as efficiency
+       round(n_finished/nullif((n_completed),0),2) as efficiency
 FROM r1
