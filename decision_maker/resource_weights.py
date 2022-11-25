@@ -206,6 +206,45 @@ def calculate_queue_weights_weighted(predefined_date = False):
         pass
 
 
+def queue_utilization_weighted_weights(predefined_date = False):
+
+    from_date = datetime.strftime(localized_now(), "%Y-%m-%d %H:%M:%S") \
+        if not predefined_date else str(predefined_date)
+
+    if not check_for_data_existance('queues_weights_4h', from_date, accuracy='hour', delete=True):
+
+        postgres_connection = PostgreSQL_engine.connect()
+        query = text(open(SQL_DIR + '/postgreSQL/queues_utilization_weighted_hist.sql').read())
+        df = pd.read_sql_query(query, postgres_connection, parse_dates={'datetime': '%Y-%m-%d'}, params={'now':from_date})
+        postgres_connection.close()
+        # df['delta_waiting_time'] = df['median_waiting_time'] - df['curr_waiting_time']
+        # df['delta_utilization'] = df['median_utilization'] - df['curr_utilization']
+        # df['delta_capacity'] = df['median_capacity'] - df['curr_capacity']
+        # df.set_index(['queue', 'site', 'cloud', 'tier_level', 'resource_type'], inplace=True)
+        # df.fillna(0, inplace=True)
+        # df.apply(pd.to_numeric)
+        # cols = df.columns
+        # idx = df.index
+        # scaler = StandardScaler()
+        # norm_df = pd.DataFrame(scaler.fit_transform(df.values), columns=cols, index=idx)
+        # # norm_df = df.apply(lambda x: round((x - np.mean(x)) / (np.max(x) - np.min(x)), 4))
+        # norm_df.fillna(0, inplace=True)
+        # norm_df.reset_index(inplace=True)
+        # print(norm_df)
+        #
+        # norm_df['delta_weight'] = norm_df['delta_waiting_time'] + \
+        #                     norm_df['delta_utilization'] + \
+        #                     norm_df['delta_capacity']
+        #
+        # df.reset_index(inplace=True)
+        # df.drop(['delta_waiting_time','delta_utilization','delta_capacity'],axis=1,inplace=True)
+        #
+        # df['weight'] = round(norm_df['delta_weight'], 4)
+        if df.shape[0] > 0:
+            insert_to_db(df, 'queue_weights_4h')
+    else:
+        pass
+
 
 
 

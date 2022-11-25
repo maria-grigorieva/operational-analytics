@@ -141,7 +141,11 @@ SELECT trunc(to_date(:from_date, 'YYYY-MM-DD HH24:MI:SS'), 'HH24') as datetime,
                  NVL(sum(failed_volume),0)+
                  NVL(sum(closed_volume),0)+
                  NVL(sum(cancelled_volume),0)),0),4) as utilization_weighted,
-                 round(NVL(sum(running_volume),0)/nullif((NVL(sum(running_volume),0)+
+                 round((NVL(sum(pending_volume),0)+
+                 NVL(sum(defined_volume),0)+
+                 NVL(sum(activated_volume),0)+
+                 NVL(sum(sent_volume),0)+
+                 NVL(sum(starting_volume),0))/nullif((NVL(sum(running_volume),0)+
                                                           NVL(sum(holding_volume),0)+
                                                           NVL(sum(merging_volume),0)+
                                                           NVL(sum(transferring_volume),0)),0),4) as fullness_weighted,

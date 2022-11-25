@@ -9,7 +9,7 @@ from database_helpers.helpers import write_to_postgreSQL
 import logging
 from datetime import datetime, timedelta
 from group_popularity import group_popularity_to_db
-from dataset_popularity import datasets_popularity_to_db, aggregation_week
+from dataset_popularity import datasets_popularity_to_db, aggregation_week, datasets_forecast_classification
 
 
 logging.basicConfig()
@@ -61,3 +61,6 @@ def collect_dates():
     for i in list_of_dates:
         print(i)
         datasets_popularity_to_db(predefined_date = datetime.strftime(i, "%Y-%m-%d"))
+
+
+datasets_forecast_classification('2022-08-01 00:00:00')
