@@ -2,13 +2,15 @@ with statuses as (SELECT s.pandaid,
            s.computingsite                                                as queue,
            s.jobstatus                                                    as status,
            s.modificationtime,
-           LEAD(CAST(s.modificationtime as date), 1)
+            NVL(LEAD(CAST(s.modificationtime as date), 1)
                 OVER (
-                    PARTITION BY s.pandaid ORDER BY s.modificationtime ASC) as lead_timestamp,
-           ROUND((LEAD(CAST(s.modificationtime as date), 1)
-                       OVER (
-                           PARTITION BY s.pandaid ORDER BY s.modificationtime ASC) -
-                  CAST(s.modificationtime as date)) * 60 * 60 * 24, 3)       lead
+                    PARTITION BY s.pandaid ORDER BY s.modificationtime ASC),
+               trunc(to_date(:from_date, 'YYYY-MM-DD HH24:MI:SS'), 'HH24')) as lead_timestamp,
+           ROUND((NVL(LEAD(CAST(s.modificationtime as date), 1)
+                OVER (
+                    PARTITION BY s.pandaid ORDER BY s.modificationtime ASC),
+               trunc(to_date(:from_date, 'YYYY-MM-DD HH24:MI:SS'), 'HH24')) -
+                  CAST(s.modificationtime as date))*60*60*24, 3)       lead
     FROM ATLAS_PANDA.JOBS_STATUSLOG s
     WHERE s.modificationtime >=
           (trunc(to_date(:from_date, 'YYYY-MM-DD HH24:MI:SS'), 'HH24') - 1/24)
