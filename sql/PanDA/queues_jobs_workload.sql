@@ -178,7 +178,7 @@ with a as (SELECT start_time,
                 and modificationtime >= trunc(
                                to_date(:from_date, 'YYYY-MM-DD HH24:MI:SS'),
                                'HH24'
-                           ) - 7
+                           ) - 21
                 and modificationtime < trunc(
                                             to_date(:from_date, 'YYYY-MM-DD HH24:MI:SS'),
                                             'HH24'
