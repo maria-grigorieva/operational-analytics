@@ -13,7 +13,14 @@ with a as (SELECT start_time,
                                    ) - 1 / 24
                       ELSE modificationtime
                       END as modificationtime,
-                  lead_time
+                  CASE
+                      WHEN (lead_time is null and status not in ('finished', 'failed', 'closed', 'cancelled')) THEN
+                          trunc(
+                                  to_date(:from_date, 'YYYY-MM-DD HH24:MI:SS'),
+                                  'HH24'
+                              )
+                      ELSE lead_time
+                      END    lead_time
            FROM (SELECT trunc(
                                 to_date(:from_date, 'YYYY-MM-DD HH24:MI:SS'),
                                 'HH24'
@@ -40,62 +47,65 @@ with a as (SELECT start_time,
                        trunc(
                                to_date(:from_date, 'YYYY-MM-DD HH24:MI:SS'),
                                'HH24'
-                           ) - 7
+                           ) - 21
                    and prodsourcelabel = 'user')
-           WHERE lead_time >= trunc(
-                                      to_date(:from_date, 'YYYY-MM-DD HH24:MI:SS'),
-                                      'HH24'
-                                  ) - 1 / 24
-              or (lead_time is null and modificationtime >= trunc(
-                                      to_date(:from_date, 'YYYY-MM-DD HH24:MI:SS'),
-                                      'HH24'
-                                  ) - 1 / 24)),
-    b as (
-    SELECT start_time,
-                  end_time,
-                  pandaid,
-                  queue,
-                  status,
-                  MIN(modificationtime) as modificationtime,
-                  MAX(lead_time) as lead_time
-    FROM (
-    SELECT start_time,
-                  end_time,
-                  pandaid,
-                  queue,
-                  CASE
-                                 WHEN status in (
-                                                   'pending',
-                                                   'defined',
-                                                   'assigned',
-                                                   'activated',
-                                                   'throttled',
-                                                   'sent',
-                                                   'starting'
-                                     ) THEN 'waiting'
-                                 WHEN status in ('running', 'holding', 'merging', 'transferring') THEN 'executing'
-                                 END          as status,
-                  modificationtime,
-                  lead_time
-          FROM a
-          )
-    GROUP BY start_time,
-                  end_time,
-                  pandaid,
-                  queue,
-                  status
+           WHERE (lead_time >= trunc(
+                                       to_date(:from_date, 'YYYY-MM-DD HH24:MI:SS'),
+                                       'HH24'
+                                   ) - 1 / 24
+               or (lead_time is null and modificationtime >= trunc(
+                                                                     to_date(:from_date, 'YYYY-MM-DD HH24:MI:SS'),
+                                                                     'HH24'
+                                                                 ) - 1 / 24
+                      )
+                     )),
+    b as (SELECT start_time,
+                 end_time,
+                 pandaid,
+                 queue,
+                 status,
+                 MIN(modificationtime) as modificationtime,
+                 MAX(lead_time)        as lead_time
+          FROM (SELECT start_time,
+                       end_time,
+                       pandaid,
+                       queue,
+                       CASE
+                           WHEN status in (
+                                           'pending',
+                                           'defined',
+                                           'assigned',
+                                           'activated',
+                                           'throttled',
+                                           'sent',
+                                           'starting'
+                               ) THEN 'waiting'
+                           WHEN status in ('running', 'holding', 'merging', 'transferring') THEN 'executing'
+                           END as status,
+                       modificationtime,
+                       lead_time
+                FROM a
+                WHERE status in (
+                                 'pending',
+                                 'defined',
+                                 'assigned',
+                                 'activated',
+                                 'throttled',
+                                 'sent',
+                                 'starting',
+                                 'running', 'holding', 'merging', 'transferring'
+                    ))
+                GROUP BY start_time,
+                         end_time,
+                         pandaid,
+                         queue,
+                         status
           ),
-    c as (
-        SELECT pandaid,
-               final_status
-        FROM (SELECT pandaid,
-                     CASE
-                         WHEN status in ('finished', 'failed', 'closed', 'cancelled')
-                             THEN status
-                         END as final_status
-              FROM a)
-        WHERE final_status is not Null
-    ),
+    c as (SELECT pandaid,
+                status as final_status
+              FROM a
+              WHERE status in ('finished', 'failed', 'closed', 'cancelled')
+              ),
     d as (SELECT b.start_time,
                  b.end_time,
                  b.pandaid,
@@ -104,9 +114,8 @@ with a as (SELECT start_time,
                  c.final_status,
                  round((b.lead_time - b.modificationtime) * 24 * 60 * 60) as duration
           FROM b
-                  LEFT JOIN c
-                             ON (b.pandaid = c.pandaid)
-          WHERE b.lead_time is not Null and b.status is not null
+                   FULL OUTER JOIN c
+                                   ON (b.pandaid = c.pandaid)
           ),
     e as (
     SELECT pandaid,
@@ -142,7 +151,7 @@ with a as (SELECT start_time,
                 and modificationtime >= trunc(
                                to_date(:from_date, 'YYYY-MM-DD HH24:MI:SS'),
                                'HH24'
-                           ) - 7
+                           ) - 21
                 and modificationtime < trunc(
                                             to_date(:from_date, 'YYYY-MM-DD HH24:MI:SS'),
                                             'HH24'
