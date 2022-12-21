@@ -5,21 +5,21 @@ with a as (SELECT start_time,
                   status,
                   CASE
                       WHEN modificationtime < trunc(
-                                                      to_date(:end_date, 'YYYY-MM-DD HH24:MI:SS'),
+                                                      to_date(:from_date, 'YYYY-MM-DD HH24:MI:SS'),
                                                       'HH24'
                                                   ) - 1 / 24
-                          THEN trunc(to_date(:end_date, 'YYYY-MM-DD HH24:MI:SS'),
+                          THEN trunc(to_date(:from_date, 'YYYY-MM-DD HH24:MI:SS'),
                                      'HH24'
                                    ) - 1 / 24
                       ELSE modificationtime
                       END as modificationtime,
                   lead_time
            FROM (SELECT trunc(
-                                to_date(:end_date, 'YYYY-MM-DD HH24:MI:SS'),
+                                to_date(:from_date, 'YYYY-MM-DD HH24:MI:SS'),
                                 'HH24'
                             ) - 1 / 24 as start_time,
                         trunc(
-                                to_date(:end_date, 'YYYY-MM-DD HH24:MI:SS'),
+                                to_date(:from_date, 'YYYY-MM-DD HH24:MI:SS'),
                                 'HH24'
                             )          as end_time,
                         pandaid,
@@ -33,20 +33,23 @@ with a as (SELECT start_time,
                  FROM ATLAS_PANDA.JOBS_STATUSLOG
                  WHERE modificationtime <
                        trunc(
-                               to_date(:end_date, 'YYYY-MM-DD HH24:MI:SS'),
+                               to_date(:from_date, 'YYYY-MM-DD HH24:MI:SS'),
                                'HH24'
                            )
                    and modificationtime >=
                        trunc(
-                               to_date(:end_date, 'YYYY-MM-DD HH24:MI:SS'),
+                               to_date(:from_date, 'YYYY-MM-DD HH24:MI:SS'),
                                'HH24'
                            ) - 7
                    and prodsourcelabel = 'user')
            WHERE lead_time >= trunc(
-                                      to_date(:end_date, 'YYYY-MM-DD HH24:MI:SS'),
+                                      to_date(:from_date, 'YYYY-MM-DD HH24:MI:SS'),
                                       'HH24'
                                   ) - 1 / 24
-              or lead_time is null),
+              or (lead_time is null and modificationtime >= trunc(
+                                      to_date(:from_date, 'YYYY-MM-DD HH24:MI:SS'),
+                                      'HH24'
+                                  ) - 1 / 24)),
     b as (
     SELECT start_time,
                   end_time,
@@ -135,11 +138,11 @@ with a as (SELECT start_time,
                     FROM d
                 )
                 and modificationtime >= trunc(
-                               to_date(:end_date, 'YYYY-MM-DD HH24:MI:SS'),
+                               to_date(:from_date, 'YYYY-MM-DD HH24:MI:SS'),
                                'HH24'
                            ) - 7
                 and modificationtime < trunc(
-                                            to_date(:end_date, 'YYYY-MM-DD HH24:MI:SS'),
+                                            to_date(:from_date, 'YYYY-MM-DD HH24:MI:SS'),
                                             'HH24'
                                         )
                 and prodsourcelabel = 'user'
@@ -162,11 +165,11 @@ with a as (SELECT start_time,
                     FROM d
                 )
                 and modificationtime >= trunc(
-                               to_date(:end_date, 'YYYY-MM-DD HH24:MI:SS'),
+                               to_date(:from_date, 'YYYY-MM-DD HH24:MI:SS'),
                                'HH24'
                            ) - 7
                 and modificationtime < trunc(
-                                            to_date(:end_date, 'YYYY-MM-DD HH24:MI:SS'),
+                                            to_date(:from_date, 'YYYY-MM-DD HH24:MI:SS'),
                                             'HH24'
                                         )
                 and prodsourcelabel = 'user'
