@@ -86,12 +86,15 @@ with a as (SELECT start_time,
                   status
           ),
     c as (
-        SELECT
-                  pandaid,
-                CASE
-                                 WHEN status in ('finished', 'failed', 'closed', 'cancelled') THEN status
-                                 END          as final_status
-          FROM a
+        SELECT pandaid,
+               final_status
+        FROM (SELECT pandaid,
+                     CASE
+                         WHEN status in ('finished', 'failed', 'closed', 'cancelled')
+                             THEN status
+                         END as final_status
+              FROM a)
+        WHERE final_status is not Null
     ),
     d as (SELECT b.start_time,
                  b.end_time,
@@ -101,10 +104,9 @@ with a as (SELECT start_time,
                  c.final_status,
                  round((b.lead_time - b.modificationtime) * 24 * 60 * 60) as duration
           FROM b
-                   LEFT JOIN c
+                  LEFT JOIN c
                              ON (b.pandaid = c.pandaid)
-          WHERE c.final_status is not Null
-            and b.lead_time is not Null
+          WHERE b.lead_time is not Null and b.status is not null
           ),
     e as (
     SELECT pandaid,
