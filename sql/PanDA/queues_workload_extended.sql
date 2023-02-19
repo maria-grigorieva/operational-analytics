@@ -1,57 +1,39 @@
-with a as (SELECT
-                                   pandaid,
-                                   status,
-                                   modificationtime as modificationtime_real,
-                                   lead_time as lead_time_real,
-                                   CASE
-                                       WHEN modificationtime < trunc(
-                                                                       to_date(:from_date, 'YYYY-MM-DD HH24:MI:SS'),
-                                                                       'HH24'
-                                                                   ) - 1 / 24
-                                           and (lead_time >= trunc(
-                                                   to_date(:from_date, 'YYYY-MM-DD HH24:MI:SS'),
-                                                   'HH24'
-                                               ) - 1 / 24)
-                                           THEN trunc(to_date(:from_date, 'YYYY-MM-DD HH24:MI:SS'),
-                                                      'HH24'
-                                                    ) - 1 / 24
-                                       WHEN modificationtime < trunc(
-                                                                       to_date(:from_date, 'YYYY-MM-DD HH24:MI:SS'),
-                                                                       'HH24'
-                                                                   ) - 1 / 24
-                                       and (lead_time is null) and status not in ('finished', 'failed', 'closed', 'cancelled')
-                                       THEN trunc(to_date(:from_date, 'YYYY-MM-DD HH24:MI:SS'),
-                                                      'HH24'
-                                                    ) - 1 / 24
-                                       ELSE modificationtime
-                                       END          as modificationtime,
-                                   CASE
-                                       WHEN (lead_time is null and status not in ('finished', 'failed', 'closed', 'cancelled'))
-                                           THEN trunc(
-                                                   to_date(:from_date, 'YYYY-MM-DD HH24:MI:SS'),
-                                                   'HH24'
-                                               )
-                                        ELSE lead_time
-                                       END             lead_time
-                            FROM (SELECT pandaid,
-                                         jobstatus      as status,
-                                         modificationtime,
-                                         LEAD(CAST(modificationtime as date), 1) OVER (
-                                             PARTITION BY pandaid
-                                             ORDER BY modificationtime asc
-                                             )          as lead_time
-                                  FROM ATLAS_PANDA.JOBS_STATUSLOG
-                                  WHERE modificationtime <
-                                        trunc(
-                                                to_date(:from_date, 'YYYY-MM-DD HH24:MI:SS'),
-                                                'HH24'
-                                            )
-                                    and modificationtime >=
-                                        trunc(
-                                                to_date(:from_date, 'YYYY-MM-DD HH24:MI:SS'),
-                                                'HH24'
-                                            ) - 3
-                                    and prodsourcelabel = 'user')),
+with a as (SELECT *
+           FROM (SELECT trunc(to_date(:from_date, 'YYYY-MM-DD HH24:MI:SS'), 'HH24') - 1 / 24 as start_time,
+                        trunc(to_date(:from_date, 'YYYY-MM-DD HH24:MI:SS'), 'HH24')          as end_time,
+                        pandaid,
+                        status,
+                        queue,
+                        modificationtime                                                     as modificationtime_real,
+                        lead_time                                                            as lead_time_real,
+                        CASE
+                            WHEN modificationtime < trunc(to_date(:from_date, 'YYYY-MM-DD HH24:MI:SS'), 'HH24') - 1 / 24
+                                and (lead_time >= trunc(to_date(:from_date, 'YYYY-MM-DD HH24:MI:SS'), 'HH24') - 1 / 24)
+                                THEN trunc(to_date(:from_date, 'YYYY-MM-DD HH24:MI:SS'), 'HH24') - 1 / 24
+                            WHEN modificationtime < trunc(to_date(:from_date, 'YYYY-MM-DD HH24:MI:SS'), 'HH24') - 1 / 24
+                                and (lead_time is null) and status not in ('finished', 'failed', 'closed', 'cancelled')
+                                THEN trunc(to_date(:from_date, 'YYYY-MM-DD HH24:MI:SS'), 'HH24') - 1 / 24
+                            ELSE modificationtime
+                            END                                                              as modificationtime,
+                        CASE
+                            WHEN (lead_time is null and status not in ('finished', 'failed', 'closed', 'cancelled'))
+                                THEN trunc(to_date(:from_date, 'YYYY-MM-DD HH24:MI:SS'), 'HH24')
+                            ELSE lead_time
+                            END                                                                 lead_time
+                 FROM (SELECT pandaid,
+                              jobstatus     as status,
+                              computingsite as queue,
+                              modificationtime,
+                              LEAD(CAST(modificationtime as date), 1) OVER (
+                                  PARTITION BY pandaid
+                                  ORDER BY modificationtime asc
+                                  )         as lead_time
+                       FROM ATLAS_PANDA.JOBS_STATUSLOG
+                       WHERE modificationtime < trunc(to_date(:from_date, 'YYYY-MM-DD HH24:MI:SS'), 'HH24')
+                         and modificationtime >= trunc(to_date(:from_date, 'YYYY-MM-DD HH24:MI:SS'), 'HH24') - 3
+                         and prodsourcelabel = 'user'))
+           WHERE modificationtime >= trunc(to_date(:from_date, 'YYYY-MM-DD HH24:MI:SS'),
+                                                                    'HH24') - 1 / 24),
     b as (SELECT start_time,
                  end_time,
                  pandaid,
