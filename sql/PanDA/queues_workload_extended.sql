@@ -30,7 +30,7 @@ with a as (SELECT *
                                   )         as lead_time
                        FROM ATLAS_PANDA.JOBS_STATUSLOG
                        WHERE modificationtime < trunc(to_date(:from_date, 'YYYY-MM-DD HH24:MI:SS'), 'HH24')
-                         and modificationtime >= trunc(to_date(:from_date, 'YYYY-MM-DD HH24:MI:SS'), 'HH24') - 4
+                         and modificationtime >= trunc(to_date(:from_date, 'YYYY-MM-DD HH24:MI:SS'), 'HH24') - 2
                          and prodsourcelabel = 'user'))
            WHERE modificationtime >= trunc(to_date(:from_date, 'YYYY-MM-DD HH24:MI:SS'),
                                                                     'HH24') - 1 / 24),
