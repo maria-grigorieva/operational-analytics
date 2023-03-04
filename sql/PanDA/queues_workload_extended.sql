@@ -56,7 +56,8 @@ with a as (SELECT *
                                            'sent',
                                            'starting'
                                ) THEN 'waiting'
-                           WHEN status in ('running', 'holding', 'merging', 'transferring') THEN 'executing'
+                           WHEN status in ('running') THEN 'running'
+                           WHEN status in ('holding', 'merging', 'transferring') THEN 'finalizing'
                            END as status,
                     modificationtime_real,
                        modificationtime,
@@ -180,14 +181,18 @@ f as (SELECT start_time,
              produsername,
              transformation,
              resource_type,
-             sum(executing_jobs)          as executing_jobs,
+             sum(running_jobs)          as running_jobs,
              sum(waiting_jobs)            as waiting_jobs,
-             sum(executing_input_volume)  as executing_input_volume,
+             sum(finalizing_jobs)          as finalizing_jobs,
+             sum(running_input_volume)  as running_input_volume,
              sum(waiting_input_volume)    as waiting_input_volume,
-             avg(executing_duration)      as avg_executing_duration,
+             sum(finalizing_input_volume)    as finalizing_input_volume,
+             avg(running_duration)      as avg_running_duration,
              avg(waiting_duration)        as avg_waiting_duration,
-             median(executing_duration) as median_executing_duration,
-             median(waiting_duration) as median_waiting_duration
+             avg(finalizing_duration)        as avg_finalizing_duration,
+             median(running_duration) as median_running_duration,
+             median(waiting_duration) as median_waiting_duration,
+             median(finalizing_duration) as median_finalizing_duration
       FROM (SELECT d.start_time,
                    d.end_time,
                    d.queue,
@@ -215,7 +220,8 @@ f as (SELECT start_time,
               avg(duration) as duration,
               sum(input_volume) as input_volume
           FOR status
-          IN ('executing' AS executing,
+          IN ('running' AS running,
+              'finalizing' AS finalizing,
               'waiting' AS waiting
               )
           )
@@ -284,14 +290,18 @@ SELECT f.start_time,
                f.produsername,
                f.transformation,
                f.resource_type,
-               NVL(f.executing_jobs,0) as executing_jobs,
+               NVL(f.running_jobs,0) as running_jobs,
              NVL(f.waiting_jobs,0) as waiting_jobs,
-             NVL(f.executing_input_volume,0) as executing_input_volume,
+             NVL(f.finalizing_jobs,0) as finalizing_jobs,
+             NVL(f.running_input_volume,0) as running_input_volume,
              NVL(f.waiting_input_volume,0) as waiting_input_volume,
-             NVL(f.avg_executing_duration,0) as avg_executing_duration,
+             NVL(f.finalizing_input_volume,0) as finalizing_input_volume,
+             NVL(f.avg_running_duration,0) as avg_running_duration,
              NVL(f.avg_waiting_duration,0) as avg_waiting_duration,
-             NVL(f.median_executing_duration,0) as median_executing_duration,
+             NVL(f.avg_finalizing_duration,0) as avg_finalizing_duration,
+             NVL(f.median_running_duration,0) as median_running_duration,
              NVL(f.median_waiting_duration,0) as median_waiting_duration,
+             NVL(f.median_finalizing_duration,0) as median_finalizing_duration,
              NVL(g.finished_jobs,0) as finished_jobs,
              NVL(g.failed_jobs,0) as failed_jobs,
              NVL(g.not_completed_jobs,0) as not_completed_jobs,
