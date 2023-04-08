@@ -35,3 +35,20 @@ def group_popularity_to_db(predefined_date = False):
                            params={'from_date': from_date})
     panda_connection.close()
     write_to_postgreSQL(df, 'group_popularity')
+
+
+def group_popularity_daily_to_db(predefined_date = False):
+
+    from_date = datetime.strftime(localized_now(), "%Y-%m-%d %H:%M:%S") if not predefined_date else str(predefined_date)
+
+    if check_postgreSQL('group_popularity_daily', from_date, accuracy='day', datetime_col_name='datetime') == True:
+        delete_from_pgsql('group_popularity_daily', from_date, accuracy='day', datetime_col_name='datetime')
+
+    panda_connection = PanDA_engine.connect()
+    query = text(open(SQL_DIR+'/PanDA/group_popularity_daily.sql').read())
+    df = pd.read_sql_query(query,
+                           panda_connection,
+                           parse_dates={'datetime': '%Y-%m-%d'},
+                           params={'from_date': from_date})
+    panda_connection.close()
+    write_to_postgreSQL(df, 'group_popularity_daily')

@@ -8,7 +8,7 @@ import configparser
 from database_helpers.helpers import write_to_postgreSQL
 import logging
 from datetime import datetime, timedelta
-from group_popularity import group_popularity_to_db
+from group_popularity import group_popularity_to_db, group_popularity_daily_to_db
 from dataset_popularity import datasets_popularity_to_db, aggregation_week, datasets_forecast_classification
 
 
@@ -66,10 +66,12 @@ def collect_dates():
 # datasets_forecast_classification('2022-08-01 00:00:00')
 
 
-def retrospective_collector(frequency='W-MON'):
+def retrospective_collector(frequency='D'):
+
+    # options W-MON, D
 
     start_date = datetime(2016, 12, 26)
-    end_date = datetime(2023, 4, 3) # next --> 2022-12-21 09:00:00
+    end_date = datetime(2023, 4, 8) # next --> 2022-12-21 09:00:00
     #  {'from_date': '2022-09-02 03:00:00'} -- for queues_metrics_hourly
 
     list_of_dates = pd.date_range(start=datetime.strftime(start_date, "%Y-%m-%d"),
@@ -77,7 +79,7 @@ def retrospective_collector(frequency='W-MON'):
 
     for i in list_of_dates[::-1]:
         print(i)
-        group_popularity_to_db(predefined_date=i)
+        group_popularity_daily_to_db(predefined_date=i)
 
 
 retrospective_collector()
