@@ -8,7 +8,7 @@ with curr as (SELECT site as site,
        round(avg(capacity_weighted)::numeric,4) as curr_capacity,
        round(avg(utilization_weighted)::numeric,4) as curr_utilization,
        round(avg(efficiency)::numeric,4) as curr_efficiency
-FROM queues_utilization_weighted
+FROM queues_weighted_jobs
 WHERE tend >= date_trunc('hour', TIMESTAMP :now) - INTERVAL '4 hour' and tend < :now
 AND resource_type='GRID'
 GROUP BY site, queue, cloud, tier_level, resource_type

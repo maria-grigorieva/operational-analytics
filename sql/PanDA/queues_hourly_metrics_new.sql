@@ -189,7 +189,7 @@ with statuses as (SELECT s.pandaid,
                        NVL(sum(failed_volume), 0) +
                        NVL(sum(closed_volume), 0) +
                        NVL(sum(cancelled_volume), 0)                               as completed_volume,
-                       round((NVL(sum(pending_jobs), 0) +
+                       NVL(round((NVL(sum(pending_jobs), 0) +
                               NVL(sum(defined_jobs), 0) +
                               NVL(sum(activated_jobs), 0) +
                               NVL(sum(sent_jobs), 0) +
@@ -199,8 +199,15 @@ with statuses as (SELECT s.pandaid,
                                      NVL(sum(failed_jobs), 0) +
                                      NVL(sum(closed_jobs), 0) +
                                      NVL(sum(cancelled_jobs), 0)), 0),
-                             4)                                                    as utilization,
-                       round(NVL(sum(pending_jobs), 0) +
+                             4),
+                           (NVL(sum(pending_jobs), 0) +
+                              NVL(sum(defined_jobs), 0) +
+                              NVL(sum(activated_jobs), 0) +
+                              NVL(sum(sent_jobs), 0) +
+                              NVL(sum(starting_jobs), 0) +
+                              NVL(sum(assigned_jobs), 0))
+                           )                   as utilization,
+                       NVL(round(NVL(sum(pending_jobs), 0) +
                              NVL(sum(defined_jobs), 0) +
                              NVL(sum(activated_jobs), 0) +
                              NVL(sum(sent_jobs), 0) +
@@ -208,38 +215,70 @@ with statuses as (SELECT s.pandaid,
                              NVL(sum(assigned_jobs), 0)/
                              nullif((NVL(sum(running_jobs), 0) + NVL(sum(holding_jobs), 0) + NVL(sum(merging_jobs), 0) +
                                      NVL(sum(transferring_jobs), 0)), 0),
-                             4)                                                    as fullness,
-                       round(NVL(sum(finished_jobs), 0) / nullif((NVL(sum(finished_jobs), 0) +
+                             4),
+                           (NVL(sum(pending_jobs), 0) +
+                             NVL(sum(defined_jobs), 0) +
+                             NVL(sum(activated_jobs), 0) +
+                             NVL(sum(sent_jobs), 0) +
+                             NVL(sum(starting_jobs), 0) +
+                             NVL(sum(assigned_jobs), 0))
+                           )                as fullness,
+                       NVL(round(NVL(sum(finished_jobs), 0) / nullif((NVL(sum(finished_jobs), 0) +
                                                                   NVL(sum(failed_jobs), 0) +
                                                                   NVL(sum(closed_jobs), 0) +
-                                                                  NVL(sum(cancelled_jobs), 0)), 0),
-                             4)                                                    as efficiency,
-                       round((NVL(sum(pending_volume), 0) +
+                                                                  NVL(sum(cancelled_jobs), 0)), 0),4),
+                           0)                                                    as efficiency,
+                       NVL(round(
+                            (
+                             (NVL(sum(pending_volume), 0) +
                               NVL(sum(defined_volume), 0) +
                               NVL(sum(activated_volume), 0) +
                               NVL(sum(sent_volume), 0) +
                               NVL(sum(starting_volume), 0) +
-                              NVL(sum(assigned_volume), 0)) /
-                             nullif((NVL(sum(finished_volume), 0) +
-                                     NVL(sum(failed_volume), 0) +
-                                     NVL(sum(closed_volume), 0) +
-                                     NVL(sum(cancelled_volume), 0)), 0),
-                             4)                                                    as utilization_weighted,
-                       round((NVL(sum(pending_volume), 0) +
-                              NVL(sum(defined_volume), 0) +
-                              NVL(sum(activated_volume), 0) +
-                              NVL(sum(sent_volume), 0) +
-                              NVL(sum(starting_volume), 0) +
-                              NVL(sum(assigned_volume), 0) ) / nullif((NVL(sum(running_volume), 0) +
-                                                                      NVL(sum(holding_volume), 0) +
-                                                                      NVL(sum(merging_volume), 0) +
-                                                                      NVL(sum(transferring_volume), 0)), 0),
-                             4)                                                    as fullness_weighted,
-                       round(NVL(sum(finished_volume), 0) / nullif((NVL(sum(finished_volume), 0) +
-                                                                    NVL(sum(failed_volume), 0) +
-                                                                    NVL(sum(closed_volume), 0) +
-                                                                    NVL(sum(cancelled_volume), 0)), 0),
-                             4)                                                    as efficiency_weighted
+                              NVL(sum(assigned_volume), 0)
+                            )/1000000000000) / nullif((NVL(sum(finished_volume), 0) +
+                                             NVL(sum(failed_volume), 0) +
+                                             NVL(sum(closed_volume), 0) +
+                                             NVL(sum(cancelled_volume), 0))/1000000000000, 0),
+                            4),
+                           round(
+                               (
+                                   (NVL(sum(pending_volume), 0) +
+                                    NVL(sum(defined_volume), 0) +
+                                    NVL(sum(activated_volume), 0) +
+                                    NVL(sum(sent_volume), 0) +
+                                    NVL(sum(starting_volume), 0) +
+                                    NVL(sum(assigned_volume), 0))/1000000000000),
+                               4)
+                           )                 as utilization_weighted,
+                       NVL(round(
+                                       (
+                                               (NVL(sum(pending_volume), 0) +
+                                                NVL(sum(defined_volume), 0) +
+                                                NVL(sum(activated_volume), 0) +
+                                                NVL(sum(sent_volume), 0) +
+                                                NVL(sum(starting_volume), 0) +
+                                                NVL(sum(assigned_volume), 0)
+                                                   ) / 1000000000000
+                                           ) / nullif((NVL(sum(running_volume), 0) +
+                                                       NVL(sum(holding_volume), 0) +
+                                                       NVL(sum(merging_volume), 0) +
+                                                       NVL(sum(transferring_volume), 0)) / 1000000000000, 0),
+                                       4),
+                           round(
+                                       (NVL(sum(pending_volume), 0) +
+                                        NVL(sum(defined_volume), 0) +
+                                        NVL(sum(activated_volume), 0) +
+                                        NVL(sum(sent_volume), 0) +
+                                        NVL(sum(starting_volume), 0) +
+                                        NVL(sum(assigned_volume), 0)) / 1000000000000, 4)
+                           ) as fullness_weighted,
+                       NVL(
+                           round(
+                               (NVL(sum(finished_volume), 0)/1000000000000) / nullif((NVL(sum(finished_volume), 0) +
+                                                                                    NVL(sum(failed_volume), 0) +
+                                                                                    NVL(sum(closed_volume), 0) +
+                                                                                    NVL(sum(cancelled_volume), 0))/1000000000000, 0),4),0) as efficiency_weighted
                 FROM result
                     PIVOT (
                     count(distinct pandaid) as jobs,

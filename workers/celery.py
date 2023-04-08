@@ -21,10 +21,10 @@ app = Celery('workers',
 
 
 app.conf.beat_schedule = {
-    'weekly_distances': {
-        'task': 'save_distances_to_db',
-        'schedule': crontab(minute=15, hour=22, day_of_week='sunday')
-    },
+    # 'weekly_distances': {
+    #     'task': 'save_distances_to_db',
+    #     'schedule': crontab(minute=15, hour=22, day_of_week='sunday')
+    # },
     'storage_info': {
         'task': 'save_storage_attrs_to_db',
         'schedule': crontab(minute=55, hour=23)
@@ -41,8 +41,12 @@ app.conf.beat_schedule = {
         'task': 'job_timings_to_db',
         'schedule': crontab(minute=10, hour=3)
     },
-    'queues_weighted_jobs': {
-        'task': 'queues_weighted_jobs',
+    'queues_workload': {
+        'task': 'queues_workload',
+        'schedule': crontab(minute=0, hour='0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23')
+    },
+    'queues_workload_extended': {
+        'task': 'queues_workload_extended',
         'schedule': crontab(minute=0, hour='0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23')
     },
     # 'queues_workload_weighted': {

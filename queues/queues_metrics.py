@@ -8,7 +8,7 @@ import pandas as pd
 from sqlalchemy import create_engine, text
 import configparser
 from cric.cric_json_api import enhance_queues
-from database_helpers.helpers import insert_to_db, check_for_data_existance, set_time_period, localized_now
+from database_helpers.helpers import insert_to_db, check_for_data_existance, set_time_period, localized_now, check_postgreSQL, write_to_postgreSQL, delete_from_pgsql
 from datetime import datetime, timedelta
 
 import logging
@@ -78,7 +78,7 @@ metrics = {
         }
 }
 
-PanDA_engine = create_engine(config['PanDA DB']['sqlalchemy_engine_str'], echo=False, max_identifier_length=128)
+PanDA_engine = create_engine(config['PanDA DB']['sqlalchemy_engine_str'], echo=True, max_identifier_length=128)
 PostgreSQL_engine = create_engine(config['PostgreSQL']['sqlalchemy_engine_str'], echo=False)
 
 
@@ -266,3 +266,271 @@ def queues_weighted_jobs(predefined_date=False, queues='actual'):
         insert_to_db(result, 'queues_weighted_jobs')
     else:
         pass
+
+def queues_weighted_jobs_wt(predefined_date=False, queues='actual'):
+
+    from_date = datetime.strftime(localized_now(), "%Y-%m-%d %H:%M:%S") \
+        if not predefined_date else str(predefined_date)
+
+    if not check_for_data_existance(f'queues_weighted_jobs_wt', from_date, accuracy='hour', delete=True,
+                                    dt='tend'):
+        PanDA_connection = PanDA_engine.connect()
+        query = text(open(SQL_DIR + f'/PanDA/queues_weighted_jobs_wt.sql').read())
+        df = pd.read_sql_query(query, PanDA_connection, parse_dates={'datetime': '%Y-%m-%d %H:%M:%S'},
+                               params={'from_date': from_date})
+        if queues == 'actual':
+            try:
+                from_cric = cric.cric_json_api.enhance_queues()
+            except Exception as e:
+                PostgreSQL_connection = PostgreSQL_engine.connect()
+                query = text('SELECT queue,cloud,site,resource_type,'
+                             'tier_level, status, state, nodes,'
+                             'corepower, corecount, region, transferring_limit '
+                             'FROM cric_resources WHERE '
+                             'datetime = (SELECT max(datetime) FROM cric_resources)'
+                             'GROUP by queue,cloud,site,resource_type,'
+                             'tier_level, status, state, nodes,'
+                             'corepower, corecount, region, transferring_limit')
+                from_cric = pd.read_sql_query(query, PostgreSQL_connection)
+        elif queues == 'db':
+            PostgreSQL_connection = PostgreSQL_engine.connect()
+            query = text('SELECT queue,cloud,site,resource_type,'
+                         'tier_level, status, state, nodes,'
+                         'corepower, corecount, region, transferring_limit '
+                         'FROM cric_resources WHERE '
+                         'datetime = (SELECT max(datetime) FROM cric_resources)'
+                         'GROUP by queue,cloud,site,resource_type,'
+                         'tier_level, status, state, nodes,'
+                         'corepower, corecount, region, transferring_limit')
+            from_cric = pd.read_sql_query(query, PostgreSQL_connection)
+        result = pd.merge(df, from_cric, left_on='queue', right_on='queue')
+        PanDA_connection.close()
+        insert_to_db(result, 'queues_weighted_jobs_wt')
+    else:
+        pass
+
+def queues_metrics_hourly(predefined_date=False, queues='actual'):
+
+    from_date = datetime.strftime(localized_now(), "%Y-%m-%d %H:%M:%S") \
+        if not predefined_date else str(predefined_date)
+
+    if not check_for_data_existance(f'queues_hourly_metrics', from_date, accuracy='hour', delete=True,
+                                    dt='datetime'):
+        PanDA_connection = PanDA_engine.connect()
+        query = text(open(SQL_DIR + f'/PanDA/queues_hourly_metrics.sql').read())
+        df = pd.read_sql_query(query, PanDA_connection, parse_dates={'datetime': '%Y-%m-%d %H:%M:%S'},
+                               params={'from_date': from_date})
+        if queues == 'actual':
+            try:
+                from_cric = cric.cric_json_api.enhance_queues()
+            except Exception as e:
+                PostgreSQL_connection = PostgreSQL_engine.connect()
+                query = text('SELECT queue,cloud,site,resource_type,'
+                             'tier_level, status, state, nodes,'
+                             'corepower, corecount, region, transferring_limit '
+                             'FROM cric_resources WHERE '
+                             'datetime = (SELECT max(datetime) FROM cric_resources)'
+                             'GROUP by queue,cloud,site,resource_type,'
+                             'tier_level, status, state, nodes,'
+                             'corepower, corecount, region, transferring_limit')
+                from_cric = pd.read_sql_query(query, PostgreSQL_connection)
+        elif queues == 'db':
+            PostgreSQL_connection = PostgreSQL_engine.connect()
+            query = text('SELECT queue,cloud,site,resource_type,'
+                         'tier_level, status, state, nodes,'
+                         'corepower, corecount, region, transferring_limit '
+                         'FROM cric_resources WHERE '
+                         'datetime = (SELECT max(datetime) FROM cric_resources)'
+                         'GROUP by queue,cloud,site,resource_type,'
+                         'tier_level, status, state, nodes,'
+                         'corepower, corecount, region, transferring_limit')
+            from_cric = pd.read_sql_query(query, PostgreSQL_connection)
+        result = pd.merge(df, from_cric, left_on='queue', right_on='queue')
+        PanDA_connection.close()
+        insert_to_db(result, 'queues_hourly_metrics')
+    else:
+        pass
+
+
+def queues_metrics_hourly_new(predefined_date=False, queues='actual'):
+
+    from_date = datetime.strftime(localized_now(), "%Y-%m-%d %H:%M:%S") \
+        if not predefined_date else str(predefined_date)
+
+    if check_postgreSQL('queues_hourly_metrics_new', from_date, accuracy='hour', datetime_col_name='datetime') == True:
+        delete_from_pgsql('queues_hourly_metrics_new', from_date, accuracy='hour', datetime_col_name='datetime')
+
+    PanDA_connection = PanDA_engine.connect()
+    query = text(open(SQL_DIR + f'/PanDA/queues_hourly_metrics_new.sql').read())
+    df = pd.read_sql_query(query, PanDA_connection, parse_dates={'datetime': '%Y-%m-%d %H:%M:%S'},
+                           params={'from_date': from_date})
+    if queues == 'actual':
+        try:
+            from_cric = cric.cric_json_api.enhance_queues()
+        except Exception as e:
+            PostgreSQL_connection = PostgreSQL_engine.connect()
+            query = text('SELECT queue,cloud,site,resource_type,'
+                         'tier_level, status, state, nodes,'
+                         'corepower, corecount, region, transferring_limit '
+                         'FROM cric_resources WHERE '
+                         'datetime = (SELECT max(datetime) FROM cric_resources)'
+                         'GROUP by queue,cloud,site,resource_type,'
+                         'tier_level, status, state, nodes,'
+                         'corepower, corecount, region, transferring_limit')
+            from_cric = pd.read_sql_query(query, PostgreSQL_connection)
+    elif queues == 'db':
+        PostgreSQL_connection = PostgreSQL_engine.connect()
+        query = text('SELECT queue,cloud,site,resource_type,'
+                     'tier_level, status, state, nodes,'
+                     'corepower, corecount, region, transferring_limit '
+                     'FROM cric_resources WHERE '
+                     'datetime = (SELECT max(datetime) FROM cric_resources)'
+                     'GROUP by queue,cloud,site,resource_type,'
+                     'tier_level, status, state, nodes,'
+                     'corepower, corecount, region, transferring_limit')
+        from_cric = pd.read_sql_query(query, PostgreSQL_connection)
+    result = pd.merge(df, from_cric, left_on='queue', right_on='queue')
+    PanDA_connection.close()
+    write_to_postgreSQL(result, 'queues_hourly_metrics_new')
+
+
+def queues_hourly_metrics_fixed(predefined_date=False, queues='actual'):
+
+    from_date = datetime.strftime(localized_now(), "%Y-%m-%d %H:%M:%S") \
+        if not predefined_date else str(predefined_date)
+
+    # if check_postgreSQL('queues_hourly_metrics_fixed', from_date, accuracy='hour', datetime_col_name='datetime') == True:
+    #     delete_from_pgsql('queues_hourly_metrics_fixed', from_date, accuracy='hour', datetime_col_name='datetime')
+
+    # dsn_tns = cx_Oracle.makedsn('itrac54104-v.cern.ch', '10121', service_name='adcr.cern.ch')
+    # conn = cx_Oracle.connect(user='atlas_datapopularity_r', password='dpp_ADCmon21', dsn=dsn_tns)
+    # curr = conn.cursor()
+    # f = open(SQL_DIR + f'/PanDA/queues_hourly_metrics_fixed.sql')
+    # q = f.read()
+    # print(q)
+    # res = curr.execute('SELECT * FROM ATLAS_PANDA.JOBS_STATUSLOG WHERE rownum<=10')
+    # print(res)
+
+
+    engine = PanDA_engine.connect()
+    # query = text('''SELECT * FROM ATLAS_PANDA.JOBS_STATUSLOG WHERE rownum<=10''')
+    # df = pd.read_sql_query(query, con=engine)
+    query = text(open(SQL_DIR + f'/PanDA/queues_hourly_metrics_fixed.sql').read())
+    df = pd.read_sql_query(query, con=engine, parse_dates={'datetime': '%Y-%m-%d %H:%M:%S'},
+                           params={'from_date': from_date})
+    engine.close()
+    if queues == 'actual':
+        try:
+            from_cric = cric.cric_json_api.enhance_queues()
+        except Exception as e:
+            PostgreSQL_connection = PostgreSQL_engine.connect()
+            query = text('SELECT queue,cloud,site,resource_type,'
+                         'tier_level, status, state, nodes,'
+                         'corepower, corecount, region, transferring_limit '
+                         'FROM cric_resources WHERE '
+                         'datetime = (SELECT max(datetime) FROM cric_resources)'
+                         'GROUP by queue,cloud,site,resource_type,'
+                         'tier_level, status, state, nodes,'
+                         'corepower, corecount, region, transferring_limit')
+            from_cric = pd.read_sql_query(query, PostgreSQL_connection)
+    elif queues == 'db':
+        PostgreSQL_connection = PostgreSQL_engine.connect()
+        query = text('SELECT queue,cloud,site,resource_type,'
+                     'tier_level, status, state, nodes,'
+                     'corepower, corecount, region, transferring_limit '
+                     'FROM cric_resources WHERE '
+                     'datetime = (SELECT max(datetime) FROM cric_resources)'
+                     'GROUP by queue,cloud,site,resource_type,'
+                     'tier_level, status, state, nodes,'
+                     'corepower, corecount, region, transferring_limit')
+        from_cric = pd.read_sql_query(query, PostgreSQL_connection)
+    result = pd.merge(df, from_cric, left_on='queue', right_on='queue')
+    write_to_postgreSQL(result, 'queues_hourly_metrics_fixed')
+
+
+def queues_workload(predefined_date=False, queues='actual'):
+
+    from_date = datetime.strftime(localized_now(), "%Y-%m-%d %H:%M:%S") \
+        if not predefined_date else str(predefined_date)
+
+    if check_postgreSQL('queues_workload', from_date, accuracy='hour', datetime_col_name='datetime') == True:
+        delete_from_pgsql('queues_workload', from_date, accuracy='hour', datetime_col_name='datetime')
+
+    engine = PanDA_engine.connect()
+    query = text(open(SQL_DIR + f'/PanDA/queues_workload.sql').read())
+    df = pd.read_sql_query(query, con=engine, parse_dates={'datetime': '%Y-%m-%d %H:%M:%S'},
+                           params={'from_date': from_date})
+    engine.close()
+    if queues == 'actual':
+        try:
+            from_cric = cric.cric_json_api.enhance_queues()
+        except Exception as e:
+            PostgreSQL_connection = PostgreSQL_engine.connect()
+            query = text('SELECT queue,cloud,site,resource_type,'
+                         'tier_level, status, state, nodes,'
+                         'corepower, corecount, region, transferring_limit '
+                         'FROM cric_resources WHERE '
+                         'datetime = (SELECT max(datetime) FROM cric_resources)'
+                         'GROUP by queue,cloud,site,resource_type,'
+                         'tier_level, status, state, nodes,'
+                         'corepower, corecount, region, transferring_limit')
+            from_cric = pd.read_sql_query(query, PostgreSQL_connection)
+    elif queues == 'db':
+        PostgreSQL_connection = PostgreSQL_engine.connect()
+        query = text('SELECT queue,cloud,site,resource_type,'
+                     'tier_level, status, state, nodes,'
+                     'corepower, corecount, region, transferring_limit '
+                     'FROM cric_resources WHERE '
+                     'datetime = (SELECT max(datetime) FROM cric_resources)'
+                     'GROUP by queue,cloud,site,resource_type,'
+                     'tier_level, status, state, nodes,'
+                     'corepower, corecount, region, transferring_limit')
+        from_cric = pd.read_sql_query(query, PostgreSQL_connection)
+    result = pd.merge(df, from_cric, left_on='queue', right_on='queue')
+    write_to_postgreSQL(result, 'queues_workload')
+
+
+
+def queues_workload_extended(predefined_date=False, queues='actual'):
+
+    from_date = datetime.strftime(localized_now(), "%Y-%m-%d %H:%M:%S") \
+        if not predefined_date else str(predefined_date)
+
+    if check_postgreSQL('queues_workload_extended', from_date, accuracy='hour', datetime_col_name='end_time') == True:
+        delete_from_pgsql('queues_workload_extended', from_date, accuracy='hour', datetime_col_name='end_time')
+
+    engine = PanDA_engine.connect()
+    query = text(open(SQL_DIR + f'/PanDA/queues_workload_extended.sql').read())
+    df = pd.read_sql_query(query, con=engine, parse_dates={'end_time': '%Y-%m-%d %H:%M:%S', 'start_time': '%Y-%m-%d %H:%M:%S'},
+                           params={'from_date': from_date})
+    engine.close()
+    if queues == 'actual':
+        try:
+            from_cric = cric.cric_json_api.enhance_queues(all=True)
+        except Exception as e:
+            PostgreSQL_connection = PostgreSQL_engine.connect()
+            query = text('SELECT queue,cloud,site,resource_type,'
+                         'tier_level, status, state, nodes,'
+                         'corepower, corecount, region, transferring_limit '
+                         'FROM cric_resources WHERE '
+                         'datetime = (SELECT max(datetime) FROM cric_resources)'
+                         'GROUP by queue,cloud,site,resource_type,'
+                         'tier_level, status, state, nodes,'
+                         'corepower, corecount, region, transferring_limit')
+            from_cric = pd.read_sql_query(query, PostgreSQL_connection)
+    elif queues == 'db':
+        PostgreSQL_connection = PostgreSQL_engine.connect()
+        query = text('SELECT queue,cloud,site,resource_type,'
+                     'tier_level, status, state, nodes,'
+                     'corepower, corecount, region, transferring_limit '
+                     'FROM cric_resources WHERE '
+                     'datetime = (SELECT max(datetime) FROM cric_resources)'
+                     'GROUP by queue,cloud,site,resource_type,'
+                     'tier_level, status, state, nodes,'
+                     'corepower, corecount, region, transferring_limit')
+        from_cric = pd.read_sql_query(query, PostgreSQL_connection)
+
+    from_cric.rename(columns={'status':'cric_status','state':'cric_state','resource_type':'cric_resource_type'},inplace=True)
+    from_cric.drop(['nodes','corepower','corecount','transferring_limit'],axis=1,inplace=True)
+    result = pd.merge(df, from_cric, left_on='queue', right_on='queue')
+    write_to_postgreSQL(result, 'queues_workload_extended')

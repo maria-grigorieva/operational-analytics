@@ -1,27 +1,36 @@
-from queues_metrics import queues_workload_weighted, queues_hourly_to_db
+from queues_metrics import queues_workload_weighted, queues_hourly_to_db, queues_workload_weighted_detailed, \
+    queues_weighted_jobs, queues_weighted_jobs_wt, queues_metrics_hourly, queues_metrics_hourly_new, queues_workload,\
+    queues_workload_extended
 from datetime import datetime, timedelta
 import pandas as pd
 
 
-def retrospective_collector():
+# queues_workload_weighted('2022-08-09 04:00:00')
 
-    start_date = datetime(2022, 7, 1, 0, 0, 0)
-    end_date = datetime(2022, 7, 16, 0, 0, 0)
+def retrospective_collector(frequency='1h'):
+
+    start_date = datetime(2022, 1, 1, 0, 0, 0)
+    end_date = datetime(2023, 3, 4, 14, 0, 0) # next --> 2022-12-21 09:00:00
+    #  {'from_date': '2022-09-02 03:00:00'} -- for queues_metrics_hourly
 
     list_of_dates = pd.date_range(start=datetime.strftime(start_date, "%Y-%m-%d %H:%M:%S"),
-                  end=datetime.strftime(end_date, "%Y-%m-%d %H:%M:%S"), freq='4h')
+                  end=datetime.strftime(end_date, "%Y-%m-%d %H:%M:%S"), freq=frequency)
 
     for i in list_of_dates[::-1]:
         print(i)
-        queues_workload_weighted(predefined_date = i)
+        queues_workload_extended(predefined_date=i, queues='db')
+        # queues_hourly_to_db(metric='queues_hourly', predefined_date = i)
+        # queues_workload_weighted_detailed(predefined_date = i)
 
 
-# retrospective_collector()
+retrospective_collector()
+# queues_workload(predefined_date='2022-12-21 18:00:00', queues='actual')
+#queues_metrics_hourly_new(predefined_date='2022-11-30 07:00:00', queues='actual')
 
 def collect_queues_for_period():
 
-    start_date = datetime(2022, 10, 30, 0, 0, 0)
-    end_date = datetime(2022, 10, 31, 8, 0, 0)
+    start_date = datetime(2022, 8, 21, 0, 0, 0)
+    end_date = datetime(2022, 11, 22, 16, 0, 0)
     # delta_day = timedelta(days=1)
     delta_hours = timedelta(hours=4)
 
@@ -31,7 +40,7 @@ def collect_queues_for_period():
                                  hours=4, queues='db')
         start_date += delta_hours
 
-collect_queues_for_period()
+# collect_queues_for_period()
 
 def collect_hourly_data_for_period(metric):
     start_date = datetime(2022, 9, 15, 0, 0, 0)

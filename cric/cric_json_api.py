@@ -48,20 +48,23 @@ def enhance_queues(all=False, with_rse=False):
     enhanced_queues = []
 
     for queue, attrs in cric_queues.items():
+        transferringlimit = attrs['transferringlimit'] if attrs.get('transferringlimit') else 2000
+        region = attrs['region'] if attrs.get('region') else 'unknown'
         #datadisks = [[d for d in v if 'DATADISK' in d or 'VP_DISK' in d] for k, v in attrs['astorages'].items() if 'write_lan' in k]
         queues_dict = {
             'queue': queue,
             'site': attrs['rc_site'],
             'cloud': attrs['cloud'],
+            'cloud': attrs['cloud'],
             'tier_level': attrs['tier_level'],
-            'transferring_limit': attrs['transferringlimit'] or 2000,
+            'transferring_limit': transferringlimit,
             'status': attrs['status'],
             'state': attrs['state'],
             'resource_type': attrs['resource_type'],
             'nodes': attrs['nodes'],
             'corepower': attrs['corepower'],
             'corecount': attrs['corecount'],
-            'region': attrs['region']
+            'region': region
         }
 
         if with_rse:

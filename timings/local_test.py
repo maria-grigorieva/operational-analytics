@@ -15,7 +15,7 @@ def collection_for_time_period():
         # jobs_agg(predefined_date=datetime.strftime(start_date, "%Y-%m-%d %H:%M:%S"))
         start_date += delta_day
 
-collection_for_time_period()
+# collection_for_time_period()
 
 
 def retrospective_dates():
@@ -30,7 +30,7 @@ def retrospective_dates():
 
 # task_timings_to_db('2022-10-17 03:00:00')
 
-timings.job_timings_to_db('2022-10-28 03:00:00')
+# timings.job_timings_to_db('2022-11-07 03:10:00')
 # task_timings_to_db('2022-09-07 00:00:00', hours=1)
 #
 # jobs_agg('2022-06-11 00:00:00')
