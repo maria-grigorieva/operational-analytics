@@ -58,7 +58,7 @@ app.conf.beat_schedule = {
         'schedule': crontab(minute=0, hour=3, day_of_week='monday')
     },
     'group_popularity_daily_to_db': {
-        'task': 'group_popularity_to_db',
+        'task': 'group_popularity_daily_to_db',
         'schedule': crontab(minute=3, hour=3)
     },
     'datasets_popularity_to_db': {

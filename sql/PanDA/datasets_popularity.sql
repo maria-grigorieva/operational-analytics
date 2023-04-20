@@ -1,5 +1,7 @@
 SELECT trunc(to_date(:from_date , 'YYYY-MM-DD HH24:MI:SS'),'DD') as datetime,
+       t.gshare,
        d.datasetname,
+       t.username,
         regexp_substr(SUBSTR(d.datasetname, REGEXP_INSTR(d.datasetname, '\.', 1, 4) + 1,
                (REGEXP_INSTR(d.datasetname, '\.', 1, 5) -
                REGEXP_INSTR(d.datasetname, '\.', 1, 4)-1)),'[^_]+',1,1) as input_format_short,
@@ -19,9 +21,7 @@ SELECT trunc(to_date(:from_date , 'YYYY-MM-DD HH24:MI:SS'),'DD') as datetime,
        substr(d.datasetname, Instr(d.datasetname, '_tid',-1,1)+1) as tid,
         SUBSTR(d.datasetname, Instr(d.datasetname, '.',-1,1)+1,
             Instr(d.datasetname, '_tid',-1,1)-Instr(d.datasetname, '.',-1,1)-1) as process_tags,
-       count(distinct t.jeditaskid) as n_tasks,
-       count(distinct t.username) as n_users,
-       1 as used
+       count(distinct t.jeditaskid) as n_tasks
 FROM ATLAS_PANDA.JEDI_TASKS t
 INNER JOIN ATLAS_PANDA.JEDI_DATASETS d ON (d.jeditaskid = t.jeditaskid)
 WHERE t.tasktype='anal' and
@@ -31,8 +31,9 @@ WHERE t.tasktype='anal' and
       d.type = 'input' and
       ((d.datasetname LIKE 'mc%.DAOD%') or (d.datasetname LIKE 'data%.DAOD%')) and
       d.masterid is null
-      and t.status in ('finished','done')
+      and t.attemptnr = 0 and t.status not in ('failed','aborted','broken','aborting','tobroken','toretry')
 GROUP BY trunc(to_date(:from_date , 'YYYY-MM-DD HH24:MI:SS'),'DD'),
+         t.gshare,
                 d.datasetname,
          regexp_substr(SUBSTR(d.datasetname, REGEXP_INSTR(d.datasetname, '\.', 1, 4) + 1,
                (REGEXP_INSTR(d.datasetname, '\.', 1, 5) -

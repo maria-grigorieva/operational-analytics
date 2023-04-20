@@ -18,7 +18,7 @@ WHERE t.tasktype='anal' and
       t.username not in ('artprod','gangarbt') and
       d.type = 'input' and
       (d.datasetname LIKE 'mc%' or d.datasetname LIKE 'data%') and
-      d.masterid is null and t.attemptnr = 0 and t.status not in ('failed','aborted','broken','aborting','tobroken','toretry')
+      d.masterid is null and t.status not in ('failed','aborted','broken','aborting','tobroken','toretry')
 GROUP BY trunc(to_date(:from_date, 'YYYY-MM-DD HH24:MI:SS'),'DD'),
          t.gshare,
          t.username,
