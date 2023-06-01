@@ -1,3 +1,7 @@
+import os, sys
+ROOT_DIR = os.path.dirname(os.path.abspath(__file__))
+BASE_DIR = os.path.join(ROOT_DIR, '..' )
+sys.path.append(os.path.abspath(BASE_DIR))
 import urllib.parse
 import requests
 import pandas as pd
@@ -9,10 +13,6 @@ from datetime import datetime
 import ssl
 import urllib3
 import json
-
-ROOT_DIR = os.path.dirname(os.path.abspath(__file__))
-BASE_DIR = os.path.join(ROOT_DIR, '..' )
-
 
 SQL_DIR = BASE_DIR+'/sql'
 
