@@ -8,7 +8,7 @@ sys.path.append(os.path.abspath(BASE_DIR))
 from sqlalchemy import create_engine, text, inspect
 import configparser
 from cric import cric_json_api
-from database_helpers.helpers import insert_to_db
+from database_helpers.helpers import write_to_postgreSQL
 from datetime import datetime, timedelta
 
 
@@ -50,4 +50,4 @@ def get_distances():
                         'corepower': 'dest_corepower'}, inplace=True)
     dst.drop('site', axis=1, inplace=True)
 
-    insert_to_db(dst, 'distances')
+    write_to_postgreSQL(dst, 'distances')

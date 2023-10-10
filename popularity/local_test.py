@@ -66,12 +66,12 @@ def collect_dates():
 # datasets_forecast_classification('2022-08-01 00:00:00')
 
 
-def retrospective_collector(frequency='W-MON'):
+def retrospective_collector(frequency='D'):
 
     # options W-MON, D
 
-    start_date = datetime(2016, 12, 26)
-    end_date = datetime(2022, 8, 29) # next --> 2022-12-21 09:00:00
+    start_date = datetime(2023, 9, 29)
+    end_date = datetime(2023, 10, 9)
     #  {'from_date': '2022-09-02 03:00:00'} -- for queues_metrics_hourly
 
     list_of_dates = pd.date_range(start=datetime.strftime(start_date, "%Y-%m-%d"),
@@ -79,9 +79,12 @@ def retrospective_collector(frequency='W-MON'):
 
     for i in list_of_dates[::-1]:
         print(i)
-        group_popularity_to_db(predefined_date=i)
+        group_popularity_daily_to_db(predefined_date=i)
+        #datasets_popularity_to_db(predefined_date=i)
 
 
-retrospective_collector()
-
-# group_popularity_to_db('2023-04-09 00:00:00')
+# retrospective_collector()
+#
+datasets_popularity_to_db('2023-10-02 00:00:00')
+datasets_popularity_to_db('2023-10-09 00:00:00')
+# group_popularity_to_db('2023-10-09 00:00:00')

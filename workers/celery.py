@@ -16,8 +16,7 @@ app = Celery('workers',
                       #'merging.tasks',
                       #'decision_maker.tasks',
                       #'slow_tasks.tasks',
-                      'popularity.tasks',
-                      'timings.tasks'])
+                      'popularity.tasks'])
 
 
 app.conf.beat_schedule = {
@@ -33,14 +32,14 @@ app.conf.beat_schedule = {
         'task': 'cric_resources_to_db',
         'schedule': crontab(minute=30, hour=23)
     },
-    'tasks_timings': {
-        'task': 'task_timings_to_db',
-        'schedule': crontab(minute=0, hour=4)
-    },
-    'jobs_timings': {
-        'task': 'job_timings_to_db',
-        'schedule': crontab(minute=10, hour=3)
-    },
+    # 'tasks_timings': {
+    #     'task': 'task_timings_to_db',
+    #     'schedule': crontab(minute=0, hour=4)
+    # },
+    # 'jobs_timings': {
+    #     'task': 'job_timings_to_db',
+    #     'schedule': crontab(minute=10, hour=3)
+    # },
     # 'queues_workload': {
     #     'task': 'queues_workload',
     #     'schedule': crontab(minute=0, hour='0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23')

@@ -6,7 +6,8 @@ import cx_Oracle
 import pandas as pd
 from sqlalchemy import create_engine, text
 import configparser
-from database_helpers.helpers import write_to_postgreSQL, check_for_data_existance, set_time_period, localized_now
+from database_helpers.helpers import check_postgreSQL, write_to_postgreSQL, day_rounder, delete_from_pgsql, \
+    set_time_period, localized_now
 from datetime import datetime, timedelta
 from sklearn.ensemble import RandomForestClassifier
 import numpy as np
@@ -28,7 +29,7 @@ def datasets_popularity_to_db(predefined_date = False):
 
     from_date = datetime.strftime(localized_now(), "%Y-%m-%d %H:%M:%S") if not predefined_date else str(predefined_date)
 
-    if not check_for_data_existance('datasets_popularity', from_date, delete=True):
+    if not check_postgreSQL('datasets_popularity', from_date, accuracy='day', datetime_col_name='datetime'):
         panda_connection = PanDA_engine.connect()
         query = text(open(SQL_DIR+'/PanDA/datasets_popularity.sql').read())
         df = pd.read_sql_query(query,
@@ -38,7 +39,7 @@ def datasets_popularity_to_db(predefined_date = False):
         panda_connection.close()
         write_to_postgreSQL(df, 'datasets_popularity')
     else:
-        pass
+        delete_from_pgsql('datasets_popularity', from_date, accuracy='day', datetime_col_name='datetime')
 
 
 def aggregation_week(predefined_date = False):

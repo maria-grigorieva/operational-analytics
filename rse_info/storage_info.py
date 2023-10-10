@@ -3,7 +3,8 @@ import requests
 import pandas as pd
 # import datetime as dt
 from datetime import datetime, timedelta
-from database_helpers.helpers import insert_to_db, check_for_data_existance, day_rounder, set_time_period
+from database_helpers.helpers import check_postgreSQL, write_to_postgreSQL, day_rounder, delete_from_pgsql, \
+    day_rounder, set_time_period
 
 # All numbers in TB. Click on table headers to sort.
 # Used (other) is other RSEs sharing the same space token.
@@ -34,7 +35,7 @@ def get_agg_storage_data():
 def save_storage_attrs_to_db(predefined_date = False):
 
     from_date = datetime.strftime(datetime.now(), "%Y-%m-%d %H:%M:%S") if not predefined_date else str(predefined_date)
-    if not check_for_data_existance('storage_info', from_date, delete=True):
+    if not check_postgreSQL('storage_info', from_date, 'day'):
         result = get_agg_storage_data()
         result['datetime'] = day_rounder(datetime.strptime(from_date, "%Y-%m-%d %H:%M:%S"))
         result.rename(columns={'Avg tombstone':'avg_tombstone', 'Min space':'min_space', 'Free(storage)':'free_storage',
@@ -42,9 +43,9 @@ def save_storage_attrs_to_db(predefined_date = False):
                                'Total(storage)': 'total_storage', 'Used(dark)': 'used_dark', 'Used(other)': 'used_other',
                                'Used(rucio)': 'used_rucio', 'Difference': 'difference', 'Persistent': 'persistent',
                                'Temporary': 'temporary', 'Unlocked': 'unlocked'}, inplace=True)
-        insert_to_db(result, 'storage_info')
+        write_to_postgreSQL(result, 'storage_info')
     else:
-        pass
+        delete_from_pgsql('storage_info', from_date, 'day')
 
 #
 # save_storage_attrs_to_db('2022-02-01 01:00:00')

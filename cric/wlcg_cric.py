@@ -49,5 +49,7 @@ def get_sites_info():
         })
 
     sites_df = pd.DataFrame(sites_list)
-    sites_df.to_csv('sites_attrs.csv')
+    sites_df.to_csv('sites_attrs_v1.csv')
+    return sites_df
+
 

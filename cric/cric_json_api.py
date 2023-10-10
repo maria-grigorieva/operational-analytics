@@ -8,11 +8,12 @@ import pandas as pd
 import configparser
 import os
 from sqlalchemy import create_engine, text, inspect
-from database_helpers.helpers import insert_to_db, check_for_data_existance, day_rounder
+from database_helpers.helpers import check_postgreSQL, write_to_postgreSQL, day_rounder, delete_from_pgsql
 from datetime import datetime
 import ssl
 import urllib3
 import json
+# from wlcg_cric import get_sites_info
 
 SQL_DIR = BASE_DIR+'/sql'
 
@@ -34,6 +35,29 @@ http = urllib3.PoolManager(
     key_password=config['CRIC']['cert_pwd'],
     ca_certs=os.path.join(BASE_DIR, config['CRIC']['tls_ca_certificate'])
 )
+
+# def atlas_wlcg_sites_info():
+#
+#     response = http.request('GET', url_queue_all if all else url_queue)
+#     data = response.data
+#     cric_queues = json.loads(data)
+#     queues = []
+#
+#     for queue, attrs in cric_queues.items():
+#         queues.append({
+#             'queue': queue,
+#             'site': attrs['rc_site'],
+#             'cloud': attrs['cloud'],
+#             'tier_level': attrs['tier_level'],
+#             'resource_type': attrs['resource_type']
+#         })
+#     queues_df = pd.DataFrame(queues)
+#
+#     wlcg_sites_df = get_sites_info()
+#
+#     result_df = queues_df.merge(wlcg_sites_df, how='left', on='site')
+#     result_df.to_csv('sites_attrs.csv')
+
 
 def enhance_queues(all=False, with_rse=False):
 
@@ -83,7 +107,7 @@ def cric_resources_to_db(predefined_date = False):
 
     from_date = datetime.strftime(datetime.now(), "%Y-%m-%d %H:%M:%S") if not predefined_date else str(predefined_date)
 
-    if not check_for_data_existance('cric_resources', from_date, delete=True):
+    if not check_postgreSQL('cric_resources', from_date, accuracy='day', datetime_col_name='datetime'):
         result = enhance_queues(with_rse=True)
         result['datetime'] = day_rounder(datetime.strptime(from_date, "%Y-%m-%d %H:%M:%S"))
         int_columns = result.select_dtypes(include=['int', 'float']).columns
@@ -96,32 +120,9 @@ def cric_resources_to_db(predefined_date = False):
                                   'corecount': 'float64',
                                   'datetime': 'datetime64'
                                   })
-        insert_to_db(result, 'cric_resources')
+        write_to_postgreSQL(result, 'cric_resources')
     else:
-        pass
-
-
-def actual_cric_info():
-
-    from_date = datetime.strftime(datetime.now(), "%Y-%m-%d %H:%M:%S")
-
-    if not check_for_data_existance('actual_cric_info', from_date, delete=True):
-        result = enhance_queues()
-        result['datetime'] = day_rounder(datetime.strptime(from_date, "%Y-%m-%d %H:%M:%S"))
-        int_columns = result.select_dtypes(include=['int', 'float']).columns
-        result[int_columns] = result[int_columns].fillna(0)
-        result['datetime'] = pd.to_datetime(result['datetime'])
-        result = result.astype({'nodes': 'int64',
-                                  'transferring_limit': 'int64',
-                                  'tier_level': 'int64',
-                                  'corepower': 'float64',
-                                  'corecount': 'float64',
-                                  'datetime': 'datetime64'
-                                  })
-        insert_to_db(result, 'actual_cric_info')
-    else:
-        pass
-
+        delete_from_pgsql('actual_cric_info', from_date, accuracy='day', datetime_col_name='datetime')
 
 def enhance_sites(all=False):
     # cric_base_url = config['CRIC']['cric_base_url']
@@ -142,7 +143,6 @@ def enhance_sites(all=False):
             'longitude': attrs['longitude'],
             'tier_level': attrs['tier_level'],
             'cloud': attrs['cloud'],
-            'corepower': attrs['corepower']
         })
 
     return pd.DataFrame(enhanced_sites)
