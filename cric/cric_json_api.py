@@ -122,7 +122,7 @@ def cric_resources_to_db(predefined_date = False):
                                   })
         write_to_postgreSQL(result, 'cric_resources')
     else:
-        delete_from_pgsql('actual_cric_info', from_date, accuracy='day', datetime_col_name='datetime')
+        delete_from_pgsql('cric_resources', from_date, accuracy='day', datetime_col_name='datetime')
 
 def enhance_sites(all=False):
     # cric_base_url = config['CRIC']['cric_base_url']
