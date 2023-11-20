@@ -1,11 +1,11 @@
-from queues_metrics import queues_workload_extended, queues_hourly_to_db
+from queues_metrics import queues_workload, jobs_statuslog_all
 from datetime import datetime, timedelta
 import pandas as pd
 
 def retrospective_collector(frequency='1h'):
 
-    start_date = datetime(2023, 9, 28, 12, 0, 0)
-    end_date = datetime(2023, 10, 10, 12, 0, 0) # next --> 2022-12-21 09:00:00
+    start_date = datetime(2023, 10, 17, 10, 0, 0)
+    end_date = datetime(2023, 11, 14, 20, 0, 0) # next --> 2022-12-21 09:00:00
     #  {'from_date': '2022-09-02 03:00:00'} -- for queues_metrics_hourly
 
     list_of_dates = pd.date_range(start=datetime.strftime(start_date, "%Y-%m-%d %H:%M:%S"),
@@ -13,11 +13,11 @@ def retrospective_collector(frequency='1h'):
 
     for i in list_of_dates[::-1]:
         print(i)
-        queues_workload_extended(predefined_date=i, queues='db')
+        queues_workload(predefined_date=i, queues='db')
         # queues_hourly_to_db(metric='queues_hourly', predefined_date = i)
         # queues_workload_weighted_detailed(predefined_date = i)
 
-queues_workload_extended(predefined_date='2023-09-28 13:00:00')
+# jobs_statuslog_all(predefined_date='2023-11-20 13:00:00')
 # retrospective_collector()
 # queues_workload(predefined_date='2022-12-21 18:00:00', queues='actual')
 #queues_metrics_hourly_new(predefined_date='2022-11-30 07:00:00', queues='actual')

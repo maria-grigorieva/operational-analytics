@@ -39,56 +39,6 @@ with a as (SELECT *
            WHERE modificationtime >= trunc(to_date(:from_date, 'YYYY-MM-DD HH24:MI:SS'),'HH24') - 1 / 24
                )
     ),
-    b as (
-        SELECT start_time,
-                 end_time,
-                 pandaid,
-                 queue,
-                 prodsourcelabel,
-                 status,
-                 min(modificationtime_real) as modificationtime_real,
-                 MIN(modificationtime) as modificationtime,
-                 MAX(lead_time)        as lead_time
-          FROM (
-              SELECT start_time,
-                       end_time,
-                       pandaid,
-                       queue,
-                       prodsourcelabel,
-                       CASE
-                           WHEN status in (
-                                           'pending',
-                                           'defined',
-                                           'assigned',
-                                           'activated',
-                                           'throttled',
-                                           'sent',
-                                           'starting'
-                               ) THEN 'waiting'
-                           WHEN status in ('running') THEN 'running'
-                           WHEN status in ('holding', 'merging', 'transferring') THEN 'finalizing'
-                           END as status,
-                    modificationtime_real,
-                       modificationtime,
-                       lead_time
-                FROM a
-                WHERE status in (
-                                 'pending',
-                                 'defined',
-                                 'assigned',
-                                 'activated',
-                                 'throttled',
-                                 'sent',
-                                 'starting',
-                                 'running', 'holding', 'merging', 'transferring'
-                    )
-              )
-                GROUP BY start_time,
-                         end_time,
-                         pandaid,
-                         queue,
-                         prodsourcelabel,
-                         status),
     c as (
         SELECT pandaid,
                 CASE WHEN status = 'finished' THEN 'finished'
@@ -97,50 +47,46 @@ with a as (SELECT *
               FROM a
         ),
     d as (
-        SELECT b.start_time,
-                 b.end_time,
-                 b.pandaid,
-                 b.queue,
-                 b.prodsourcelabel,
-                 b.status,
+        SELECT a.start_time,
+                 a.end_time,
+                 a.pandaid,
+                 a.queue,
+                 a.prodsourcelabel,
+                 a.status,
                  c.final_status,
-                 round((b.lead_time - b.modificationtime) * 24 * 60 * 60) as duration
-          FROM b
+                 round((a.lead_time - a.modificationtime) * 24 * 60 * 60) as duration
+          FROM a
                    FULL OUTER JOIN c
-                                   ON (b.pandaid = c.pandaid)
+                                   ON (a.pandaid = c.pandaid)
           ),
     e as (
         SELECT pandaid,
         gshare,
-        resource_type,
-        max(inputfilebytes) as inputfilebytes
+        resource_type
         from (
             SELECT pandaid,
                 gshare,
-                resource_type,
-                NVL(inputfilebytes, 0) as inputfilebytes
+                resource_type
             FROM ATLAS_PANDA.JOBSARCHIVED4
             WHERE pandaid IN (
                     SELECT distinct pandaid
                     FROM d
                 )
-               AND modificationtime >= (SELECT min(modificationtime_real) from b)
+               AND modificationtime >= (SELECT min(modificationtime_real) from a)
             UNION ALL
             SELECT pandaid,
                 gshare,
-                resource_type,
-                NVL(inputfilebytes, 0) as inputfilebytes
+                resource_type
             FROM ATLAS_PANDAARCH.JOBSARCHIVED
             WHERE pandaid IN (
                     SELECT distinct pandaid
                     FROM d
                 )
-                AND modificationtime >= (SELECT min(modificationtime_real) from b)
+                AND modificationtime >= (SELECT min(modificationtime_real) from a)
             UNION ALL
             SELECT pandaid,
                 gshare,
-                resource_type,
-                NVL(inputfilebytes, 0) as inputfilebytes
+                resource_type
             FROM ATLAS_PANDA.JOBSACTIVE4
             WHERE pandaid IN (
                     SELECT distinct pandaid
@@ -149,8 +95,7 @@ with a as (SELECT *
             UNION ALL
             SELECT pandaid,
                 gshare,
-                resource_type,
-                NVL(inputfilebytes, 0) as inputfilebytes
+                resource_type
             FROM ATLAS_PANDA.JOBSWAITING4
             WHERE pandaid IN (
                     SELECT distinct pandaid
@@ -159,8 +104,7 @@ with a as (SELECT *
             UNION ALL
             SELECT pandaid,
                 gshare,
-                resource_type,
-                NVL(inputfilebytes, 0) as inputfilebytes
+                resource_type
             FROM ATLAS_PANDA.JOBSDEFINED4
             WHERE pandaid IN (
                     SELECT distinct pandaid
@@ -177,18 +121,26 @@ f as (SELECT start_time,
              prodsourcelabel,
              gshare,
              resource_type,
-             sum(running_jobs)          as running_jobs,
-             sum(waiting_jobs)            as waiting_jobs,
-             sum(finalizing_jobs)          as finalizing_jobs,
-             sum(running_input_volume)  as running_input_volume,
-             sum(waiting_input_volume)    as waiting_input_volume,
-             sum(finalizing_input_volume)    as finalizing_input_volume,
-             avg(running_duration)      as avg_running_duration,
-             avg(waiting_duration)        as avg_waiting_duration,
-             avg(finalizing_duration)        as avg_finalizing_duration,
-             median(running_duration) as median_running_duration,
-             median(waiting_duration) as median_waiting_duration,
-             median(finalizing_duration) as median_finalizing_duration
+            NVL(sum(pending_jobs),0) as pending_jobs,
+               NVL(sum(defined_jobs),0) as defined_jobs,
+               NVL(sum(assigned_jobs),0) as assigned_jobs,
+               NVL(sum(activated_jobs),0) as activated_jobs,
+               NVL(sum(sent_jobs),0) as sent_jobs,
+               NVL(sum(starting_jobs),0) as starting_jobs,
+               NVL(sum(running_jobs),0) as running_jobs,
+               NVL(sum(transferring_jobs),0) as transferring_jobs,
+               NVL(sum(merging_jobs),0) as merging_jobs,
+               NVL(sum(holding_jobs),0) as holding_jobs,
+               round(avg(pending_duration)) as avg_pending_duration,
+               round(avg(defined_duration)) as avg_defined_duration,
+               round(avg(assigned_duration)) as avg_assigned_duration,
+               round(avg(activated_duration)) as avg_activated_duration,
+               round(avg(sent_duration)) as avg_sent_duration,
+               round(avg(starting_duration)) as avg_starting_duration,
+               round(avg(running_duration)) as avg_running_duration,
+               round(avg(transferring_duration)) as avg_transferring_duration,
+               round(avg(merging_duration)) as avg_merging_duration,
+               round(avg(holding_duration)) as avg_holding_duration
       FROM (SELECT d.start_time,
                    d.end_time,
                    d.queue,
@@ -197,10 +149,8 @@ f as (SELECT start_time,
                    e.gshare,
                    e.resource_type,
                    count(distinct d.pandaid)       as n_jobs,
-                   round(avg(d.duration))          as duration,
-                   sum(distinct e.inputfilebytes)  as input_volume
-            FROM d,
-                 e
+                   round(avg(d.duration))          as duration
+      FROM d,e
             WHERE d.pandaid = e.pandaid
             GROUP BY d.start_time,
                      d.end_time,
@@ -211,13 +161,23 @@ f as (SELECT start_time,
                      e.resource_type)
           PIVOT (
               sum(n_jobs) as jobs,
-              avg(duration) as duration,
-              sum(input_volume) as input_volume
+              avg(duration) as duration
           FOR status
-          IN ('running' AS running,
-              'finalizing' AS finalizing,
-              'waiting' AS waiting
-              )
+          IN ('pending' AS pending,
+                  'defined' AS defined,
+                  'assigned' AS assigned,
+                  'activated' AS activated,
+                  'sent' AS sent,
+                  'starting' AS starting,
+                  'running' AS running,
+                  'transferring' AS transferring,
+                  'merging' AS merging,
+                  'finished' AS finished,
+                  'failed' AS failed,
+                  'holding' AS holding,
+                  'cancelled' as cancelled,
+                  'closed' as closed
+                  )
           )
       GROUP BY start_time,
                end_time,
@@ -233,10 +193,7 @@ f as (SELECT start_time,
              resource_type,
              sum(finished_jobs) as finished_jobs,
              sum(failed_jobs) as failed_jobs,
-             sum(not_completed_jobs) as not_completed_jobs,
-             sum(finished_input_volume) as finished_input_volume,
-             sum(failed_input_volume) as failed_input_volume,
-             sum(not_completed_input_volume) as not_completed_input_volume
+             sum(not_completed_jobs) as not_completed_jobs
       FROM (SELECT d.start_time,
                    d.end_time,
                    d.queue,
@@ -245,8 +202,7 @@ f as (SELECT start_time,
                    e.gshare,
                    e.resource_type,
                    count(distinct d.pandaid)       as n_jobs,
-                   round(avg(d.duration))          as duration,
-                   sum(distinct e.inputfilebytes)  as input_volume
+                   round(avg(d.duration))          as duration
             FROM d,
                  e
             WHERE d.pandaid = e.pandaid
@@ -258,8 +214,7 @@ f as (SELECT start_time,
                      e.gshare,
                      e.resource_type)
           PIVOT (
-              sum(n_jobs) as jobs,
-              sum(input_volume) as input_volume
+              sum(n_jobs) as jobs
           FOR final_status
           IN ('finished' AS finished,
               'failed' AS failed,
@@ -278,24 +233,29 @@ SELECT f.start_time,
                f.prodsourcelabel,
                f.gshare,
                f.resource_type,
+               NVL(f.pending_jobs,0) as pending_jobs,
+               NVL(f.defined_jobs,0) as defined_jobs,
+               NVL(f.assigned_jobs,0) as assigned_jobs,
+               NVL(f.activated_jobs,0) as activated_jobs,
+               NVL(f.sent_jobs,0) as sent_jobs,
+               NVL(f.starting_jobs,0) as starting_jobs,
                NVL(f.running_jobs,0) as running_jobs,
-             NVL(f.waiting_jobs,0) as waiting_jobs,
-             NVL(f.finalizing_jobs,0) as finalizing_jobs,
-             NVL(f.running_input_volume,0) as running_input_volume,
-             NVL(f.waiting_input_volume,0) as waiting_input_volume,
-             NVL(f.finalizing_input_volume,0) as finalizing_input_volume,
-             NVL(f.avg_running_duration,0) as avg_running_duration,
-             NVL(f.avg_waiting_duration,0) as avg_waiting_duration,
-             NVL(f.avg_finalizing_duration,0) as avg_finalizing_duration,
-             NVL(f.median_running_duration,0) as median_running_duration,
-             NVL(f.median_waiting_duration,0) as median_waiting_duration,
-             NVL(f.median_finalizing_duration,0) as median_finalizing_duration,
+               NVL(f.transferring_jobs,0) as transferring_jobs,
+               NVL(f.merging_jobs,0) as merging_jobs,
+               NVL(f.holding_jobs,0) as holding_jobs,
+               NVL(f.avg_pending_duration,0) as avg_pending_duration,
+               NVL(f.avg_defined_duration,0) as avg_defined_duration,
+               NVL(f.avg_assigned_duration,0) as avg_assigned_duration,
+               NVL(f.avg_activated_duration,0) as avg_activated_duration,
+               NVL(f.avg_sent_duration,0) as avg_sent_duration,
+               NVL(f.avg_starting_duration,0) as avg_starting_duration,
+               NVL(f.avg_running_duration,0) as avg_running_duration,
+               NVL(f.avg_transferring_duration,0) as avg_transferring_duration,
+               NVL(f.avg_merging_duration,0) as avg_merging_duration,
+               NVL(f.avg_holding_duration,0) as avg_holding_duration,
              NVL(g.finished_jobs,0) as finished_jobs,
              NVL(g.failed_jobs,0) as failed_jobs,
-             NVL(g.not_completed_jobs,0) as not_completed_jobs,
-             NVL(g.finished_input_volume,0) as finished_input_volume,
-             NVL(g.failed_input_volume,0) as failed_input_volume,
-             NVL(g.not_completed_input_volume,0) as not_completed_input_volume
+             NVL(g.not_completed_jobs,0) as not_completed_jobs
     FROM
 f, g WHERE f.start_time = g.start_time and
          f.end_time = g.end_time and
