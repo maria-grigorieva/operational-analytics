@@ -366,6 +366,7 @@ SELECT h.start_time,
                NVL(h.avg_transferring_duration,0) as avg_transferring_duration,
                NVL(h.avg_merging_duration,0) as avg_merging_duration,
                NVL(h.avg_holding_duration,0) as avg_holding_duration,
+                NVL(h.avg_throttled_duration,0) as avg_throttled_duration,
              NVL(g.finished_jobs,0) as finished_jobs,
              NVL(g.not_completed_jobs,0) as not_completed_jobs,
              NVL(g.in_progress_jobs,0) as in_progress_jobs
