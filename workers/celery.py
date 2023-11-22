@@ -44,8 +44,12 @@ app.conf.beat_schedule = {
         'task': 'queues_workload',
         'schedule': crontab(minute=0, hour='0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23')
     },
-    'jobs_statuslog_all': {
-        'task': 'jobs_statuslog_all',
+    # 'jobs_statuslog_all': {
+    #     'task': 'jobs_statuslog_all',
+    #     'schedule': crontab(minute=0, hour='0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23')
+    # },
+    'jobs_statuslog_extended': {
+        'task': 'jobs_statuslog_extended',
         'schedule': crontab(minute=0, hour='0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23')
     },
     # 'queues_workload_weighted': {
