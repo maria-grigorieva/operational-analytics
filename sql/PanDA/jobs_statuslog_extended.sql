@@ -54,7 +54,7 @@ with a as (SELECT *
                pandaid,
                status,
                final_status,
-               sum(duration) as duration
+               avg(duration) as duration
 FROM (
                SELECT a.start_time,
                  a.end_time,
