@@ -34,18 +34,11 @@ with a as (SELECT *
                                   )         as lead_time
                        FROM ATLAS_PANDA.JOBS_STATUSLOG
                        WHERE modificationtime < trunc(to_date(:from_date, 'YYYY-MM-DD HH24:MI:SS'), 'HH24')
-                         and modificationtime >= trunc(to_date(:from_date, 'YYYY-MM-DD HH24:MI:SS'), 'HH24') - 2
+                         and modificationtime >= trunc(to_date(:from_date, 'YYYY-MM-DD HH24:MI:SS'), 'HH24') - 4
                      )
-           WHERE modificationtime >= trunc(to_date(:from_date, 'YYYY-MM-DD HH24:MI:SS'),'HH24') - 1 / 24
                )
+               WHERE modificationtime >= trunc(to_date(:from_date, 'YYYY-MM-DD HH24:MI:SS'),'HH24') - 1 / 24
     ),
-    c as (
-        SELECT pandaid,
-                CASE WHEN status = 'finished' THEN 'finished'
-                    WHEN status in ('failed','closed','cancelled') THEN 'not_completed'
-                    ELSE 'in_progress' END as final_status
-              FROM a
-        ),
     d as (
         SELECT start_time,
                end_time,
@@ -53,7 +46,6 @@ with a as (SELECT *
                prodsourcelabel,
                pandaid,
                status,
-               final_status,
                avg(duration) as duration
 FROM (
                SELECT a.start_time,
@@ -62,18 +54,17 @@ FROM (
                  a.prodsourcelabel,
                  a.pandaid,
                  a.status,
-                 c.final_status,
-                 round((a.lead_time - a.modificationtime) * 24 * 60 * 60) as duration
-          FROM a
-                   FULL OUTER JOIN c
-                                   ON (a.pandaid = c.pandaid))
+                CASE WHEN a.status not in ('finished','failed','closed','cancelled') THEN
+                 round((a.lead_time - a.modificationtime) * 24 * 60 * 60)
+                    ELSE 0
+                    END as duration
+          FROM a)
 group by start_time,
                end_time,
                queue,
                prodsourcelabel,
                pandaid,
-               status,
-               final_status),
+               status),
     e as (
         SELECT pandaid,
         gshare,
@@ -155,7 +146,6 @@ group by start_time,
                  d.queue,
                  d.prodsourcelabel,
                  d.status,
-                 d.final_status,
                 d.duration
          FROM e,d where e.pandaid = d.pandaid
      ),
@@ -196,9 +186,11 @@ f as (SELECT start_time,
                NVL(sum(merging_jobs),0) as merging_jobs,
                NVL(sum(holding_jobs),0) as holding_jobs,
              NVL(sum(throttled_jobs),0) as throttled_jobs,
-             NVL(sum(cancelled_jobs),0) as cancelled_jobs,
-             NVL(sum(closed_jobs),0) as closed_jobs,
+                          NVL(sum(finished_jobs),0) as finished_jobs,
              NVL(sum(failed_jobs),0) as failed_jobs,
+             NVL(sum(closed_jobs),0) as closed_jobs,
+             NVL(sum(cancelled_jobs),0) as cancelled_jobs,
+            NVL(sum(failed_jobs),0)+NVL(sum(closed_jobs),0)+NVL(sum(cancelled_jobs),0) as not_completed_jobs,
                round(avg(pending_duration)) as avg_pending_duration,
                round(avg(defined_duration)) as avg_defined_duration,
                round(avg(assigned_duration)) as avg_assigned_duration,
@@ -238,12 +230,12 @@ f as (SELECT start_time,
                   'starting' AS starting,
                   'transferring' AS transferring,
                   'merging' AS merging,
-                  'finished' AS finished,
-                  'failed' AS failed,
                   'holding' AS holding,
-                  'cancelled' as cancelled,
+                  'throttled' as throttled,
+                  'finished' as finished,
+                  'failed' as failed,
                   'closed' as closed,
-                  'throttled' as throttled
+                  'cancelled' as cancelled
                   )
           )
       GROUP BY start_time,
@@ -251,129 +243,47 @@ f as (SELECT start_time,
                queue,
                prodsourcelabel,
                gshare,
-               resource_type),
-    g as (SELECT start_time,
-             end_time,
-             queue,
-             prodsourcelabel,
-             gshare,
-             resource_type,
-             sum(finished_jobs) as finished_jobs,
-             sum(not_completed_jobs) as not_completed_jobs,
-             sum(in_progress_jobs) as in_progress_jobs
-      FROM (SELECT start_time,
-                   end_time,
-                   queue,
-                   final_status,
-                   prodsourcelabel,
-                   gshare,
-                   resource_type,
-                   count(distinct pandaid) as n_jobs
-            FROM merged
-            GROUP BY start_time,
-                     end_time,
-                     queue,
-                     final_status,
-                     prodsourcelabel,
-                     gshare,
-                     resource_type)
-          PIVOT (
-              sum(n_jobs) as jobs
-          FOR final_status
-          IN ('finished' AS finished,
-              'not_completed' AS not_completed,
-              'in_progress' as in_progress
-              )
-          )
-      GROUP BY start_time,
-               end_time,
-               queue,
-               prodsourcelabel,
-               gshare,
-               resource_type),
-     h as (
+               resource_type)
  SELECT f.start_time,
                  f.end_time,
                  f.queue,
                  f.prodsourcelabel,
                  f.gshare,
                  f.resource_type,
-                 running.running_jobs,
-                 running.running_slots,
-                 running.avg_running_duration,
-                running.cpuconsumptiontime,
-                f.pending_jobs,
-                f.defined_jobs,
-                f.assigned_jobs,
-                f.activated_jobs,
-                f.sent_jobs,
-                f.starting_jobs,
-                f.transferring_jobs,
-                f.merging_jobs,
-                f.holding_jobs,
-                f.throttled_jobs,
-                f.cancelled_jobs,
-                f.closed_jobs,
-                f.failed_jobs,
-                f.avg_pending_duration,
-                f.avg_defined_duration,
-                f.avg_assigned_duration,
-                f.avg_activated_duration,
-                f.avg_sent_duration,
-                f.avg_starting_duration,
-                f.avg_transferring_duration,
-                f.avg_merging_duration,
-                f.avg_holding_duration,
-                f.avg_throttled_duration
-        FROM running, f
-            WHERE running.start_time = f.start_time and
-                  running.end_time = f.end_time and
-                  running.queue = f.queue and
-                  running.prodsourcelabel = f.prodsourcelabel and
-                  running.resource_type = f.resource_type and
-                  running.gshare = f.gshare
-     )
-SELECT h.start_time,
-               h.end_time,
-               h.queue,
-               h.prodsourcelabel,
-               h.gshare,
-               h.resource_type,
-               NVL(h.pending_jobs,0) as pending_jobs,
-               NVL(h.defined_jobs,0) as defined_jobs,
-               NVL(h.assigned_jobs,0) as assigned_jobs,
-               NVL(h.activated_jobs,0) as activated_jobs,
-               NVL(h.sent_jobs,0) as sent_jobs,
-               NVL(h.starting_jobs,0) as starting_jobs,
-               NVL(h.running_jobs,0) as running_jobs,
-               NVL(h.running_slots,0) as running_slots,
-               NVL(h.avg_running_duration,0)  as avg_running_duration,
-                NVL(h.cpuconsumptiontime,0) as cpuconsumptiontime,
-               NVL(h.transferring_jobs,0) as transferring_jobs,
-               NVL(h.merging_jobs,0) as merging_jobs,
-               NVL(h.holding_jobs,0) as holding_jobs,
-               NVL(h.cancelled_jobs,0) as cancelled_jobs,
-               NVL(h.closed_jobs,0) as closed_jobs,
-                NVL(h.throttled_jobs,0) as throttled_jobs,
-               NVL(h.failed_jobs,0) as failed_jobs,
-               NVL(h.avg_pending_duration,0) as avg_pending_duration,
-               NVL(h.avg_defined_duration,0) as avg_defined_duration,
-               NVL(h.avg_assigned_duration,0) as avg_assigned_duration,
-               NVL(h.avg_activated_duration,0) as avg_activated_duration,
-               NVL(h.avg_sent_duration,0) as avg_sent_duration,
-               NVL(h.avg_starting_duration,0) as avg_starting_duration,
-               NVL(h.avg_running_duration,0) as avg_running_duration,
-               NVL(h.avg_transferring_duration,0) as avg_transferring_duration,
-               NVL(h.avg_merging_duration,0) as avg_merging_duration,
-               NVL(h.avg_holding_duration,0) as avg_holding_duration,
-                NVL(h.avg_throttled_duration,0) as avg_throttled_duration,
-             NVL(g.finished_jobs,0) as finished_jobs,
-             NVL(g.not_completed_jobs,0) as not_completed_jobs,
-             NVL(g.in_progress_jobs,0) as in_progress_jobs
-    FROM
-h, g WHERE h.start_time = g.start_time and
-         h.end_time = g.end_time and
-         h.queue = g.queue and
-         h.prodsourcelabel = g.prodsourcelabel and
-         h.gshare = g.gshare and
-         h.resource_type = g.resource_type
+                 NVL(running.running_jobs,0) as running_jobs,
+                 NVL(running.running_slots,0) as running_slots,
+                 NVL(running.avg_running_duration,0) as avg_running_duration,
+                NVL(running.cpuconsumptiontime,0) as cpuconsumptiontime,
+                NVL(f.pending_jobs,0) as pending_jobs,
+                NVL(f.defined_jobs,0) as defined_jobs,
+                NVL(f.assigned_jobs,0) as assigned_jobs,
+                NVL(f.activated_jobs,0) as activated_jobs,
+                NVL(f.sent_jobs,0) as sent_jobs,
+                NVL(f.starting_jobs,0) as starting_jobs,
+                NVL(f.transferring_jobs,0) as transferring_jobs,
+                NVL(f.merging_jobs,0) as merging_jobs,
+                NVL(f.holding_jobs,0) as holding_jobs,
+                NVL(f.throttled_jobs,0) as throttled_jobs,
+                NVL(f.finished_jobs,0) as finished_jobs,
+        NVL(f.failed_jobs,0) as failed_jobs,
+        NVL(f.closed_jobs,0) as closed_jobs,
+        NVL(f.cancelled_jobs,0) as cancelled_jobs,
+        NVL(f.not_completed_jobs,0) as not_completed_jobs,
+                NVL(f.avg_pending_duration,0) as avg_pending_duration,
+                NVL(f.avg_defined_duration,0) as avg_defined_duration,
+                NVL(f.avg_assigned_duration,0) as avg_assigned_duration,
+                NVL(f.avg_activated_duration,0) as avg_activated_duration,
+                NVL(f.avg_sent_duration,0) as avg_sent_duration,
+                NVL(f.avg_starting_duration,0) as avg_starting_duration,
+                NVL(f.avg_transferring_duration,0) as avg_transferring_duration,
+                NVL(f.avg_merging_duration,0) as avg_merging_duration,
+                NVL(f.avg_holding_duration,0) as avg_holding_duration,
+                NVL(f.avg_throttled_duration,0) as avg_throttled_duration
+         FROM f
+                  FULL OUTER JOIN running
+                                  ON (running.start_time = f.start_time) and
+     (running.end_time = f.end_time) and
+                  (running.queue = f.queue) and
+                  (running.prodsourcelabel = f.prodsourcelabel) and
+                  (running.resource_type = f.resource_type) and
+                  (running.gshare = f.gshare)
