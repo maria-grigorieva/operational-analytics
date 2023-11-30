@@ -65,54 +65,10 @@ def queues_workload(predefined_date=False, queues='actual'):
                      'tier_level, status, state, nodes,'
                      'corepower, corecount, region, transferring_limit')
         from_cric = pd.read_sql_query(query, PostgreSQL_connection)
+
+    from_cric.rename(columns={'resource_type':'cric_resource_type'},inplace=True)
     result = pd.merge(df, from_cric, left_on='queue', right_on='queue')
     write_to_postgreSQL(result, 'queues_workload')
-
-
-
-def jobs_statuslog_all(predefined_date=False, queues='actual'):
-
-    from_date = datetime.strftime(localized_now(), "%Y-%m-%d %H:%M:%S") \
-        if not predefined_date else str(predefined_date)
-
-    if check_postgreSQL('jobs_statuslog_all', from_date, accuracy='hour', datetime_col_name='end_time') == True:
-        delete_from_pgsql('jobs_statuslog_all', from_date, accuracy='hour', datetime_col_name='end_time')
-
-    engine = PanDA_engine.connect()
-    query = text(open(SQL_DIR + f'/PanDA/jobs_statuslog_all.sql').read())
-    df = pd.read_sql_query(query, con=engine, parse_dates={'end_time': '%Y-%m-%d %H:%M:%S', 'start_time': '%Y-%m-%d %H:%M:%S'},
-                           params={'from_date': from_date})
-    engine.close()
-    if queues == 'actual':
-        try:
-            from_cric = cric.cric_json_api.enhance_queues(all=True)
-        except Exception as e:
-            PostgreSQL_connection = PostgreSQL_engine.connect()
-            query = text('SELECT queue,cloud,site,resource_type,'
-                         'tier_level, status, state, nodes,'
-                         'corepower, corecount, region, transferring_limit '
-                         'FROM cric_resources WHERE '
-                         'datetime = (SELECT max(datetime) FROM cric_resources)'
-                         'GROUP by queue,cloud,site,resource_type,'
-                         'tier_level, status, state, nodes,'
-                         'corepower, corecount, region, transferring_limit')
-            from_cric = pd.read_sql_query(query, PostgreSQL_connection)
-    elif queues == 'db':
-        PostgreSQL_connection = PostgreSQL_engine.connect()
-        query = text('SELECT queue,cloud,site,resource_type,'
-                     'tier_level, status, state, nodes,'
-                     'corepower, corecount, region, transferring_limit '
-                     'FROM cric_resources WHERE '
-                     'datetime = (SELECT max(datetime) FROM cric_resources)'
-                     'GROUP by queue,cloud,site,resource_type,'
-                     'tier_level, status, state, nodes,'
-                     'corepower, corecount, region, transferring_limit')
-        from_cric = pd.read_sql_query(query, PostgreSQL_connection)
-
-    from_cric.rename(columns={'status':'cric_status','state':'cric_state','resource_type':'cric_resource_type'},inplace=True)
-    from_cric.drop(['nodes','corepower','corecount','transferring_limit'],axis=1,inplace=True)
-    result = pd.merge(df, from_cric, left_on='queue', right_on='queue')
-    write_to_postgreSQL(result, 'jobs_statuslog_all')
 
 
 def jobs_statuslog_extended(predefined_date=False, queues='actual'):

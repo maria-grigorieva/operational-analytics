@@ -85,6 +85,11 @@ def extract_architecture_specs(url='https://atlas-cric.cern.ch/api/atlas/pandaqu
     return pd.DataFrame(enhanced_queues)
 
 
+def queues_sites():
+    cric_queues = json.loads(http.request('GET',url_queue_all if all else url_queue).data)
+    return [{'queue': queue, 'site': attrs['atlas_site']} for queue, attrs in cric_queues.items()]
+
+
 def enhance_queues(all=False, with_rse=False):
 
     # cric_queues = requests.get(url_queue_all if all else url_queue,
@@ -103,8 +108,7 @@ def enhance_queues(all=False, with_rse=False):
         #datadisks = [[d for d in v if 'DATADISK' in d or 'VP_DISK' in d] for k, v in attrs['astorages'].items() if 'write_lan' in k]
         queues_dict = {
             'queue': queue,
-            'site': attrs['rc_site'],
-            'cloud': attrs['cloud'],
+            'site': attrs['atlas_site'],
             'cloud': attrs['cloud'],
             'tier_level': attrs['tier_level'],
             'transferring_limit': transferringlimit,

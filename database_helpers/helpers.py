@@ -76,7 +76,7 @@ def write_to_bigquery(df, table_name):
 def insert_to_db(df, table_name):
 
     write_to_postgreSQL(df, table_name)
-    write_to_bigquery(df, table_name)
+    #write_to_bigquery(df, table_name)
 
 
 def check_for_data_existance(table_name, now, accuracy='day', delete=True, dt='datetime'):
