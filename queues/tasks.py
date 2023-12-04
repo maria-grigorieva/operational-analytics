@@ -1,6 +1,7 @@
 from workers.celery import app
 from queues.queues_metrics import jobs_statuslog_extended as jobs_statuslog_extended_worker
 from queues.queues_metrics import queues_workload as queues_workload_worker
+from queues.queues_metrics import jobs_statuslog_nucleus as jobs_statuslog_nucleus_worker
 
 
 @app.task(name="queues_workload", autoretry_for=(Exception,), max_retries=5, default_retry_delay=600)
@@ -15,6 +16,13 @@ def queues_workload():
 def jobs_statuslog_extended():
     try:
         return jobs_statuslog_extended_worker()
+    except Exception as e:
+        raise e
+
+@app.task(name="jobs_statuslog_nucleus", autoretry_for=(Exception,), max_retries=5, default_retry_delay=600)
+def jobs_statuslog_nucleus():
+    try:
+        return jobs_statuslog_nucleus_worker()
     except Exception as e:
         raise e
 # @app.task(name="queues_statuslog_actual",autoretry_for=(Exception,),max_retries=5,default_retry_delay=600)

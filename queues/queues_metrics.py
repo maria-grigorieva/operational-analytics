@@ -117,3 +117,29 @@ def jobs_statuslog_extended(predefined_date=False, queues='actual'):
     specs = extract_architecture_specs()
     res = pd.merge(result, specs, left_on='queue', right_on='queue')
     write_to_postgreSQL(res, 'jobs_statuslog_extended')
+
+
+def jobs_statuslog_nucleus(predefined_date=False):
+
+    from_date = datetime.strftime(localized_now(), "%Y-%m-%d %H:%M:%S") \
+        if not predefined_date else str(predefined_date)
+
+    if check_postgreSQL('jobs_statuslog_nucleus', from_date, accuracy='hour', datetime_col_name='end_time') == True:
+        delete_from_pgsql('jobs_statuslog_nucleus', from_date, accuracy='hour', datetime_col_name='end_time')
+
+    engine = PanDA_engine.connect()
+    query = text(open(SQL_DIR + f'/PanDA/jobs_statuslog_nucleus.sql').read())
+    df = pd.read_sql_query(query, con=engine, parse_dates={'end_time': '%Y-%m-%d %H:%M:%S', 'start_time': '%Y-%m-%d %H:%M:%S'},
+                           params={'from_date': from_date})
+    engine.close()
+
+    from_cric = cric.cric_json_api.enhance_queues(all=True)
+
+    from_cric.rename(columns={'resource_type':'cric_resource_type'},inplace=True)
+    from_cric.drop(['nodes','corepower','corecount'],axis=1,inplace=True)
+    result = pd.merge(df, from_cric, left_on='queue', right_on='queue')
+
+    specs = extract_architecture_specs()
+    res = pd.merge(result, specs, left_on='queue', right_on='queue')
+
+    write_to_postgreSQL(res, 'jobs_statuslog_nucleus')

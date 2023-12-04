@@ -48,6 +48,10 @@ app.conf.beat_schedule = {
         'task': 'jobs_statuslog_extended',
         'schedule': crontab(minute=0, hour='0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23')
     },
+    'jobs_statuslog_nucleus': {
+        'task': 'jobs_statuslog_nucleus',
+        'schedule': crontab(minute=0, hour='0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23')
+    },
     'group_popularity_to_db': {
         'task': 'group_popularity_to_db',
         'schedule': crontab(minute=0, hour=3, day_of_week='monday')
