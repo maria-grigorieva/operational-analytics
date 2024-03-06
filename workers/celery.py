@@ -40,18 +40,18 @@ app.conf.beat_schedule = {
     #     'task': 'job_timings_to_db',
     #     'schedule': crontab(minute=10, hour=3)
     # },
-    # 'queues_workload': {
-    #     'task': 'queues_workload',
-    #     'schedule': crontab(minute=0, hour='0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23')
-    # },
-    'queues_workload_extended': {
-        'task': 'queues_workload_extended',
+    'queues_workload': {
+        'task': 'queues_workload',
         'schedule': crontab(minute=0, hour='0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23')
     },
-    # 'queues_workload_weighted': {
-    #     'task': 'queues_workload_weighted',
-    #     'schedule': crontab(minute=0, hour='1,5,9,13,17,21')
-    # },
+    'jobs_statuslog_extended': {
+        'task': 'jobs_statuslog_extended',
+        'schedule': crontab(minute=0, hour='0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23')
+    },
+    'jobs_statuslog_nucleus': {
+        'task': 'jobs_statuslog_nucleus',
+        'schedule': crontab(minute=0, hour='0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23')
+    },
     'group_popularity_to_db': {
         'task': 'group_popularity_to_db',
         'schedule': crontab(minute=0, hour=3, day_of_week='monday')

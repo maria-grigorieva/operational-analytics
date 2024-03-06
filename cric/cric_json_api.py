@@ -59,6 +59,37 @@ http = urllib3.PoolManager(
 #     result_df.to_csv('sites_attrs.csv')
 
 
+def extract_architecture_specs(url='https://atlas-cric.cern.ch/api/atlas/pandaqueue/query/?json&preset=tags'):
+    response = http.request('GET',url)
+    data = response.data
+    cric_queues = json.loads(data)
+
+    enhanced_queues = []
+    for key, value in cric_queues.items():
+        if value.get('architectures'):
+            architectures = value['architectures'][0]
+            arch = architectures['arch'][0] if architectures.get('arch') else 'unknown'
+            instr = architectures['instr'][0] if architectures.get('instr') else 'unknown'
+            type_value = architectures['type'] if architectures.get('type') else 'unknown'
+            queues_dict = {'queue': key,
+                           'architecture': arch,
+                           'instruction': instr,
+                           'processor_type': type_value}
+        else:
+            queues_dict = {'queue': key,
+                           'architecture': 'unknown',
+                           'instruction': 'unknown',
+                           'processor_type': 'unknown'}
+        enhanced_queues.append(queues_dict)
+
+    return pd.DataFrame(enhanced_queues)
+
+
+def queues_sites():
+    cric_queues = json.loads(http.request('GET',url_queue_all if all else url_queue).data)
+    return [{'queue': queue, 'site': attrs['atlas_site']} for queue, attrs in cric_queues.items()]
+
+
 def enhance_queues(all=False, with_rse=False):
 
     # cric_queues = requests.get(url_queue_all if all else url_queue,
@@ -77,8 +108,7 @@ def enhance_queues(all=False, with_rse=False):
         #datadisks = [[d for d in v if 'DATADISK' in d or 'VP_DISK' in d] for k, v in attrs['astorages'].items() if 'write_lan' in k]
         queues_dict = {
             'queue': queue,
-            'site': attrs['rc_site'],
-            'cloud': attrs['cloud'],
+            'site': attrs['atlas_site'],
             'cloud': attrs['cloud'],
             'tier_level': attrs['tier_level'],
             'transferring_limit': transferringlimit,

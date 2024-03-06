@@ -4,7 +4,7 @@ import pandas as pd
 import configparser
 import os
 from sqlalchemy import create_engine, text, inspect
-from database_helpers.helpers import insert_to_db, check_for_data_existance, day_rounder
+from database_helpers.helpers import write_to_postgreSQL, check_for_data_existance, day_rounder
 from datetime import datetime
 import ssl
 import urllib3
@@ -29,8 +29,32 @@ import logging
 logging.basicConfig()
 logging.getLogger('sqlalchemy.engine').setLevel(logging.INFO)
 
-conf_notes_url = 'https://inspirehep.net/api/literature?size=1000&fields=publication_info.conference_record,publication_info.cnum&doc_type=conference%20paper&collaboration=ATLAS&subject=Experiment-HEP&page=1&q=&earliest_date=2018--2022'
+#conf_notes_url = 'https://inspirehep.net/api/literature?size=1000&fields=publication_info.conference_record,publication_info.cnum&doc_type=conference%20paper&collaboration=ATLAS&subject=Experiment-HEP&page=1&q=&earliest_date=2022--2024'
+conf_notes_url = 'https://inspirehep.net/api/literature?size=1000&fields=publication_info.conference_record,publication_info.cnum&doc_type=conference%20paper&collaboration=ATLAS&page=1&q=&earliest_date=2021--2024'
+
 PostgreSQL_engine = create_engine(config['PostgreSQL']['sqlalchemy_engine_str'], echo=False)
+
+
+def get_atlas_conferences():
+    conf_notes = requests.get(conf_notes_url).json()
+    root = conf_notes['hits']['hits']
+    conferences = []
+    for i in root:
+        if 'metadata' in i:
+            if 'publication_info' in i['metadata']:
+                pub_info = i['metadata']['publication_info'][0]
+                if 'conference_record' in pub_info:
+                    url = pub_info['conference_record']['$ref']
+                    if not any(c['url'] == url for c in conferences):
+                        new_conf_record = {}
+                        new_conf_record['url'] = url
+                        new_conf_record['n_papers'] = 1
+                        conferences.append(new_conf_record)
+                    else:
+                        d = next(c for c in conferences if c['url'] == url)
+                        d['n_papers'] += 1
+    df = pd.DataFrame(conferences)
+    df.to_csv('atlas_conferences.csv')
 
 
 def conferences_to_db():
@@ -69,8 +93,9 @@ def conferences_to_db():
     datetime_cols = ['opening_date','closing_date']
     for d in datetime_cols:
         df[d] = pd.to_datetime(df[d], infer_datetime_format=True, errors='ignore')
-    df.to_csv('ihep_conf.csv')
-    insert_to_db(df, 'ihep_conferences')
+    #df.to_csv('ihep_conf_2022_2023.csv')
+    write_to_postgreSQL(df, 'ihep_conferences')
 
 
-conferences_to_db()
+# conferences_to_db()
+#get_atlas_conferences()

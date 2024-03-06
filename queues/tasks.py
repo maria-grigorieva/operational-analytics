@@ -1,10 +1,7 @@
 from workers.celery import app
-# from queues.queues_metrics import queues_to_db as queues_to_db_worker
-# from queues.queues_metrics import queues_hourly_to_db as queues_hourly_to_db_worker
-# from queues.queues_metrics import queues_workload_weighted_detailed as queues_workload_weighted_detailed_worker
-# from queues.queues_metrics import queues_weighted_jobs_wt as queues_weighted_jobs_wt_worker
-from queues.queues_metrics import queues_workload_extended as queues_workload_extended_worker
+from queues.queues_metrics import jobs_statuslog_extended as jobs_statuslog_extended_worker
 from queues.queues_metrics import queues_workload as queues_workload_worker
+from queues.queues_metrics import jobs_statuslog_nucleus as jobs_statuslog_nucleus_worker
 
 
 @app.task(name="queues_workload", autoretry_for=(Exception,), max_retries=5, default_retry_delay=600)
@@ -14,13 +11,20 @@ def queues_workload():
     except Exception as e:
         raise e
 
-@app.task(name="queues_workload_extended", autoretry_for=(Exception,), max_retries=5, default_retry_delay=600)
-def queues_workload_extended():
+
+@app.task(name="jobs_statuslog_extended", autoretry_for=(Exception,), max_retries=5, default_retry_delay=600)
+def jobs_statuslog_extended():
     try:
-        return queues_workload_extended_worker()
+        return jobs_statuslog_extended_worker()
     except Exception as e:
         raise e
 
+@app.task(name="jobs_statuslog_nucleus", autoretry_for=(Exception,), max_retries=5, default_retry_delay=600)
+def jobs_statuslog_nucleus():
+    try:
+        return jobs_statuslog_nucleus_worker()
+    except Exception as e:
+        raise e
 # @app.task(name="queues_statuslog_actual",autoretry_for=(Exception,),max_retries=5,default_retry_delay=600)
 # def queues_statuslog_actual(metric='queues_statuslog_actual'):
 #     try:
