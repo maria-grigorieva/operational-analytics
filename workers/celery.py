@@ -10,7 +10,7 @@ app = Celery('workers',
              broker=config['Redis']['connection_string'],
              backend=config['Redis']['connection_string'],
              include=['queues.tasks',
-                      #'datasets.tasks',
+                      # 'datasets.tasks',
                       'rse_info.tasks',
                       'cric.tasks',
                       #'merging.tasks',
@@ -32,9 +32,9 @@ app.conf.beat_schedule = {
         'task': 'cric_resources_to_db',
         'schedule': crontab(minute=30, hour=23)
     },
-    # 'tasks_timings': {
-    #     'task': 'task_timings_to_db',
-    #     'schedule': crontab(minute=0, hour=4)
+    # 'datasets_at_queues': {
+    #     'task': 'datasets_at_queues',
+    #     'schedule': crontab(minute=30, hour=0)
     # },
     # 'jobs_timings': {
     #     'task': 'job_timings_to_db',

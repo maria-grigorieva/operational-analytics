@@ -85,6 +85,6 @@ def retrospective_collector(frequency='D'):
 
 # retrospective_collector()
 #
-datasets_popularity_to_db('2023-10-02 00:00:00')
-datasets_popularity_to_db('2023-10-09 00:00:00')
+# datasets_popularity_to_db('2023-10-02 00:00:00')
+# datasets_popularity_to_db('2023-10-09 00:00:00')
 # group_popularity_to_db('2023-10-09 00:00:00')

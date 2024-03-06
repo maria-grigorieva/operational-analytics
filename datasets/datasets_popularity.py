@@ -5,7 +5,7 @@ sys.path.append(os.path.abspath(BASE_DIR))
 import pandas as pd
 from sqlalchemy import create_engine, text
 import configparser
-from database_helpers.helpers import insert_to_db, check_for_data_existance, set_time_period, day_rounder
+from database_helpers.helpers import insert_to_db, check_for_data_existance, set_time_period, day_rounder, localized_now
 import logging
 from datetime import datetime, timedelta
 import re
@@ -98,16 +98,17 @@ def save_processed_datasets_to_db(predefined_date = False):
         pass
 
 
-def save_dataset_task_user_to_db(predefined_date = False):
+def datasets_at_queues(predefined_date = False):
 
-    from_date, to_date = set_time_period(predefined_date, n_hours=24)
+    from_date = datetime.strftime(localized_now(), "%Y-%m-%d %H:%M:%S") \
+        if not predefined_date else str(predefined_date)
 
-    if not check_for_data_existance('datasets_tasks_users', from_date, delete=True):
+    if not check_for_data_existance('datasets_at_queues', from_date, delete=True):
         panda_connection = PanDA_engine.connect()
-        query = text(open(SQL_DIR+'/PanDA/datasets_tasks_users.sql').read())
+        query = text(open(SQL_DIR+'/PanDA/datasets_at_queues.sql').read())
         df = pd.read_sql_query(query, panda_connection, parse_dates={'datetime': '%Y-%m-%d'},
-                               params={'from_date': from_date})
-        insert_to_db(df, 'datasets_tasks_users')
+                               params={'datetime': from_date})
+        insert_to_db(df, 'datasets_at_queues')
     else:
         pass
 
@@ -128,4 +129,4 @@ def collect_data_for_period():
             print(f'The process has been failed at date {start_date}. Please restart the app.')
 
 
-# save_dataset_task_user_to_db('2022-04-06 00:40:00')
+# datasets_at_queues()
