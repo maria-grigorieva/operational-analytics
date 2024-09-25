@@ -53,16 +53,16 @@ PostgreSQL_engine = create_engine(config['PostgreSQL']['sqlalchemy_engine_str'],
 
 
 def collect_dates():
-    start_date = datetime(2021, 5, 2)
-    end_date = datetime(2022, 10, 17)
+    start_date = datetime(2023, 5, 19)
+    end_date = datetime(2024, 3, 18)
     list_of_dates = pd.date_range(start=datetime.strftime(start_date, "%Y-%m-%d"),
-                  end=datetime.strftime(end_date, "%Y-%m-%d"), freq='W')
+                  end=datetime.strftime(end_date, "%Y-%m-%d"), freq='D')
     print(list_of_dates)
     for i in list_of_dates:
         print(i)
         datasets_popularity_to_db(predefined_date = datetime.strftime(i, "%Y-%m-%d"))
 
-#
+datasets_popularity_to_db('2024-03-18 03:30:00')
 # datasets_forecast_classification('2022-08-01 00:00:00')
 
 

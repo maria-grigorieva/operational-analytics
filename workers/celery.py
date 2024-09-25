@@ -62,7 +62,7 @@ app.conf.beat_schedule = {
     },
     'datasets_popularity_to_db': {
         'task': 'datasets_popularity_to_db',
-        'schedule': crontab(minute=30, hour=3, day_of_week='monday')
+        'schedule': crontab(minute=30, hour=3)
     },
     'aggregation_week': {
         'task': 'aggregation_week',
