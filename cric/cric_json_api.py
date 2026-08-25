@@ -102,6 +102,8 @@ def enhance_queues(all=False, with_rse=False):
                                # os.path.join(BASE_DIR, config['CRIC']['tls_ca_certificate'])).json()
     enhanced_queues = []
 
+    print(f"Enhancing queues with RSE: {cric_queues}")
+
     for queue, attrs in cric_queues.items():
         transferringlimit = attrs['transferringlimit'] if attrs.get('transferringlimit') else 2000
         region = attrs['region'] if attrs.get('region') else 'unknown'
@@ -115,7 +117,8 @@ def enhance_queues(all=False, with_rse=False):
             'status': attrs['status'],
             'state': attrs['state'],
             'resource_type': attrs['resource_type'],
-            'nodes': attrs['nodes'],
+            # 'nodes': attrs['nodes'],            
+            'nodes': None if attrs.get('nodes') is None else attrs['nodes'],
             'corepower': attrs['corepower'],
             'corecount': attrs['corecount'],
             'region': region

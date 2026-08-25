@@ -24,10 +24,10 @@ app.conf.beat_schedule = {
     #     'task': 'save_distances_to_db',
     #     'schedule': crontab(minute=15, hour=22, day_of_week='sunday')
     # },
-    'storage_info': {
-        'task': 'save_storage_attrs_to_db',
-        'schedule': crontab(minute=55, hour=23)
-    },
+    # 'storage_info': {
+    #     'task': 'save_storage_attrs_to_db',
+    #     'schedule': crontab(minute=55, hour=23)
+    # },
     'cric': {
         'task': 'cric_resources_to_db',
         'schedule': crontab(minute=30, hour=23)
@@ -40,10 +40,10 @@ app.conf.beat_schedule = {
     #     'task': 'job_timings_to_db',
     #     'schedule': crontab(minute=10, hour=3)
     # },
-    'queues_workload': {
-        'task': 'queues_workload',
-        'schedule': crontab(minute=0, hour='0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23')
-    },
+    # 'queues_workload': {
+    #     'task': 'queues_workload',
+    #     'schedule': crontab(minute=0, hour='0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23')
+    # },
     'jobs_statuslog_extended': {
         'task': 'jobs_statuslog_extended',
         'schedule': crontab(minute=0, hour='0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23')
@@ -64,10 +64,10 @@ app.conf.beat_schedule = {
         'task': 'datasets_popularity_to_db',
         'schedule': crontab(minute=30, hour=3)
     },
-    'aggregation_week': {
-        'task': 'aggregation_week',
-        'schedule': crontab(minute=0, hour=10, day_of_week='monday')
-    }
+    # 'aggregation_week': {
+    #     'task': 'aggregation_week',
+    #     'schedule': crontab(minute=0, hour=10, day_of_week='monday')
+    # }
 }
 # app.conf.enable_utc = True
 # app.conf.timezone = 'Africa/Accra'

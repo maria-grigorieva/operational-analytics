@@ -2,7 +2,7 @@ import os, sys
 ROOT_DIR = os.path.dirname(os.path.abspath(__file__))
 BASE_DIR = os.path.join(ROOT_DIR, '..' )
 sys.path.append(os.path.abspath(BASE_DIR))
-import cx_Oracle
+import oracledb
 import cric
 import pandas as pd
 from sqlalchemy import create_engine, text
@@ -21,7 +21,13 @@ SQL_DIR = BASE_DIR+'/sql'
 config = configparser.ConfigParser()
 config.read(BASE_DIR+'/config.ini')
 
-cx_Oracle.init_oracle_client(lib_dir=config['PanDA DB']['client_path'])
+oracle_mode = config['PanDA DB'].get('oracle_mode', 'thin').strip().lower()
+client_path = config['PanDA DB'].get('client_path', '').strip()
+if oracle_mode == 'thick':
+    try:
+        oracledb.init_oracle_client(lib_dir=client_path or None)
+    except Exception as exc:
+        logging.warning(f"Failed to initialize Oracle Thick mode client: {exc}")
 
 PanDA_engine = create_engine(config['PanDA DB']['sqlalchemy_engine_str'], echo=True, max_identifier_length=128)
 PostgreSQL_engine = create_engine(config['PostgreSQL']['sqlalchemy_engine_str'], echo=False)
@@ -132,6 +138,17 @@ def jobs_statuslog_nucleus(predefined_date=False):
     df = pd.read_sql_query(query, con=engine, parse_dates={'end_time': '%Y-%m-%d %H:%M:%S', 'start_time': '%Y-%m-%d %H:%M:%S'},
                            params={'from_date': from_date})
     engine.close()
+
+    # PostgreSQL_connection = PostgreSQL_engine.connect()
+    # query = text('SELECT queue,cloud,site,resource_type,'
+    #                 'tier_level, nodes,'
+    #                 'corepower, corecount, region, transferring_limit '
+    #                 'FROM cric_resources WHERE '
+    #                 'datetime = (SELECT max(datetime) FROM cric_resources)'
+    #                 'GROUP by queue,cloud,site,resource_type,'
+    #                 'tier_level, nodes,'
+    #                 'corepower, corecount, region, transferring_limit')
+    # from_cric = pd.read_sql_query(query, PostgreSQL_connection)
 
     from_cric = cric.cric_json_api.enhance_queues(all=True)
 

@@ -2,7 +2,7 @@ import os, sys
 ROOT_DIR = os.path.dirname(os.path.abspath(__file__))
 BASE_DIR = os.path.join(ROOT_DIR, '..' )
 sys.path.append(os.path.abspath(BASE_DIR))
-import cx_Oracle
+import oracledb
 import cric
 import pandas as pd
 from sqlalchemy import create_engine, text
@@ -17,10 +17,16 @@ logging.getLogger('sqlalchemy.engine').setLevel(logging.ERROR)
 
 SQL_DIR = BASE_DIR+'/sql'
 
-# cx_Oracle.init_oracle_client(lib_dir=r"/usr/lib/oracle/19.13/client64/lib")
-
 config = configparser.ConfigParser()
 config.read(BASE_DIR+'/config.ini')
+
+oracle_mode = config['PanDA DB'].get('oracle_mode', 'thin').strip().lower()
+client_path = config['PanDA DB'].get('client_path', '').strip()
+if oracle_mode == 'thick':
+    try:
+        oracledb.init_oracle_client(lib_dir=client_path or None)
+    except Exception as exc:
+        logging.warning(f"Failed to initialize Oracle Thick mode client: {exc}")
 
 PanDA_engine = create_engine(config['PanDA DB']['sqlalchemy_engine_str'], echo=True)
 PostgreSQL_engine = create_engine(config['PostgreSQL']['sqlalchemy_engine_str'], echo=True)

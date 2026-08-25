@@ -62,7 +62,7 @@ def collect_dates():
         print(i)
         datasets_popularity_to_db(predefined_date = datetime.strftime(i, "%Y-%m-%d"))
 
-datasets_popularity_to_db('2024-03-18 03:30:00')
+#datasets_popularity_to_db('2025-02-17 03:30:00')
 # datasets_forecast_classification('2022-08-01 00:00:00')
 
 

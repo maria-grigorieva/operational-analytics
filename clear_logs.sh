@@ -1,10 +1,18 @@
 #!/bin/bash
+# Define the log directory
+LOG_DIR="/opt/4maria/operational-analytics/logs"
 
-rm -r /opt/4maria/operational-analytics/logs/*
-echo "Celery Log Files has been removed"
+# Find and truncate all log files (modify the pattern if needed)
+find "$LOG_DIR" -type f -name "*.log" -exec truncate -s 0 {} \;
 
->/opt/4maria/operational-analytics/logs/celery.log
+# Optionally, log the cleanup activity
+echo "$(date): Cleared log files in $LOG_DIR" >> /opt/4maria/operational-analytics/log_cleanup.log
 
->/opt/4maria/operational-analytics/logs/celerybeat.log
+#rm -r /opt/4maria/operational-analytics/logs/*
+#echo "Celery Log Files has been removed"
 
-echo "New Log Files were created"
+#>/opt/4maria/operational-analytics/logs/celery.log
+
+#>/opt/4maria/operational-analytics/logs/celerybeat.log
+
+#echo "New Log Files were created"
