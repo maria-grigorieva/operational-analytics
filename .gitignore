@@ -8,3 +8,12 @@ celerybeat-schedule.bak
 celerybeat-schedule.dat
 celerybeat-schedule.dir
 celeryd
+celery.log
+celerybeat-schedule
+.gitignore
+log_cleanup.log
+.gitignore
+proxy
+queues/nohup.out
+staging/user_staging.log
+timings/nohup.out
